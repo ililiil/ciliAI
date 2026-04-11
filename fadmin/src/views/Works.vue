@@ -3,7 +3,7 @@
     <el-card shadow="never">
       <template #header>
         <div class="card-header">
-          <span>IP版权库内容管理</span>
+          <span>社区分享内容管理</span>
           <el-button type="primary" @click="showCreateDialog">
             <el-icon><Plus /></el-icon>
             上传作品
@@ -16,10 +16,11 @@
         <el-table-column label="封面" width="120">
           <template #default="{ row }">
             <el-image 
-              :src="row.image" 
+              :src="getFullImageUrl(row.image)" 
               style="width: 80px; height: 60px;" 
               fit="cover"
-              :preview-src-list="[row.image]"
+              :preview-src-list="[getFullImageUrl(row.image)]"
+              :initial-index="0"
             >
               <template #error>
                 <div class="image-slot">
@@ -37,6 +38,13 @@
           <template #default="{ row }">
             <el-tag :type="row.status === 'active' ? 'success' : 'danger'">
               {{ row.status === 'active' ? '已发布' : '已下架' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="category" label="分类" width="100">
+          <template #default="{ row }">
+            <el-tag :type="row.category === 'IP版权库' ? 'primary' : 'success'" size="small">
+              {{ row.category === 'IP版权库' ? 'IP版权库' : '社区分享' }}
             </el-tag>
           </template>
         </el-table-column>
@@ -69,9 +77,22 @@
         </el-row>
         
         <el-form-item label="封面图片" prop="image">
-          <el-input v-model="form.image" placeholder="请输入图片URL或上传图片" />
-          <div class="image-preview" v-if="form.image">
-            <el-image :src="form.image" style="width: 200px; height: 150px;" fit="cover" />
+          <el-input v-model="form.image" placeholder="请输入图片URL" style="margin-bottom: 10px;" />
+          <div class="cover-upload">
+            <el-upload
+              class="cover-uploader"
+              action="/api/admin/upload"
+              :show-file-list="false"
+              :on-success="handleUploadSuccess"
+              :on-error="handleUploadError"
+              :before-upload="beforeUpload"
+              :headers="uploadHeaders"
+              accept="image/*"
+            >
+              <img v-if="form.image" :src="getFullImageUrl(form.image)" class="cover-image" />
+              <el-icon v-else class="cover-uploader-icon"><Plus /></el-icon>
+            </el-upload>
+            <div class="upload-tip">支持 JPG、PNG、GIF、WebP 格式</div>
           </div>
         </el-form-item>
 
@@ -116,6 +137,13 @@
         <el-form-item label="作品简介" prop="introduction">
           <el-input v-model="form.introduction" type="textarea" :rows="4" placeholder="请输入作品简介" />
         </el-form-item>
+
+        <el-form-item label="分类" prop="category">
+          <el-select v-model="form.category" placeholder="请选择分类" style="width: 100%;">
+            <el-option label="IP版权库" value="IP版权库" />
+            <el-option label="社区分享" value="社区分享" />
+          </el-select>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="createDialogVisible = false">取消</el-button>
@@ -128,7 +156,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Picture } from '@element-plus/icons-vue'
+import { Picture, Plus } from '@element-plus/icons-vue'
 import { getWorks, createWork, updateWork, deleteWork as deleteWorkApi } from '../api/admin'
 
 const loading = ref(false)
@@ -136,6 +164,47 @@ const works = ref([])
 const createDialogVisible = ref(false)
 const editingWork = ref(null)
 const formRef = ref(null)
+
+const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5002'
+const uploadHeaders = {
+  'Authorization': localStorage.getItem('admin_token') || ''
+}
+
+const getFullImageUrl = (url) => {
+  if (!url) return ''
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url
+  }
+  return baseURL + url
+}
+
+const beforeUpload = (file) => {
+  const isImage = file.type.startsWith('image/')
+  const isLt15M = file.size / 1024 / 1024 < 15
+  
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件！')
+    return false
+  }
+  if (!isLt15M) {
+    ElMessage.error('图片大小不能超过 15MB！')
+    return false
+  }
+  return true
+}
+
+const handleUploadSuccess = (response) => {
+  if (response.code === 200) {
+    form.image = response.data.url
+    ElMessage.success('封面上传成功')
+  } else {
+    ElMessage.error(response.msg || '上传失败')
+  }
+}
+
+const handleUploadError = () => {
+  ElMessage.error('上传失败，请重试')
+}
 
 const form = reactive({
   title: '',
@@ -146,7 +215,8 @@ const form = reactive({
   price: '',
   copyright: '归方塘所有',
   tags: [],
-  introduction: ''
+  introduction: '',
+  category: 'IP版权库'
 })
 
 const rules = {
@@ -183,6 +253,7 @@ const showCreateDialog = () => {
   form.copyright = '归方塘所有'
   form.tags = []
   form.introduction = ''
+  form.category = 'IP版权库'
   createDialogVisible.value = true
 }
 
@@ -197,6 +268,7 @@ const editWork = (row) => {
   form.copyright = row.copyright
   form.tags = row.tags || []
   form.introduction = row.introduction
+  form.category = row.category || 'IP版权库'
   createDialogVisible.value = true
 }
 
@@ -291,5 +363,51 @@ onMounted(() => {
   background: var(--el-fill-color-light);
   color: var(--el-text-color-secondary);
   font-size: 24px;
+}
+
+.cover-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cover-uploader {
+  border: 1px dashed var(--el-border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.3s;
+  width: 200px;
+  height: 150px;
+  cursor: pointer;
+  position: relative;
+}
+
+.cover-uploader:hover {
+  border-color: var(--el-color-primary);
+}
+
+.cover-uploader .el-upload {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cover-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cover-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+}
+
+.upload-tip {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 5px;
 }
 </style>

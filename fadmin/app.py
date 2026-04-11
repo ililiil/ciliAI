@@ -4,9 +4,11 @@ import sqlite3
 import random
 import string
 from datetime import datetime
-from flask import Flask, request, jsonify, g, send_from_directory
+from flask import Flask, request, jsonify, g, send_from_directory, current_app
 from flask_cors import CORS
 from dotenv import load_dotenv
+import uuid
+import os
 
 load_dotenv()
 
@@ -14,6 +16,14 @@ app = Flask(__name__, static_folder='templates', static_url_path='')
 CORS(app)
 
 DATABASE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'fangtang', 'fangtang.db')
+
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def generate_invite_code(length=8):
     chars = string.ascii_uppercase + string.digits
@@ -72,6 +82,38 @@ def admin_info():
             'roles': ['admin']
         }
     })
+
+@app.route('/api/admin/upload', methods=['POST'])
+def upload_image():
+    if 'file' not in request.files:
+        return jsonify({'code': 400, 'msg': '没有文件上传'}), 400
+    
+    file = request.files['file']
+    
+    if file.filename == '':
+        return jsonify({'code': 400, 'msg': '文件名为空'}), 400
+    
+    if file and allowed_file(file.filename):
+        ext = file.filename.rsplit('.', 1)[1].lower()
+        filename = f"{uuid.uuid4().hex}.{ext}"
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(filepath)
+        
+        image_url = f"/uploads/{filename}"
+        return jsonify({
+            'code': 200,
+            'msg': '上传成功',
+            'data': {
+                'url': image_url,
+                'filename': filename
+            }
+        })
+    else:
+        return jsonify({'code': 400, 'msg': '不支持的文件格式'}), 400
+
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
 
 @app.route('/api/admin/invite-codes', methods=['GET'])
 def get_invite_codes():
@@ -221,15 +263,19 @@ def create_work():
     price = data.get('price', '')
     copyright = data.get('copyright', '归方塘所有')
     introduction = data.get('introduction', '')
+    category = data.get('category', 'IP版权库')
     
     if not title or not image:
         return jsonify({'code': 400, 'msg': '标题和图片不能为空'}), 400
     
+    if category not in ['IP版权库', '社区分享']:
+        category = 'IP版权库'
+    
     db = get_db()
     cursor = db.execute('''
-        INSERT INTO ip_works (title, student_name, image, tags, cost, duration, price, copyright, introduction)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (title, student_name, image, json.dumps(tags), cost, duration, price, copyright, introduction))
+        INSERT INTO ip_works (title, student_name, image, tags, cost, duration, price, copyright, introduction, category)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (title, student_name, image, json.dumps(tags), cost, duration, price, copyright, introduction, category))
     db.commit()
     
     return jsonify({
@@ -250,8 +296,10 @@ def update_work(id):
     update_fields = []
     update_values = []
     
-    for field in ['title', 'student_name', 'image', 'tags', 'cost', 'duration', 'price', 'copyright', 'introduction', 'status']:
+    for field in ['title', 'student_name', 'image', 'tags', 'cost', 'duration', 'price', 'copyright', 'introduction', 'category', 'status']:
         if field in data:
+            if field == 'category' and data[field] not in ['IP版权库', '社区分享']:
+                continue
             update_fields.append(f'{field} = ?')
             if field == 'tags':
                 update_values.append(json.dumps(data[field]))
@@ -332,11 +380,17 @@ def init_db():
             price TEXT,
             copyright TEXT,
             introduction TEXT,
+            category TEXT DEFAULT 'IP版权库',
             status TEXT DEFAULT 'active',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    
+    try:
+        cursor.execute('ALTER TABLE ip_works ADD COLUMN category TEXT DEFAULT "IP版权库"')
+    except sqlite3.OperationalError:
+        pass
     
     conn.commit()
     conn.close()

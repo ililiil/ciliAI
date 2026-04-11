@@ -52,52 +52,6 @@
               </div>
           </div>
         </div>
-        
-        <!-- 评论功能模块 -->
-        <div class="comment-section">
-          <h3 class="comment-title">作品评论</h3>
-          
-          <!-- 公共评论 -->
-          <div class="comment-group">
-            <h4 class="comment-group-title">精选评论</h4>
-            <div class="comment-list">
-              <div v-for="comment in publicComments" :key="comment.id" class="comment-item">
-                <div class="comment-avatar">{{ comment.author.charAt(0) }}</div>
-                <div class="comment-content">
-                  <div class="comment-author">{{ comment.author }}</div>
-                  <div class="comment-text">{{ comment.content }}</div>
-                  <div class="comment-time">{{ comment.time }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <!-- 我的评论（仅登录用户可见） -->
-          <div class="comment-group" v-if="isLoggedIn">
-            <h4 class="comment-group-title">我的评论</h4>
-            <div class="comment-input-area">
-              <textarea 
-                v-model="myComment" 
-                placeholder="写下你的评论..." 
-                class="comment-input"
-                rows="3"
-              ></textarea>
-              <button class="comment-submit-btn" @click="submitComment" :disabled="!myComment.trim()">
-                发布评论
-              </button>
-            </div>
-            <div class="my-comments-list">
-              <div v-for="comment in myComments" :key="comment.id" class="comment-item my-comment">
-                <div class="comment-avatar">我</div>
-                <div class="comment-content">
-                  <div class="comment-author">我</div>
-                  <div class="comment-text">{{ comment.content }}</div>
-                  <div class="comment-time">{{ comment.time }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </el-tab-pane>
       <el-tab-pane label="社区分享" name="community">
         <div class="works-grid">
@@ -161,37 +115,17 @@
 </template>
 
 <script setup>
-import { ref, watch, inject, onMounted } from 'vue'
+import { ref, inject, onMounted } from 'vue'
 import { ElTabs, ElTabPane } from 'element-plus'
 import NovelDetailModal from '../components/NovelDetailModal.vue'
 
 const activeTab = ref('works')
 const showNovelModal = ref(false)
 const selectedNovel = ref({})
-const myComment = ref('')
-const myComments = ref([])
 
 const isLoggedIn = inject('isLoggedIn')
 const computingPower = inject('computingPower')
 const inviteCode = inject('currentInviteCode')
-
-const publicComments = ref([
-  { id: 1, author: '创意达人', content: '这个作品太棒了！制作精良，剧情引人入胜。', time: '2024-01-15 14:30' },
-  { id: 2, author: '短剧爱好者', content: '方塘AI的制作水准真的很高，画面质量和剧情都很出色。', time: '2024-01-15 12:20' },
-  { id: 3, author: '新手学员', content: '看完教程后自己也尝试做了一个，学习到了很多技巧！', time: '2024-01-14 18:45' },
-  { id: 4, author: '资深制作人', content: '作为同行，不得不佩服这个作品的质量，值得学习。', time: '2024-01-14 10:15' }
-])
-
-const submitComment = () => {
-  if (myComment.value.trim()) {
-    myComments.value.unshift({
-      id: Date.now(),
-      content: myComment.value.trim(),
-      time: new Date().toLocaleString('zh-CN')
-    })
-    myComment.value = ''
-  }
-}
 
 const ads = ref([
   { src: 'https://pubsto.fullpeace.cn/freefishpc/file/726afab63d004543b7c1069d27d89bb4.png', alt: '广告位1' },
@@ -430,138 +364,5 @@ const openNovelDetail = (work) => {
 .meta-value {
   color: #fff;
   font-weight: 500;
-}
-
-.comment-section {
-  margin-top: 32px;
-  padding: 24px;
-  background-color: #232323;
-  border-radius: 12px;
-}
-
-.comment-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: #fff;
-  margin: 0 0 20px 0;
-}
-
-.comment-group {
-  margin-bottom: 24px;
-}
-
-.comment-group:last-child {
-  margin-bottom: 0;
-}
-
-.comment-group-title {
-  font-size: 16px;
-  font-weight: 500;
-  color: #a3e635;
-  margin: 0 0 16px 0;
-}
-
-.comment-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.comment-item {
-  display: flex;
-  gap: 12px;
-  padding: 12px;
-  background-color: #1a1a1a;
-  border-radius: 8px;
-}
-
-.comment-item.my-comment {
-  border: 1px solid #a3e635;
-}
-
-.comment-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background-color: #a3e635;
-  color: #1a1a1a;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-
-.comment-content {
-  flex: 1;
-}
-
-.comment-author {
-  font-size: 14px;
-  font-weight: 600;
-  color: #fff;
-  margin-bottom: 4px;
-}
-
-.comment-text {
-  font-size: 14px;
-  color: #ccc;
-  line-height: 1.5;
-}
-
-.comment-time {
-  font-size: 12px;
-  color: #666;
-  margin-top: 8px;
-}
-
-.comment-input-area {
-  margin-bottom: 16px;
-}
-
-.comment-input {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #333;
-  border-radius: 8px;
-  background-color: #1a1a1a;
-  color: #fff;
-  font-size: 14px;
-  resize: vertical;
-  min-height: 80px;
-}
-
-.comment-input:focus {
-  outline: none;
-  border-color: #a3e635;
-}
-
-.comment-submit-btn {
-  margin-top: 12px;
-  padding: 10px 24px;
-  background-color: #a3e635;
-  color: #1a1a1a;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.comment-submit-btn:hover:not(:disabled) {
-  background-color: #bef264;
-}
-
-.comment-submit-btn:disabled {
-  background-color: #555;
-  color: #888;
-  cursor: not-allowed;
-}
-
-.my-comments-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
 }
 </style>
