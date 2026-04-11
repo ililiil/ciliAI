@@ -155,6 +155,25 @@ def init_db():
         )
     ''')
     
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS ip_works (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            student_name TEXT,
+            image TEXT,
+            tags TEXT,
+            cost TEXT,
+            duration TEXT,
+            price TEXT,
+            copyright TEXT,
+            introduction TEXT,
+            category TEXT DEFAULT 'IP版权库',
+            status TEXT DEFAULT 'active',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
     try:
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_projects_user_id ON projects(user_id)')
     except:
@@ -1288,6 +1307,47 @@ def get_stats():
             'today_power_used': abs(today_power_used)
         }
     })
+
+@app.route('/api/works', methods=['GET'])
+def get_public_works():
+    try:
+        conn = sqlite3.connect(DATABASE, check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='ip_works'")
+        if not cursor.fetchone():
+            logger.error("Table 'ip_works' does not exist in database")
+            conn.close()
+            return jsonify({
+                'code': 404,
+                'msg': 'IP works table does not exist. Please restart the application to initialize the database.',
+                'data': {'list': [], 'total': 0}
+            }), 404
+        
+        works = cursor.execute('''
+            SELECT * FROM ip_works
+            WHERE status = 'active'
+            ORDER BY created_at DESC
+        ''').fetchall()
+        
+        result = {
+            'code': 200,
+            'data': {
+                'list': [dict(work) for work in works],
+                'total': len(works)
+            }
+        }
+        
+        conn.close()
+        return jsonify(result)
+    except Exception as e:
+        logger.error(f"Error fetching works: {str(e)}")
+        return jsonify({
+            'code': 500,
+            'msg': 'Failed to fetch works',
+            'error': str(e)
+        }), 500
 
 if __name__ == '__main__':
     if not VOLC_AK or not VOLC_SK:

@@ -138,7 +138,7 @@ const communityWorks = ref([])
 
 const fetchWorks = async () => {
   try {
-    const response = await fetch('http://localhost:5002/api/works')
+    const response = await fetch('/api/works')
     const result = await response.json()
     if (result.code === 200) {
       const allWorks = result.data.list.map(work => ({
