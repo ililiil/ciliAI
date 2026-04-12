@@ -1,8 +1,8 @@
-# 方塘AI短剧平台 - 项目部署说明文档
+﻿# CiliAI短剧平台 - 项目部署说明文档
 
 ## 文档信息
 
-- **项目名称**：方塘AI短剧平台
+- **项目名称**：CiliAI短剧平台
 - **版本**：0.0.6
 - **编写日期**：2026-04-12
 - **文档用途**：运维团队部署指南
@@ -57,7 +57,7 @@
 │                        数据库服务器                               │
 │                   ┌─────────────────┐                           │
 │                   │  SQLite数据库    │                           │
-│                   │  fangtang.db    │                           │
+│                   │  ciliAI.db    │                           │
 │                   └─────────────────┘                           │
 └─────────────────────────────────────────────────────────────────┘
                          │
@@ -89,7 +89,7 @@
 ┌─────────────────────┐
 │   用户应用后端API     │ ◀─── 依赖 ───► ┌────────────────────┐
 │   (端口: 5001)       │                │   SQLite数据库      │
-└──────────┬──────────┘                │   fangtang.db     │
+└──────────┬──────────┘                │   ciliAI.db     │
            │                           └────────────────────┘
            │
            ▼
@@ -293,7 +293,7 @@ docker --version
                ▼
 ┌─────────────────────────────────────────┐
 │           SQLite数据库                   │
-│         (fangtang.db)                   │
+│         (ciliAI.db)                   │
 └─────────────────────────────────────────┘
 ```
 
@@ -303,11 +303,11 @@ docker --version
 
 ```bash
 # 创建项目目录
-sudo mkdir -p /var/www/fangtang
-sudo chown -R $USER:$USER /var/www/fangtang
+sudo mkdir -p /var/www/ciliAI
+sudo chown -R $USER:$USER /var/www/ciliAI
 
 # 进入项目目录
-cd /var/www/fangtang
+cd /var/www/ciliAI
 ```
 
 #### 3.2.2 获取代码
@@ -316,22 +316,22 @@ cd /var/www/fangtang
 
 ```bash
 # 如果使用Git仓库
-git clone <repository_url> /var/www/fangtang
+git clone <repository_url> /var/www/ciliAI
 ```
 
 **方式二：SCP上传**
 
 ```bash
 # 在本地执行
-scp -r ./fangtang user@server:/tmp/
-ssh user@server "mv /tmp/fangtang /var/www/"
+scp -r ./ciliAI user@server:/tmp/
+ssh user@server "mv /tmp/ciliAI /var/www/"
 ```
 
 #### 3.2.3 配置环境变量
 
 ```bash
 # 进入用户应用端目录
-cd /var/www/fangtang/fangtang
+cd /var/www/ciliAI/ciliAI
 
 # 创建环境变量文件
 cp .env.example .env
@@ -356,7 +356,7 @@ LOG_LEVEL=INFO
 
 #### 3.3.1 创建Dockerfile
 
-**文件位置**：`fangtang/Dockerfile`
+**文件位置**：`ciliAI/Dockerfile`
 
 ```dockerfile
 # 前端构建阶段
@@ -404,22 +404,22 @@ CMD ["gunicorn", "--bind", "0.0.0.0:5001", "--workers", "4", "--timeout", "120",
 
 #### 3.3.2 创建docker-compose.yml
 
-**文件位置**：`fangtang/docker-compose.yml`
+**文件位置**：`ciliAI/docker-compose.yml`
 
 ```yaml
 version: '3.8'
 
 services:
-  fangtang:
+  ciliAI:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: fangtang-app
+    container_name: ciliAI-app
     ports:
       - "5001:5001"
     volumes:
       - ./data:/app/data
-      - ./fangtang.db:/app/fangtang.db
+      - ./ciliAI.db:/app/ciliAI.db
       - ./logs:/app/logs
     env_file:
       - .env
@@ -433,10 +433,10 @@ services:
       retries: 3
       start_period: 40s
     networks:
-      - fangtang-network
+      - ciliAI-network
 
 networks:
-  fangtang-network:
+  ciliAI-network:
     driver: bridge
 ```
 
@@ -444,10 +444,10 @@ networks:
 
 ```bash
 # 进入用户应用端目录
-cd /var/www/fangtang/fangtang
+cd /var/www/ciliAI/ciliAI
 
 # 构建镜像
-docker build -t fangtang-app:latest .
+docker build -t ciliAI-app:latest .
 
 # 启动服务
 docker-compose up -d
@@ -462,7 +462,7 @@ docker-compose logs -f
 
 ```bash
 # 进入目录
-cd /var/www/fangtang/fangtang
+cd /var/www/ciliAI/ciliAI
 
 # 创建虚拟环境
 python3 -m venv venv
@@ -499,8 +499,8 @@ npm run build
 #!/bin/bash
 # Gunicorn启动脚本
 
-NAME="fangtang-app"
-DIR="/var/www/fangtang/fangtang"
+NAME="ciliAI-app"
+DIR="/var/www/ciliAI/ciliAI"
 USER="www-data"
 GROUP="www-data"
 
@@ -514,8 +514,8 @@ exec gunicorn \
     --workers 4 \
     --bind 0.0.0.0:5001 \
     --timeout 120 \
-    --access-logfile /var/log/fangtang/access.log \
-    --error-logfile /var/log/fangtang/error.log \
+    --access-logfile /var/log/ciliAI/access.log \
+    --error-logfile /var/log/ciliAI/error.log \
     --log-level info \
     app:app
 ```
@@ -532,8 +532,8 @@ chmod +x start_gunicorn.sh
 npm install -g pm2
 
 # 启动应用
-cd /var/www/fangtang/fangtang
-pm2 start start_gunicorn.sh --name fangtang-main
+cd /var/www/ciliAI/ciliAI
+pm2 start start_gunicorn.sh --name ciliAI-main
 
 # 保存PM2配置
 pm2 save
@@ -544,10 +544,10 @@ pm2 startup
 
 ### 3.5 Nginx反向代理配置
 
-创建Nginx配置文件 `/etc/nginx/sites-available/fangtang`：
+创建Nginx配置文件 `/etc/nginx/sites-available/ciliAI`：
 
 ```nginx
-upstream fangtang_backend {
+upstream ciliAI_backend {
     server 127.0.0.1:5001;
     keepalive 32;
 }
@@ -558,8 +558,8 @@ server {
     client_max_body_size 100M;
 
     # 访问日志
-    access_log /var/log/nginx/fangtang_access.log;
-    error_log /var/log/nginx/fangtang_error.log;
+    access_log /var/log/nginx/ciliAI_access.log;
+    error_log /var/log/nginx/ciliAI_error.log;
 
     # Gzip压缩
     gzip on;
@@ -569,7 +569,7 @@ server {
 
     # 主应用
     location / {
-        proxy_pass http://fangtang_backend;
+        proxy_pass http://ciliAI_backend;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -596,7 +596,7 @@ server {
 
 ```bash
 # 启用配置
-sudo ln -s /etc/nginx/sites-available/fangtang /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/ciliAI /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
@@ -659,7 +659,7 @@ curl http://localhost:5001/ | head -20
 
 ```bash
 # 进入管理后台目录
-cd /var/www/fangtang/fadmin
+cd /var/www/ciliAI/ruoyi
 
 # 创建上传目录
 mkdir -p uploads
@@ -670,7 +670,7 @@ chmod 755 uploads
 
 #### 4.3.1 创建Dockerfile
 
-**文件位置**：`fadmin/Dockerfile`
+**文件位置**：`ruoyi/Dockerfile`
 
 ```dockerfile
 # 前端构建阶段
@@ -710,17 +710,17 @@ CMD ["python", "app.py"]
 
 #### 4.3.2 创建docker-compose.yml
 
-**文件位置**：`fadmin/docker-compose.yml`
+**文件位置**：`ruoyi/docker-compose.yml`
 
 ```yaml
 version: '3.8'
 
 services:
-  fadmin-api:
+  ruoyi-api:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: fadmin-api
+    container_name: ruoyi-api
     ports:
       - "5002:5002"
     volumes:
@@ -729,10 +729,10 @@ services:
       - TZ=Asia/Shanghai
     restart: always
     networks:
-      - fangtang-network
+      - ciliAI-network
 
 networks:
-  fangtang-network:
+  ciliAI-network:
     external: true
 ```
 
@@ -740,10 +740,10 @@ networks:
 
 ```bash
 # 进入管理后台目录
-cd /var/www/fangtang/fadmin
+cd /var/www/ciliAI/ruoyi
 
 # 构建镜像
-docker build -t fadmin-api:latest .
+docker build -t ruoyi-api:latest .
 
 # 启动服务
 docker-compose up -d
@@ -755,7 +755,7 @@ docker-compose up -d
 
 ```bash
 # 进入目录
-cd /var/www/fangtang/fadmin
+cd /var/www/ciliAI/ruoyi
 
 # 创建虚拟环境
 python3 -m venv venv
@@ -785,7 +785,7 @@ cp -r dist templates
 
 ```bash
 # 启动后端API
-pm2 start python --name "fadmin-api" -- app.py
+pm2 start python --name "ruoyi-api" -- app.py
 
 # 启动前端（使用Nginx或Vite）
 # 方式1：Nginx（推荐生产环境）
@@ -797,10 +797,10 @@ npm run preview
 
 ### 4.5 Nginx配置
 
-创建Nginx配置文件 `/etc/nginx/sites-available/fadmin`：
+创建Nginx配置文件 `/etc/nginx/sites-available/ruoyi`：
 
 ```nginx
-upstream fadmin_backend {
+upstream ruoyi_backend {
     server 127.0.0.1:5002;
     keepalive 16;
 }
@@ -812,7 +812,7 @@ server {
 
     # 管理后台API
     location /api/ {
-        proxy_pass http://fadmin_backend;
+        proxy_pass http://ruoyi_backend;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -826,7 +826,7 @@ server {
 
     # 管理后台静态文件
     location / {
-        root /var/www/fangtang/fadmin/templates;
+        root /var/www/ciliAI/ruoyi/templates;
         try_files $uri $uri/ /index.html;
         expires 7d;
         add_header Cache-Control "public, immutable";
@@ -836,7 +836,7 @@ server {
 
 ```bash
 # 启用配置
-sudo ln -s /etc/nginx/sites-available/fadmin /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/ruoyi /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
@@ -866,25 +866,25 @@ curl http://localhost:3001/
 
 | 环境 | 文件路径 |
 |-----|---------|
-| **开发环境** | `d:\fangtang\fangtang\fangtang.db` |
-| **生产环境** | `/var/www/fangtang/fangtang/fangtang.db` |
-| **Docker环境** | `/app/fangtang.db`（容器内） |
+| **开发环境** | `d:\ciliAI\ciliAI\ciliAI.db` |
+| **生产环境** | `/var/www/ciliAI/ciliAI/ciliAI.db` |
+| **Docker环境** | `/app/ciliAI.db`（容器内） |
 
 #### 5.1.2 数据库连接配置
 
-**用户应用端**（`fangtang/app.py` 第23行）：
+**用户应用端**（`ciliAI/app.py` 第23行）：
 
 ```python
-DATABASE = 'fangtang.db'  # 相对路径
+DATABASE = 'ciliAI.db'  # 相对路径
 ```
 
-**管理后台端**（`fadmin/app.py` 第18行）：
+**管理后台端**（`ruoyi/app.py` 第18行）：
 
 ```python
 DATABASE = os.path.join(
     os.path.dirname(os.path.dirname(__file__)),
-    'fangtang',
-    'fangtang.db'
+    'ciliAI',
+    'ciliAI.db'
 )
 ```
 
@@ -899,7 +899,7 @@ DATABASE = os.path.join(
 python app.py
 
 # 查看日志确认初始化成功
-tail -f /var/log/fangtang/app.log
+tail -f /var/log/ciliAI/app.log
 ```
 
 预期输出：
@@ -929,10 +929,10 @@ pm2 stop all
 docker-compose down
 
 # 步骤2：备份现有数据库
-cp fangtang.db fangtang_backup_$(date +%Y%m%d).db
+cp ciliAI.db ciliAI_backup_$(date +%Y%m%d).db
 
 # 步骤3：删除数据库文件
-rm fangtang.db
+rm ciliAI.db
 
 # 步骤4：重启应用
 pm2 restart all
@@ -940,7 +940,7 @@ pm2 restart all
 docker-compose up -d
 
 # 步骤5：验证
-sqlite3 fangtang.db ".tables"
+sqlite3 ciliAI.db ".tables"
 ```
 
 ### 5.3 数据库备份
@@ -949,23 +949,23 @@ sqlite3 fangtang.db ".tables"
 
 ```bash
 # 备份命令
-cp fangtang.db fangtang_backup_$(date +%Y%m%d_%H%M%S).db
+cp ciliAI.db ciliAI_backup_$(date +%Y%m%d_%H%M%S).db
 
 # 压缩备份
-tar -czf fangtang_backup_$(date +%Y%m%d).tar.gz fangtang.db
+tar -czf ciliAI_backup_$(date +%Y%m%d).tar.gz ciliAI.db
 ```
 
 #### 5.3.2 自动备份脚本
 
-创建备份脚本 `/var/scripts/backup_fangtang.sh`：
+创建备份脚本 `/var/scripts/backup_ciliAI.sh`：
 
 ```bash
 #!/bin/bash
-# 方塘AI数据库备份脚本
+# CiliAI数据库备份脚本
 
 # 配置
-BACKUP_DIR="/var/backups/fangtang"
-DB_FILE="/var/www/fangtang/fangtang/fangtang.db"
+BACKUP_DIR="/var/backups/ciliAI"
+DB_FILE="/var/www/ciliAI/ciliAI/ciliAI.db"
 DATE=$(date +%Y%m%d_%H%M%S)
 KEEP_DAYS=30
 
@@ -974,26 +974,26 @@ mkdir -p $BACKUP_DIR
 
 # 执行备份
 echo "[$(date)] Starting backup..."
-cp $DB_FILE $BACKUP_DIR/fangtang_$DATE.db
+cp $DB_FILE $BACKUP_DIR/ciliAI_$DATE.db
 
 # 压缩备份
-tar -czf $BACKUP_DIR/fangtang_$DATE.tar.gz -C $(dirname $DB_FILE) $(basename $DB_FILE)
+tar -czf $BACKUP_DIR/ciliAI_$DATE.tar.gz -C $(dirname $DB_FILE) $(basename $DB_FILE)
 
 # 删除原文件备份（保留压缩包）
-rm $BACKUP_DIR/fangtang_$DATE.db
+rm $BACKUP_DIR/ciliAI_$DATE.db
 
 # 清理过期备份
 find $BACKUP_DIR -name "*.tar.gz" -mtime +$KEEP_DAYS -delete
 
 # 上传到远程存储（可选）
-# aws s3 cp $BACKUP_DIR/fangtang_$DATE.tar.gz s3://your-bucket/backups/
+# aws s3 cp $BACKUP_DIR/ciliAI_$DATE.tar.gz s3://your-bucket/backups/
 
-echo "[$(date)] Backup completed: fangtang_$DATE.tar.gz"
+echo "[$(date)] Backup completed: ciliAI_$DATE.tar.gz"
 ```
 
 ```bash
 # 添加执行权限
-chmod +x /var/scripts/backup_fangtang.sh
+chmod +x /var/scripts/backup_ciliAI.sh
 ```
 
 #### 5.3.3 设置定时任务
@@ -1003,7 +1003,7 @@ chmod +x /var/scripts/backup_fangtang.sh
 crontab -e
 
 # 添加定时任务（每天凌晨3点执行）
-0 3 * * * /var/scripts/backup_fangtang.sh >> /var/log/fangtang_backup.log 2>&1
+0 3 * * * /var/scripts/backup_ciliAI.sh >> /var/log/ciliAI_backup.log 2>&1
 
 # 保存退出
 ```
@@ -1017,13 +1017,13 @@ crontab -e
 pm2 stop all
 
 # 步骤2：备份当前数据库
-cp fangtang.db fangtang_current.db
+cp ciliAI.db ciliAI_current.db
 
 # 步骤3：恢复备份
-tar -xzf /path/to/fangtang_backup_20260412_030000.tar.gz
+tar -xzf /path/to/ciliAI_backup_20260412_030000.tar.gz
 
 # 步骤4：验证数据
-sqlite3 fangtang.db "SELECT COUNT(*) FROM users;"
+sqlite3 ciliAI.db "SELECT COUNT(*) FROM users;"
 
 # 步骤5：重启应用
 pm2 restart all
@@ -1033,10 +1033,10 @@ pm2 restart all
 
 ```bash
 # 从S3下载备份
-aws s3 cp s3://your-bucket/backups/fangtang_20260412.tar.gz /tmp/
+aws s3 cp s3://your-bucket/backups/ciliAI_20260412.tar.gz /tmp/
 
 # 解压
-tar -xzf /tmp/fangtang_20260412.tar.gz -C /var/www/fangtang/fangtang/
+tar -xzf /tmp/ciliAI_20260412.tar.gz -C /var/www/ciliAI/ciliAI/
 
 # 重启
 pm2 restart all
@@ -1050,14 +1050,14 @@ SQLite需要定期维护：
 
 ```bash
 # 连接数据库执行VACUUM
-sqlite3 fangtang.db "VACUUM;"
+sqlite3 ciliAI.db "VACUUM;"
 ```
 
 #### 5.5.2 分析查询
 
 ```bash
 # 开启查询分析
-sqlite3 fangtang.db "EXPLAIN QUERY PLAN SELECT * FROM users WHERE invite_code = '12345678';"
+sqlite3 ciliAI.db "EXPLAIN QUERY PLAN SELECT * FROM users WHERE invite_code = '12345678';"
 ```
 
 ---
@@ -1068,9 +1068,9 @@ sqlite3 fangtang.db "EXPLAIN QUERY PLAN SELECT * FROM users WHERE invite_code = 
 
 | 服务名称 | 类型 | 端口 | 技术栈 | 启动方式 |
 |---------|------|------|--------|---------|
-| **fangtang-main** | API服务 | 5001 | Flask + Gunicorn | Docker/PM2 |
-| **fadmin-api** | API服务 | 5002 | Flask | Docker/PM2 |
-| **fadmin-frontend** | Web服务 | 3001 | Vite/Nginx | Nginx |
+| **ciliAI-main** | API服务 | 5001 | Flask + Gunicorn | Docker/PM2 |
+| **ruoyi-api** | API服务 | 5002 | Flask | Docker/PM2 |
+| **ruoyi-frontend** | Web服务 | 3001 | Vite/Nginx | Nginx |
 
 ### 6.2 使用PM2管理服务
 
@@ -1089,27 +1089,27 @@ pm2 --version
 **用户应用后端**：
 
 ```bash
-cd /var/www/fangtang/fangtang
+cd /var/www/ciliAI/ciliAI
 source venv/bin/activate
 
 pm2 start gunicorn \
-  --name fangtang-main \
+  --name ciliAI-main \
   --workers 4 \
   --bind 0.0.0.0:5001 \
   --timeout 120 \
-  --access-logfile /var/log/fangtang/access.log \
-  --error-logfile /var/log/fangtang/error.log \
+  --access-logfile /var/log/ciliAI/access.log \
+  --error-logfile /var/log/ciliAI/error.log \
   -- app:app
 ```
 
 **管理后台后端**：
 
 ```bash
-cd /var/www/fangtang/fadmin
+cd /var/www/ciliAI/ruoyi
 source venv/bin/activate
 
 pm2 start python \
-  --name fadmin-api \
+  --name ruoyi-api \
   -- app.py
 ```
 
@@ -1120,21 +1120,21 @@ pm2 start python \
 pm2 status
 
 # 查看日志
-pm2 logs fangtang-main
-pm2 logs fadmin-api
+pm2 logs ciliAI-main
+pm2 logs ruoyi-api
 
 # 重启服务
-pm2 restart fangtang-main
-pm2 restart fadmin-api
+pm2 restart ciliAI-main
+pm2 restart ruoyi-api
 
 # 重启所有服务
 pm2 restart all
 
 # 停止服务
-pm2 stop fangtang-main
+pm2 stop ciliAI-main
 
 # 删除服务
-pm2 delete fangtang-main
+pm2 delete ciliAI-main
 
 # 保存PM2配置
 pm2 save
@@ -1151,17 +1151,17 @@ pm2 startup
 module.exports = {
   apps: [
     {
-      name: 'fangtang-main',
+      name: 'ciliAI-main',
       script: 'venv/bin/gunicorn',
       args: '--bind 0.0.0.0:5001 --workers 4 --timeout 120 app:app',
-      cwd: '/var/www/fangtang/fangtang',
+      cwd: '/var/www/ciliAI/ciliAI',
       interpreter: 'none',
       env: {
         NODE_ENV: 'production',
         PYTHONUNBUFFERED: '1'
       },
-      error_file: '/var/log/fangtang/fangtang-error.log',
-      out_file: '/var/log/fangtang/fangtang-out.log',
+      error_file: '/var/log/ciliAI/ciliAI-error.log',
+      out_file: '/var/log/ciliAI/ciliAI-out.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       merge_logs: true,
       autorestart: true,
@@ -1169,17 +1169,17 @@ module.exports = {
       max_memory_restart: '1G'
     },
     {
-      name: 'fadmin-api',
+      name: 'ruoyi-api',
       script: 'venv/bin/python',
       args: 'app.py',
-      cwd: '/var/www/fangtang/fadmin',
+      cwd: '/var/www/ciliAI/ruoyi',
       interpreter: 'none',
       env: {
         NODE_ENV: 'production',
         PYTHONUNBUFFERED: '1'
       },
-      error_file: '/var/log/fangtang/fadmin-error.log',
-      out_file: '/var/log/fangtang/fadmin-out.log',
+      error_file: '/var/log/ciliAI/ruoyi-error.log',
+      out_file: '/var/log/ciliAI/ruoyi-out.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
       merge_logs: true,
       autorestart: true,
@@ -1203,26 +1203,26 @@ pm2 startup
 
 ### 6.3 使用Systemd管理服务
 
-创建systemd服务文件 `/etc/systemd/system/fangtang-main.service`：
+创建systemd服务文件 `/etc/systemd/system/ciliAI-main.service`：
 
 ```ini
 [Unit]
-Description=Fangtang AI Main Application
+Description=ciliAI AI Main Application
 After=network.target
 
 [Service]
 Type=notify
 User=www-data
 Group=www-data
-WorkingDirectory=/var/www/fangtang/fangtang
-Environment="PATH=/var/www/fangtang/fangtang/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
+WorkingDirectory=/var/www/ciliAI/ciliAI
+Environment="PATH=/var/www/ciliAI/ciliAI/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
 Environment="PYTHONUNBUFFERED=1"
-ExecStart=/var/www/fangtang/fangtang/venv/bin/gunicorn \
+ExecStart=/var/www/ciliAI/ciliAI/venv/bin/gunicorn \
     --bind 0.0.0.0:5001 \
     --workers 4 \
     --timeout 120 \
-    --access-logfile /var/log/fangtang/access.log \
-    --error-logfile /var/log/fangtang/error.log \
+    --access-logfile /var/log/ciliAI/access.log \
+    --error-logfile /var/log/ciliAI/error.log \
     --daemon \
     app:app
 Restart=on-failure
@@ -1237,16 +1237,16 @@ WantedBy=multi-user.target
 sudo systemctl daemon-reload
 
 # 启用服务
-sudo systemctl enable fangtang-main
+sudo systemctl enable ciliAI-main
 
 # 启动服务
-sudo systemctl start fangtang-main
+sudo systemctl start ciliAI-main
 
 # 查看状态
-sudo systemctl status fangtang-main
+sudo systemctl status ciliAI-main
 
 # 重启服务
-sudo systemctl restart fangtang-main
+sudo systemctl restart ciliAI-main
 ```
 
 ---
@@ -1257,7 +1257,7 @@ sudo systemctl restart fangtang-main
 
 #### 7.1.1 用户应用端配置
 
-**文件**：`fangtang/.env`
+**文件**：`ciliAI/.env`
 
 ```bash
 # 火山引擎AccessKey（必需）
@@ -1273,7 +1273,7 @@ FLASK_ENV=production
 LOG_LEVEL=INFO
 
 # 数据库路径（可选）
-DATABASE_PATH=fangtang.db
+DATABASE_PATH=ciliAI.db
 ```
 
 #### 7.1.2 管理后台端配置
@@ -1284,7 +1284,7 @@ DATABASE_PATH=fangtang.db
 
 #### 7.2.1 端口修改
 
-**用户应用端**（`fangtang/app.py`）：
+**用户应用端**（`ciliAI/app.py`）：
 
 ```python
 # 第1353行
@@ -1293,7 +1293,7 @@ if __name__ == '__main__':
     # 修改 port=5001 为所需端口
 ```
 
-**管理后台后端**（`fadmin/app.py`）：
+**管理后台后端**（`ruoyi/app.py`）：
 
 ```python
 # 第398行
@@ -1302,7 +1302,7 @@ if __name__ == '__main__':
     # 修改 port=5002 为所需端口
 ```
 
-**管理后台前端**（`fadmin/vite.config.js`）：
+**管理后台前端**（`ruoyi/vite.config.js`）：
 
 ```javascript
 server: {
@@ -1316,7 +1316,7 @@ server: {
 如果需要允许特定域名访问：
 
 ```python
-# fangtang/app.py
+# ciliAI/app.py
 from flask_cors import CORS
 
 # 允许所有域名
@@ -1334,7 +1334,7 @@ CORS(app, resources={
 
 ```bash
 # 验证Python环境变量
-cd /var/www/fangtang/fangtang
+cd /var/www/ciliAI/ciliAI
 source venv/bin/activate
 python -c "import os; from dotenv import load_dotenv; load_dotenv(); print(f'VOLC_AK: {os.getenv(\"VOLC_AK\")}')"
 
@@ -1355,10 +1355,10 @@ python -c "from app import app; print(f'Debug: {app.debug}')"
 | 3 | 管理后台后端运行 | `curl http://localhost:5002/` | 返回HTML页面 | ☐ |
 | 4 | 管理后台登录 | `curl -X POST http://localhost:5002/api/admin/login` | 返回token | ☐ |
 | 5 | 管理后台前端 | `curl http://localhost:3001/` | 返回HTML页面 | ☐ |
-| 6 | 数据库连接 | `sqlite3 fangtang.db "SELECT COUNT(*) FROM users;"` | 返回数字 | ☐ |
+| 6 | 数据库连接 | `sqlite3 ciliAI.db "SELECT COUNT(*) FROM users;"` | 返回数字 | ☐ |
 | 7 | 邀请码验证 | 使用默认邀请码登录 | 登录成功 | ☐ |
 | 8 | Nginx代理 | `curl http://localhost/admin/` | 访问管理后台 | ☐ |
-| 9 | 日志文件 | 检查 `/var/log/fangtang/` | 无错误日志 | ☐ |
+| 9 | 日志文件 | 检查 `/var/log/ciliAI/` | 无错误日志 | ☐ |
 | 10 | 防火墙 | 检查端口开放 | 5001/5002/3001开放 | ☐ |
 
 ### 8.2 验证脚本
@@ -1367,10 +1367,10 @@ python -c "from app import app; print(f'Debug: {app.debug}')"
 
 ```bash
 #!/bin/bash
-# 方塘AI部署验证脚本
+# CiliAI部署验证脚本
 
 echo "=========================================="
-echo "   方塘AI短剧平台 - 部署验证脚本"
+echo "   CiliAI短剧平台 - 部署验证脚本"
 echo "=========================================="
 echo ""
 
@@ -1408,7 +1408,7 @@ check_service "管理后台前端" "http://localhost:3001/" "200"
 
 # 验证数据库
 echo -n "检查数据库... "
-if sqlite3 /var/www/fangtang/fangtang/fangtang.db "SELECT COUNT(*) FROM users;" > /dev/null 2>&1; then
+if sqlite3 /var/www/ciliAI/ciliAI/ciliAI.db "SELECT COUNT(*) FROM users;" > /dev/null 2>&1; then
     echo -e "${GREEN}✓ 通过${NC}"
 else
     echo -e "${RED}✗ 失败${NC}"
@@ -1447,8 +1447,8 @@ chmod +x /var/scripts/verify_deployment.sh
 
 | 日志类型 | 路径 | 说明 |
 |---------|------|------|
-| **应用日志** | `/var/log/fangtang/access.log` | 访问日志 |
-| **错误日志** | `/var/log/fangtang/error.log` | 错误日志 |
+| **应用日志** | `/var/log/ciliAI/access.log` | 访问日志 |
+| **错误日志** | `/var/log/ciliAI/error.log` | 错误日志 |
 | **PM2日志** | `~/.pm2/logs/` | PM2进程日志 |
 | **Docker日志** | `docker logs <container>` | Docker容器日志 |
 
@@ -1458,8 +1458,8 @@ chmod +x /var/scripts/verify_deployment.sh
 
 ```python
 # 在启动命令中添加
---access-logfile /var/log/fangtang/access.log
---error-logfile /var/log/fangtang/error.log
+--access-logfile /var/log/ciliAI/access.log
+--error-logfile /var/log/ciliAI/error.log
 --log-level info
 ```
 
@@ -1535,8 +1535,8 @@ netstat -tlnp | grep 5001
 
 2. 检查日志
 ```bash
-pm2 logs fangtang-main
-docker logs fangtang-app
+pm2 logs ciliAI-main
+docker logs ciliAI-app
 ```
 
 3. 检查环境变量
@@ -1559,7 +1559,7 @@ python -c "import os; from dotenv import load_dotenv; load_dotenv(); print(os.ge
 
 1. 检查是否有其他进程访问数据库
 ```bash
-lsof /var/www/fangtang/fangtang/fangtang.db
+lsof /var/www/ciliAI/ciliAI/ciliAI.db
 ```
 
 2. 检查是否有未关闭的数据库连接
@@ -1589,7 +1589,7 @@ df -h
 
 2. 检查数据库性能
 ```bash
-sqlite3 fangtang.db "PRAGMA integrity_check;"
+sqlite3 ciliAI.db "PRAGMA integrity_check;"
 ```
 
 3. 检查慢查询
@@ -1729,7 +1729,7 @@ sudo nginx -t
 
 #### 11.1.2 备份内容
 
-- 数据库文件（`fangtang.db`）
+- 数据库文件（`ciliAI.db`）
 - 配置文件（`.env`）
 - 上传文件（`uploads/`）
 - 静态资源（`public/`）
@@ -1740,11 +1740,11 @@ sudo nginx -t
 
 ```bash
 #!/bin/bash
-# 方塘AI完整备份脚本
+# CiliAI完整备份脚本
 
 # 配置
-BACKUP_DIR="/var/backups/fangtang"
-SOURCE_DIR="/var/www/fangtang"
+BACKUP_DIR="/var/backups/ciliAI"
+SOURCE_DIR="/var/www/ciliAI"
 DATE=$(date +%Y%m%d_%H%M%S)
 KEEP_LOCAL_DAYS=7
 KEEP_REMOTE_DAYS=30
@@ -1754,28 +1754,28 @@ mkdir -p $BACKUP_DIR
 
 # 备份数据库
 echo "[$(date)] Backing up database..."
-cp $SOURCE_DIR/fangtang/fangtang.db $BACKUP_DIR/fangtang.db.$DATE
+cp $SOURCE_DIR/ciliAI/ciliAI.db $BACKUP_DIR/ciliAI.db.$DATE
 
 # 备份上传文件
 echo "[$(date)] Backing up uploads..."
-tar -czf $BACKUP_DIR/uploads.$DATE.tar.gz -C $SOURCE_DIR/fadmin uploads
+tar -czf $BACKUP_DIR/uploads.$DATE.tar.gz -C $SOURCE_DIR/ruoyi uploads
 
 # 创建完整备份
 echo "[$(date)] Creating full backup..."
-tar -czf $BACKUP_DIR/fangtang_full.$DATE.tar.gz \
+tar -czf $BACKUP_DIR/ciliAI_full.$DATE.tar.gz \
     -C $SOURCE_DIR \
-    fangtang/fangtang.db \
-    fangtang/.env \
-    fadmin/uploads
+    ciliAI/ciliAI.db \
+    ciliAI/.env \
+    ruoyi/uploads
 
 # 清理本地旧备份
 find $BACKUP_DIR -name "*.db.*" -mtime +$KEEP_LOCAL_DAYS -delete
 find $BACKUP_DIR -name "*.tar.gz" -mtime +$KEEP_LOCAL_DAYS -delete
 
 # 上传到远程存储（示例：S3）
-# aws s3 cp $BACKUP_DIR/fangtang_full.$DATE.tar.gz s3://your-bucket/backups/
+# aws s3 cp $BACKUP_DIR/ciliAI_full.$DATE.tar.gz s3://your-bucket/backups/
 
-echo "[$(date)] Backup completed: fangtang_full.$DATE.tar.gz"
+echo "[$(date)] Backup completed: ciliAI_full.$DATE.tar.gz"
 ```
 
 ```bash
@@ -1789,20 +1789,20 @@ chmod +x /var/scripts/full_backup.sh
 pm2 stop all
 
 # 步骤2：备份当前数据
-cp fangtang.db fangtang.db.emergency
+cp ciliAI.db ciliAI.db.emergency
 
 # 步骤3：下载或获取备份文件
-# aws s3 cp s3://your-bucket/backups/fangtang_full.20260412.tar.gz /tmp/
+# aws s3 cp s3://your-bucket/backups/ciliAI_full.20260412.tar.gz /tmp/
 
 # 步骤4：解压备份
-tar -xzf /tmp/fangtang_full.20260412.tar.gz -C /tmp/
+tar -xzf /tmp/ciliAI_full.20260412.tar.gz -C /tmp/
 
 # 步骤5：恢复文件
-cp /tmp/fangtang.db /var/www/fangtang/fangtang/
-cp /tmp/.env /var/www/fangtang/fangtang/
+cp /tmp/ciliAI.db /var/www/ciliAI/ciliAI/
+cp /tmp/.env /var/www/ciliAI/ciliAI/
 
 # 步骤6：验证数据
-sqlite3 /var/www/fangtang/fangtang/fangtang.db "SELECT COUNT(*) FROM users;"
+sqlite3 /var/www/ciliAI/ciliAI/ciliAI.db "SELECT COUNT(*) FROM users;"
 
 # 步骤7：重启服务
 pm2 restart all
@@ -1845,7 +1845,7 @@ curl http://localhost:5001/api/stats?invite_code=test
 | 脚本名称 | 用途 | 路径 |
 |---------|------|------|
 | `start_gunicorn.sh` | 启动用户应用 | `/var/scripts/` |
-| `backup_fangtang.sh` | 数据库备份 | `/var/scripts/` |
+| `backup_ciliAI.sh` | 数据库备份 | `/var/scripts/` |
 | `full_backup.sh` | 完整备份 | `/var/scripts/` |
 | `verify_deployment.sh` | 部署验证 | `/var/scripts/` |
 
@@ -2023,13 +2023,13 @@ curl http://localhost:5001/api/stats?invite_code=test
 apt update && apt install -y python3.9 python3-pip nodejs npm nginx
 
 # 2. 创建目录
-mkdir -p /var/www/fangtang /var/log/fangtang /var/backups/fangtang
+mkdir -p /var/www/ciliAI /var/log/ciliAI /var/backups/ciliAI
 
 # 3. 上传代码
-# scp -r ./fangtang user@server:/var/www/
+# scp -r ./ciliAI user@server:/var/www/
 
 # 4. 配置用户应用
-cd /var/www/fangtang/fangtang
+cd /var/www/ciliAI/ciliAI
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -2038,7 +2038,7 @@ cp .env.example .env
 nano .env
 
 # 5. 配置管理后台
-cd /var/www/fangtang/fadmin
+cd /var/www/ciliAI/ruoyi
 python3 -m venv venv
 source venv/bin/activate
 pip install flask flask-cors python-dotenv
@@ -2046,7 +2046,7 @@ npm install
 npm run build
 
 # 6. 配置Nginx
-sudo ln -s /etc/nginx/sites-available/fangtang /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/ciliAI /etc/nginx/sites-enabled/
 sudo nginx -t
 
 # 7. 启动服务
@@ -2066,29 +2066,29 @@ curl -fsSL https://get.docker.com | sudo -E bash -
 sudo usermod -aG docker $USER
 
 # 2. 创建网络
-docker network create fangtang-network
+docker network create ciliAI-network
 
 # 3. 部署用户应用
-cd /var/www/fangtang/fangtang
-docker build -t fangtang-app:latest .
+cd /var/www/ciliAI/ciliAI
+docker build -t ciliAI-app:latest .
 docker run -d \
-  --name fangtang-app \
+  --name ciliAI-app \
   -p 5001:5001 \
-  --network fangtang-network \
-  -v /var/www/fangtang/data:/app/data \
+  --network ciliAI-network \
+  -v /var/www/ciliAI/data:/app/data \
   --restart always \
-  fangtang-app:latest
+  ciliAI-app:latest
 
 # 4. 部署管理后台
-cd /var/www/fangtang/fadmin
-docker build -t fadmin-api:latest .
+cd /var/www/ciliAI/ruoyi
+docker build -t ruoyi-api:latest .
 docker run -d \
-  --name fadmin-api \
+  --name ruoyi-api \
   -p 5002:5002 \
-  --network fangtang-network \
-  -v /var/www/fangtang/fadmin/uploads:/app/uploads \
+  --network ciliAI-network \
+  -v /var/www/ciliAI/ruoyi/uploads:/app/uploads \
   --restart always \
-  fadmin-api:latest
+  ruoyi-api:latest
 
 # 5. 验证
 docker ps
@@ -2109,5 +2109,8 @@ curl http://localhost:5001/
 
 **文档版本**：1.0  
 **最后更新**：2026-04-12  
-**维护者**：方塘AI技术团队  
+**维护者**：CiliAI技术团队  
 **文档审核**：待定
+
+
+

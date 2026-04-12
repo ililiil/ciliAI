@@ -1,8 +1,8 @@
-# 方塘AI短剧平台 - 项目启动说明书
+﻿# CiliAI短剧平台 - 项目启动说明书
 
 ## 文档信息
 
-- **项目名称**：方塘AI短剧平台
+- **项目名称**：CiliAI短剧平台
 - **版本**：0.0.6
 - **编写日期**：2026-04-12
 - **文档用途**：项目启动与配置指南
@@ -25,7 +25,7 @@
 
 ### 1.1 项目组成
 
-方塘AI短剧平台由以下四大组件构成：
+CiliAI短剧平台由以下四大组件构成：
 
 | 组件名称 | 类型 | 端口 | 功能描述 |
 |---------|------|------|---------|
@@ -43,27 +43,27 @@
 └────────────────────────────┬────────────────────────────────┘
                              │
 ┌────────────────────────────▼────────────────────────────────┐
-│                      方塘AI短剧平台                           │
+│                      CiliAI短剧平台                           │
 │  ┌─────────────────────────────────────────────────────┐   │
-│  │                  用户应用端 (fangtang/)               │   │
+│  │                  用户应用端 (ciliAI/)               │   │
 │  │  ┌──────────────┐    ┌──────────────────────────┐  │   │
 │  │  │  Vue.js 3.5  │    │      Flask API          │  │   │
 │  │  │  Element Plus │    │      (端口: 5001)        │  │   │
 │  │  │  Vite 6.0     │    │  ┌──────────────┐       │  │   │
 │  │  └──────────────┘    │  │   SQLite DB  │       │  │   │
-│  │         │             │  │ fangtang.db │       │  │   │
+│  │         │             │  │ ciliAI.db │       │  │   │
 │  │         └────────────▶│  └──────────────┘       │  │   │
 │  │                       └──────────────────────────┘  │   │
 │  └─────────────────────────────────────────────────────┘   │
 │                                                            │
 │  ┌─────────────────────────────────────────────────────┐   │
-│  │                管理后台端 (fadmin/)                  │   │
+│  │                管理后台端 (ruoyi/)                  │   │
 │  │  ┌──────────────┐    ┌──────────────────────────┐  │   │
 │  │  │  Vue.js 3.4  │    │      Flask API          │  │   │
 │  │  │  Pinia       │    │      (端口: 5002)        │  │   │
 │  │  │  Vite 5.1    │    │  ┌──────────────┐       │  │   │
 │  │  └──────┬───────┘    │  │   SQLite DB  │       │  │   │
-│  │         │             │  │ fangtang.db │       │  │   │
+│  │         │             │  │ ciliAI.db │       │  │   │
 │  │         └────────────▶│  └──────────────┘       │  │   │
 │  └─────────────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
@@ -72,9 +72,9 @@
 ### 1.3 目录结构总览
 
 ```
-d:\fangtang\
+d:\ciliAI\
 │
-├── fangtang\                          # 用户应用端（主应用）
+├── ciliAI\                          # 用户应用端（主应用）
 │   ├── src\                           # Vue前端源码
 │   │   ├── components\                # 可复用组件
 │   │   ├── views\                     # 页面视图
@@ -90,9 +90,9 @@ d:\fangtang\
 │   ├── package.json                   # Node依赖
 │   ├── vite.config.js                 # Vite配置
 │   ├── .env                          # 环境变量配置
-│   └── fangtang.db                   # SQLite数据库文件
+│   └── ciliAI.db                   # SQLite数据库文件
 │
-├── fadmin\                            # 管理后台端
+├── ruoyi\                            # 管理后台端
 │   ├── src\                           # Vue前端源码
 │   │   ├── api\                       # API调用封装
 │   │   ├── router\                    # 路由配置
@@ -115,7 +115,7 @@ d:\fangtang\
 ### 2.1 目录结构详解
 
 ```
-fangtang\                              # 用户应用端根目录
+ciliAI\                              # 用户应用端根目录
 │
 ├── src\                              # Vue前端源码目录
 │   ├── components\                   # Vue组件目录
@@ -235,7 +235,7 @@ fangtang\                              # 用户应用端根目录
 │
 ├── deploy.sh                        # Linux部署脚本
 │
-└── fangtang.db                      # 【重要】SQLite数据库文件
+└── ciliAI.db                      # 【重要】SQLite数据库文件
     表：users, projects, generation_records, 
         chat_messages, compute_power_logs, invite_codes, ip_works
 ```
@@ -245,7 +245,7 @@ fangtang\                              # 用户应用端根目录
 | 文件路径 | 类型 | 功能说明 | 运维重要性 |
 |---------|------|---------|----------|
 | `app.py` | Python | Flask主应用，包含所有API接口 | ★★★★★ 核心 |
-| `fangtang.db` | SQLite | 数据库文件，存储所有业务数据 | ★★★★★ 关键 |
+| `ciliAI.db` | SQLite | 数据库文件，存储所有业务数据 | ★★★★★ 关键 |
 | `.env` | 配置文件 | 火山引擎API密钥配置 | ★★★★★ 敏感 |
 | `requirements.txt` | 依赖清单 | Python依赖包列表 | ★★★★ 高 |
 | `package.json` | 依赖清单 | Node.js依赖包列表 | ★★★★ 高 |
@@ -258,7 +258,7 @@ fangtang\                              # 用户应用端根目录
 
 ```powershell
 # 步骤1：打开终端，进入用户应用端目录
-cd d:\fangtang\fangtang
+cd d:\ciliAI\ciliAI
 
 # 步骤2：运行启动脚本
 start.bat
@@ -296,7 +296,7 @@ start.bat
 
 ```powershell
 # 步骤1：进入用户应用端目录
-cd d:\fangtang\fangtang
+cd d:\ciliAI\ciliAI
 
 # 步骤2：创建虚拟环境（如已有则跳过）
 python -m venv venv
@@ -308,7 +308,7 @@ python -m venv venv
 pip install -r requirements.txt
 
 # 步骤5：配置环境变量（创建.env文件）
-# 文件路径：d:\fangtang\fangtang\.env
+# 文件路径：d:\ciliAI\ciliAI\.env
 # 内容：
 # VOLC_AK=你的AccessKeyID
 # VOLC_SK=你的SecretAccessKey
@@ -319,13 +319,13 @@ python app.py
 
 **验证启动成功**：
 
-访问 http://localhost:5001，应该显示方塘AI登录页面。
+访问 http://localhost:5001，应该显示CiliAI登录页面。
 
 #### 方式三：Docker启动
 
 ```bash
 # 步骤1：进入用户应用端目录
-cd d:\fangtang\fangtang
+cd d:\ciliAI\ciliAI
 
 # 步骤2：创建环境变量文件
 cp .env.example .env
@@ -345,7 +345,7 @@ docker-compose logs -f
 ### 3.1 目录结构详解
 
 ```
-fadmin\                               # 管理后台端根目录
+ruoyi\                               # 管理后台端根目录
 │
 ├── src\                              # Vue前端源码目录
 │   ├── api\                          # API调用封装目录
@@ -431,7 +431,7 @@ fadmin\                               # 管理后台端根目录
 
 ```powershell
 # 打开终端，进入管理后台目录
-cd d:\fangtang\fadmin
+cd d:\ciliAI\ruoyi
 
 # 激活虚拟环境（如有）
 # .\venv\Scripts\activate
@@ -469,7 +469,7 @@ curl -X POST http://localhost:5002/api/admin/login ^
 
 ```powershell
 # 新开终端，进入管理后台目录
-cd d:\fangtang\fadmin
+cd d:\ciliAI\ruoyi
 
 # 安装Node依赖（首次运行）
 npm install
@@ -507,18 +507,18 @@ VITE ready in 1153 ms
 | 属性 | 值 |
 |-----|-----|
 | **数据库类型** | SQLite 3 |
-| **数据库文件** | `fangtang/fangtang.db` |
+| **数据库文件** | `ciliAI/ciliAI.db` |
 | **初始化方式** | 首次启动自动创建 |
-| **数据文件位置** | `d:\fangtang\fangtang\fangtang.db` |
+| **数据文件位置** | `d:\ciliAI\ciliAI\ciliAI.db` |
 
 ### 4.2 数据库连接配置
 
 #### 主应用数据库连接
 
-**文件**：`fangtang/app.py` 第23行
+**文件**：`ciliAI/app.py` 第23行
 
 ```python
-DATABASE = 'fangtang.db'  # 相对路径，相对于app.py所在目录
+DATABASE = 'ciliAI.db'  # 相对路径，相对于app.py所在目录
 ```
 
 **连接配置**：
@@ -538,18 +538,18 @@ def get_db():
 
 #### 管理后台数据库连接
 
-**文件**：`fadmin/app.py` 第18行
+**文件**：`ruoyi/app.py` 第18行
 
 ```python
-DATABASE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'fangtang', 'fangtang.db')
-# 绝对路径：d:\fangtang\fangtang\fangtang.db
+DATABASE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'ciliAI', 'ciliAI.db')
+# 绝对路径：d:\ciliAI\ciliAI\ciliAI.db
 ```
 
 ### 4.3 数据库初始化脚本
 
 #### 主应用初始化
 
-**位置**：`fangtang/app.py` 第47-286行
+**位置**：`ciliAI/app.py` 第47-286行
 
 ```python
 def init_db():
@@ -589,7 +589,7 @@ init_db()
 
 #### 管理后台初始化
 
-**位置**：`fadmin/app.py` 第367-396行
+**位置**：`ruoyi/app.py` 第367-396行
 
 ```python
 def init_db():
@@ -786,10 +786,10 @@ CREATE TABLE ip_works (
 # Linux: pm2 stop all
 
 # 步骤2：备份现有数据库
-copy d:\fangtang\fangtang\fangtang.db d:\fangtang\fangtang\fangtang_backup.db
+copy d:\ciliAI\ciliAI\ciliAI.db d:\ciliAI\ciliAI\ciliAI_backup.db
 
 # 步骤3：删除数据库文件
-del d:\fangtang\fangtang\fangtang.db
+del d:\ciliAI\ciliAI\ciliAI.db
 
 # 步骤4：重启应用（会自动创建新数据库）
 python app.py
@@ -799,7 +799,7 @@ python app.py
 
 ```bash
 # 使用sqlite3命令验证
-sqlite3 d:\fangtang\fangtang\fangtang.db ".tables"
+sqlite3 d:\ciliAI\ciliAI\ciliAI.db ".tables"
 
 # 预期输出：
 # chat_messages    compute_power_logs    generation_records
@@ -815,9 +815,9 @@ sqlite3 d:\fangtang\fangtang\fangtang.db ".tables"
 
 | 服务名称 | 类型 | 端口 | 技术栈 | 启动文件 |
 |---------|------|------|--------|---------|
-| **用户应用后端** | API服务 | 5001 | Flask + SQLite | fangtang/app.py |
-| **管理后台后端** | API服务 | 5002 | Flask + SQLite | fadmin/app.py |
-| **管理后台前端** | Web服务 | 3001 | Vite + Vue | fadmin/ (npm) |
+| **用户应用后端** | API服务 | 5001 | Flask + SQLite | ciliAI/app.py |
+| **管理后台后端** | API服务 | 5002 | Flask + SQLite | ruoyi/app.py |
+| **管理后台前端** | Web服务 | 3001 | Vite + Vue | ruoyi/ (npm) |
 
 ### 5.2 用户应用后端服务
 
@@ -825,12 +825,12 @@ sqlite3 d:\fangtang\fangtang\fangtang.db ".tables"
 
 | 属性 | 值 |
 |-----|-----|
-| **服务名称** | fangtang-main |
+| **服务名称** | ciliAI-main |
 | **监听端口** | 5001 |
 | **启动命令** | `python app.py` |
-| **工作目录** | `d:\fangtang\fangtang` |
+| **工作目录** | `d:\ciliAI\ciliAI` |
 | **配置文件** | `.env`, `app.py`, `requirements.txt` |
-| **数据文件** | `fangtang.db` |
+| **数据文件** | `ciliAI.db` |
 | **依赖环境** | Python 3.9+, Flask, 火山引擎SDK |
 
 #### 核心功能
@@ -847,14 +847,14 @@ sqlite3 d:\fangtang\fangtang\fangtang.db ".tables"
 **Windows环境**：
 
 ```powershell
-cd d:\fangtang\fangtang
+cd d:\ciliAI\ciliAI
 python app.py
 ```
 
 **Linux环境**：
 
 ```bash
-cd /var/www/fangtang/fangtang
+cd /var/www/ciliAI/ciliAI
 source venv/bin/activate
 python app.py
 ```
@@ -862,7 +862,7 @@ python app.py
 **Docker环境**：
 
 ```bash
-cd d:\fangtang\fangtang
+cd d:\ciliAI\ciliAI
 docker-compose up -d
 ```
 
@@ -886,12 +886,12 @@ curl http://localhost:5001/api/stats?invite_code=test
 
 | 属性 | 值 |
 |-----|-----|
-| **服务名称** | fangtang-admin-api |
+| **服务名称** | ciliAI-admin-api |
 | **监听端口** | 5002 |
 | **启动命令** | `python app.py` |
-| **工作目录** | `d:\fangtang\fadmin` |
+| **工作目录** | `d:\ciliAI\ruoyi` |
 | **配置文件** | `app.py` |
-| **数据文件** | `fangtang.db`（共享用户端数据库） |
+| **数据文件** | `ciliAI.db`（共享用户端数据库） |
 | **依赖环境** | Python 3.9+, Flask |
 
 #### 核心功能
@@ -907,14 +907,14 @@ curl http://localhost:5001/api/stats?invite_code=test
 **Windows环境**：
 
 ```powershell
-cd d:\fangtang\fadmin
+cd d:\ciliAI\ruoyi
 python app.py
 ```
 
 **Linux环境**：
 
 ```bash
-cd /var/www/fangtang/fadmin
+cd /var/www/ciliAI/ruoyi
 source venv/bin/activate
 python app.py
 ```
@@ -956,10 +956,10 @@ curl -X POST http://localhost:5002/api/admin/login \
 
 | 属性 | 值 |
 |-----|-----|
-| **服务名称** | fangtang-admin-frontend |
+| **服务名称** | ciliAI-admin-frontend |
 | **监听端口** | 3001 |
 | **启动命令** | `npm run dev` |
-| **工作目录** | `d:\fangtang\fadmin` |
+| **工作目录** | `d:\ciliAI\ruoyi` |
 | **构建命令** | `npm run build` |
 | **配置文件** | `vite.config.js`, `package.json` |
 | **依赖环境** | Node.js 16+, npm 8+ |
@@ -974,7 +974,7 @@ curl -X POST http://localhost:5002/api/admin/login \
 #### 启动步骤
 
 ```powershell
-cd d:\fangtang\fadmin
+cd d:\ciliAI\ruoyi
 
 # 首次运行需要安装依赖
 npm install
@@ -1014,7 +1014,7 @@ npm run dev
 **操作**：
 
 ```powershell
-cd d:\fangtang\fangtang
+cd d:\ciliAI\ciliAI
 python app.py
 ```
 
@@ -1049,7 +1049,7 @@ curl -X POST http://localhost:5001/api/verify-invite-code \
 **操作**：
 
 ```powershell
-cd d:\fangtang\fadmin
+cd d:\ciliAI\ruoyi
 python app.py
 ```
 
@@ -1085,7 +1085,7 @@ curl -X POST http://localhost:5002/api/admin/login \
 **操作**：
 
 ```powershell
-cd d:\fangtang\fadmin
+cd d:\ciliAI\ruoyi
 npm run dev
 ```
 
@@ -1106,7 +1106,7 @@ npm run dev
 | 管理后台后端 | 访问主页 | 返回HTML | `curl http://localhost:5002/` |
 | 管理后台后端 | 登录API | 登录成功 | `curl -X POST http://localhost:5002/api/admin/login -d "..."` |
 | 管理后台前端 | 访问主页 | 显示登录页面 | 浏览器访问 http://localhost:3001 |
-| 数据库 | 查询表 | 返回表列表 | `sqlite3 fangtang.db ".tables"` |
+| 数据库 | 查询表 | 返回表列表 | `sqlite3 ciliAI.db ".tables"` |
 
 ### 6.4 启动时间预估
 
@@ -1166,7 +1166,7 @@ ModuleNotFoundError: No module named 'flask'
 
 ```bash
 # 进入虚拟环境
-cd d:\fangtang\fangtang
+cd d:\ciliAI\ciliAI
 .\venv\Scripts\activate
 
 # 安装依赖
@@ -1185,7 +1185,7 @@ WARNING: VOLC_AK or VOLC_SK not found in environment variables!
 
 ```powershell
 # 创建环境变量文件
-cd d:\fangtang\fangtang
+cd d:\ciliAI\ciliAI
 notepad .env
 
 # 填入以下内容：
@@ -1234,7 +1234,7 @@ npm ERR! syscall symlink
 #### 解决方案
 
 ```powershell
-cd d:\fangtang\fadmin
+cd d:\ciliAI\ruoyi
 
 # 删除缓存
 rmdir /s /q node_modules
@@ -1290,15 +1290,15 @@ server: {
 
 ```powershell
 # 启动用户应用后端
-cd d:\fangtang\fangtang
+cd d:\ciliAI\ciliAI
 start.bat
 
 # 启动管理后台后端（新终端）
-cd d:\fangtang\fadmin
+cd d:\ciliAI\ruoyi
 python app.py
 
 # 启动管理后台前端（新终端）
-cd d:\fangtang\fadmin
+cd d:\ciliAI\ruoyi
 npm run dev
 ```
 
@@ -1306,17 +1306,17 @@ npm run dev
 
 ```bash
 # 使用PM2管理
-cd /var/www/fangtang/fangtang
-pm2 start python --name "fangtang-main" -- app.py
+cd /var/www/ciliAI/ciliAI
+pm2 start python --name "ciliAI-main" -- app.py
 
-cd /var/www/fangtang/fadmin
-pm2 start python --name "fangtang-admin" -- app.py
+cd /var/www/ciliAI/ruoyi
+pm2 start python --name "ciliAI-admin" -- app.py
 ```
 
 ### Docker环境
 
 ```bash
-cd d:\fangtang\fangtang
+cd d:\ciliAI\ciliAI
 docker-compose up -d
 ```
 
@@ -1334,4 +1334,7 @@ docker-compose up -d
 
 **文档版本**：1.0  
 **最后更新**：2026-04-12  
-**维护者**：方塘AI技术团队
+**维护者**：CiliAI技术团队
+
+
+

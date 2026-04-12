@@ -2,7 +2,7 @@
   <el-container class="layout-container">
     <el-aside width="220px" class="layout-aside">
       <div class="logo">
-        <span class="logo-text">方塘AI</span>
+        <span class="logo-text">CiliAI</span>
         <span class="logo-sub">后台管理</span>
       </div>
       <el-menu

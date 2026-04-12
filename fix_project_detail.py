@@ -4,7 +4,7 @@
 import sys
 
 def fix_file():
-    filepath = r'D:\fangtang\fangtang\src\views\ProjectDetail.vue'
+    filepath = r'D:\fangtang\ciliAI\src\views\ProjectDetail.vue'
 
     try:
         with open(filepath, 'r', encoding='utf-8') as f:

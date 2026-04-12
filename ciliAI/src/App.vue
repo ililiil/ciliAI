@@ -2,7 +2,7 @@
   <div class="layout-container">
     <div class="layout-sidebar flex flex-col relative">
       <div style="display: flex; align-items: center; justify-content: center; height: 63px; padding: 0 16px;">
-        <div style="text-align: center; font-size: 1.5rem; font-weight: bold; color: white;">磁力AI</div>
+        <div style="text-align: center; font-size: 1.5rem; font-weight: bold; color: white;">CiliAI</div>
       </div>
       <div class="flex-1 flex flex-col min-h-0 overflow-y-auto">
         <el-menu

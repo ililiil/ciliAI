@@ -1,14 +1,14 @@
-# 作品管理系统整合完成报告
+﻿# 作品管理系统整合完成报告
 
 ## 一、系统架构分析
 
 ### 1. 前端展示层 (用户端)
-- **位置**: `d:\fangtang\fangtang\src\views\Works.vue`
+- **位置**: `d:\ciliAI\ciliAI\src\views\Works.vue`
 - **功能**: 展示作品列表给用户
 - **字段**: ID、封面、作品名称、学员名称、算力成本、制作时长、状态
 
 ### 2. 后台管理层 (管理端)
-- **位置**: `d:\fangtang\fadmin\src\views\Works.vue`
+- **位置**: `d:\ciliAI\ruoyi\src\views\Works.vue`
 - **功能**: 完整的CRUD管理功能
 - **字段**: 包含前端所有字段 + 市场售价、版权信息、标签、作品简介
 
@@ -71,7 +71,7 @@
 - **状态**: ✓ 正常
 
 ### 前端API调用
-**位置**: `d:\fangtang\fadmin\src\api\admin.js`
+**位置**: `d:\ciliAI\ruoyi\src\api\admin.js`
 - ✓ getWorks() - 获取列表
 - ✓ createWork() - 创建作品
 - ✓ updateWork() - 更新作品
@@ -159,11 +159,11 @@
 ### 启动命令
 ```bash
 # 后端服务
-cd d:\fangtang\fadmin
+cd d:\ciliAI\ruoyi
 python app.py
 
 # 前端服务
-cd d:\fangtang\fadmin
+cd d:\ciliAI\ruoyi
 npm run dev
 ```
 
@@ -182,3 +182,5 @@ npm run dev
 **整合状态**: 已完成并验证通过
 **系统状态**: 正常运行
 **建议**: 可以投入生产使用
+
+

@@ -1,8 +1,8 @@
-import sqlite3
+﻿import sqlite3
 import json
 import random
 
-DATABASE = 'fangtang/fangtang.db'
+DATABASE = 'ciliAI/fangtang.db'
 
 def add_ip_works():
     conn = sqlite3.connect(DATABASE)
@@ -28,136 +28,136 @@ def add_ip_works():
 
     ip_works = [
         {
-            'title': '星际穿越者',
-            'student_name': '方塘官方',
+            'title': '鏄熼檯绌胯秺鑰?,
+            'student_name': 'CiliAI瀹樻柟',
             'image': 'https://picsum.photos/400/600?random=1001',
-            'tags': ['科幻', '冒险', 'AI生成'],
+            'tags': ['绉戝够', '鍐掗櫓', 'AI鐢熸垚'],
             'cost': '150',
             'duration': '180',
             'price': '299',
-            'copyright': '番茄小说',
-            'introduction': '讲述人类在宇宙中寻找新家园的史诗故事。'
+            'copyright': '鐣寗灏忚',
+            'introduction': '璁茶堪浜虹被鍦ㄥ畤瀹欎腑瀵绘壘鏂板鍥殑鍙茶瘲鏁呬簨銆?
         },
         {
-            'title': '时光旅行者',
-            'student_name': '方塘官方',
+            'title': '鏃跺厜鏃呰鑰?,
+            'student_name': '鏂瑰瀹樻柟',
             'image': 'https://picsum.photos/400/600?random=1002',
-            'tags': ['悬疑', '穿越', 'AI生成'],
+            'tags': ['鎮枒', '绌胯秺', 'AI鐢熸垚'],
             'cost': '140',
             'duration': '160',
             'price': '259',
-            'copyright': '番茄小说',
-            'introduction': '一个普通人意外获得穿越时空的能力，改变命运的故事。'
+            'copyright': '鐣寗灏忚',
+            'introduction': '涓€涓櫘閫氫汉鎰忓鑾峰緱绌胯秺鏃剁┖鐨勮兘鍔涳紝鏀瑰彉鍛借繍鐨勬晠浜嬨€?
         },
         {
-            'title': '都市猎人',
-            'student_name': '方塘官方',
+            'title': '閮藉競鐚庝汉',
+            'student_name': '鏂瑰瀹樻柟',
             'image': 'https://picsum.photos/400/600?random=1003',
-            'tags': ['动作', '都市', 'AI生成'],
+            'tags': ['鍔ㄤ綔', '閮藉競', 'AI鐢熸垚'],
             'cost': '135',
             'duration': '150',
             'price': '249',
-            'copyright': '番茄小说',
-            'introduction': '现代都市中的神秘猎人，面对黑暗势力的挑战。'
+            'copyright': '鐣寗灏忚',
+            'introduction': '鐜颁唬閮藉競涓殑绁炵鐚庝汉锛岄潰瀵归粦鏆楀娍鍔涚殑鎸戞垬銆?
         },
         {
-            'title': '修仙之路',
-            'student_name': '方塘官方',
+            'title': '淇粰涔嬭矾',
+            'student_name': '鏂瑰瀹樻柟',
             'image': 'https://picsum.photos/400/600?random=1004',
-            'tags': ['玄幻', '修仙', 'AI生成'],
+            'tags': ['鐜勫够', '淇粰', 'AI鐢熸垚'],
             'cost': '160',
             'duration': '200',
             'price': '399',
-            'copyright': '番茄小说',
-            'introduction': '一个平凡少年的修仙之旅，历经磨难终成大道。'
+            'copyright': '鐣寗灏忚',
+            'introduction': '涓€涓钩鍑″皯骞寸殑淇粰涔嬫梾锛屽巻缁忕（闅剧粓鎴愬ぇ閬撱€?
         },
         {
-            'title': '爱情公寓',
-            'student_name': '方塘官方',
+            'title': '鐖辨儏鍏瘬',
+            'student_name': '鏂瑰瀹樻柟',
             'image': 'https://picsum.photos/400/600?random=1005',
-            'tags': ['爱情', '喜剧', 'AI生成'],
+            'tags': ['鐖辨儏', '鍠滃墽', 'AI鐢熸垚'],
             'cost': '120',
             'duration': '140',
             'price': '199',
-            'copyright': '番茄小说',
-            'introduction': '一群年轻人在公寓里的欢乐日常和爱情故事。'
+            'copyright': '鐣寗灏忚',
+            'introduction': '涓€缇ゅ勾杞讳汉鍦ㄥ叕瀵撻噷鐨勬涔愭棩甯稿拰鐖辨儏鏁呬簨銆?
         },
         {
-            'title': '盗墓笔记',
-            'student_name': '方塘官方',
+            'title': '鐩楀绗旇',
+            'student_name': '鏂瑰瀹樻柟',
             'image': 'https://picsum.photos/400/600?random=1006',
-            'tags': ['探险', '悬疑', 'AI生成'],
+            'tags': ['鎺㈤櫓', '鎮枒', 'AI鐢熸垚'],
             'cost': '145',
             'duration': '170',
             'price': '279',
-            'copyright': '番茄小说',
-            'introduction': '深入古墓，探索未知世界的冒险故事。'
+            'copyright': '鐣寗灏忚',
+            'introduction': '娣卞叆鍙ゅ锛屾帰绱㈡湭鐭ヤ笘鐣岀殑鍐掗櫓鏁呬簨銆?
         },
         {
-            'title': '宫廷剧',
-            'student_name': '方塘官方',
+            'title': '瀹环鍓?,
+            'student_name': '鏂瑰瀹樻柟',
             'image': 'https://picsum.photos/400/600?random=1007',
-            'tags': ['古风', '宫斗', 'AI生成'],
+            'tags': ['鍙ら', '瀹枟', 'AI鐢熸垚'],
             'cost': '155',
             'duration': '185',
             'price': '329',
-            'copyright': '番茄小说',
-            'introduction': '古代宫廷中的权谋与爱情，精彩的宫斗大戏。'
+            'copyright': '鐣寗灏忚',
+            'introduction': '鍙や唬瀹环涓殑鏉冭皨涓庣埍鎯咃紝绮惧僵鐨勫鏂楀ぇ鎴忋€?
         },
         {
-            'title': '未来世界',
-            'student_name': '方塘官方',
+            'title': '鏈潵涓栫晫',
+            'student_name': '鏂瑰瀹樻柟',
             'image': 'https://picsum.photos/400/600?random=1008',
-            'tags': ['科幻', '赛博朋克', 'AI生成'],
+            'tags': ['绉戝够', '璧涘崥鏈嬪厠', 'AI鐢熸垚'],
             'cost': '165',
             'duration': '195',
             'price': '359',
-            'copyright': '番茄小说',
-            'introduction': '2088年的未来世界，高科技与人类情感的碰撞。'
+            'copyright': '鐣寗灏忚',
+            'introduction': '2088骞寸殑鏈潵涓栫晫锛岄珮绉戞妧涓庝汉绫绘儏鎰熺殑纰版挒銆?
         },
         {
-            'title': '武侠风云',
-            'student_name': '方塘官方',
+            'title': '姝︿緺椋庝簯',
+            'student_name': '鏂瑰瀹樻柟',
             'image': 'https://picsum.photos/400/600?random=1009',
-            'tags': ['武侠', '动作', 'AI生成'],
+            'tags': ['姝︿緺', '鍔ㄤ綔', 'AI鐢熸垚'],
             'cost': '148',
             'duration': '175',
             'price': '289',
-            'copyright': '番茄小说',
-            'introduction': '江湖恩怨，刀光剑影，一代武侠的传奇故事。'
+            'copyright': '鐣寗灏忚',
+            'introduction': '姹熸箹鎭╂€紝鍒€鍏夊墤褰憋紝涓€浠ｆ渚犵殑浼犲鏁呬簨銆?
         },
         {
-            'title': '校园青春',
-            'student_name': '方塘官方',
+            'title': '鏍″洯闈掓槬',
+            'student_name': '鏂瑰瀹樻柟',
             'image': 'https://picsum.photos/400/600?random=1010',
-            'tags': ['青春', '校园', 'AI生成'],
+            'tags': ['闈掓槬', '鏍″洯', 'AI鐢熸垚'],
             'cost': '110',
             'duration': '130',
             'price': '179',
-            'copyright': '番茄小说',
-            'introduction': '青春洋溢的校园生活，友情与爱情的美好时光。'
+            'copyright': '鐣寗灏忚',
+            'introduction': '闈掓槬娲嬫孩鐨勬牎鍥敓娲伙紝鍙嬫儏涓庣埍鎯呯殑缇庡ソ鏃跺厜銆?
         },
         {
-            'title': '破案高手',
-            'student_name': '方塘官方',
+            'title': '鐮存楂樻墜',
+            'student_name': '鏂瑰瀹樻柟',
             'image': 'https://picsum.photos/400/600?random=1011',
-            'tags': ['刑侦', '悬疑', 'AI生成'],
+            'tags': ['鍒戜睛', '鎮枒', 'AI鐢熸垚'],
             'cost': '138',
             'duration': '158',
             'price': '269',
-            'copyright': '番茄小说',
-            'introduction': '天才侦探破解一个又一个棘手的案件。'
+            'copyright': '鐣寗灏忚',
+            'introduction': '澶╂墠渚︽帰鐮磋В涓€涓張涓€涓鎵嬬殑妗堜欢銆?
         },
         {
-            'title': '商战精英',
-            'student_name': '方塘官方',
+            'title': '鍟嗘垬绮捐嫳',
+            'student_name': '鏂瑰瀹樻柟',
             'image': 'https://picsum.photos/400/600?random=1012',
-            'tags': ['商战', '职场', 'AI生成'],
+            'tags': ['鍟嗘垬', '鑱屽満', 'AI鐢熸垚'],
             'cost': '142',
             'duration': '165',
             'price': '259',
-            'copyright': '番茄小说',
-            'introduction': '商场如战场，精英们的智慧与胆识较量。'
+            'copyright': '鐣寗灏忚',
+            'introduction': '鍟嗗満濡傛垬鍦猴紝绮捐嫳浠殑鏅烘収涓庤儐璇嗚緝閲忋€?
         }
     ]
 
@@ -177,13 +177,14 @@ def add_ip_works():
                 work['copyright'],
                 work['introduction']
             ))
-            print(f"✓ 添加作品: {work['title']}")
+            print(f"鉁?娣诲姞浣滃搧: {work['title']}")
         except Exception as e:
-            print(f"✗ 添加作品失败 {work['title']}: {e}")
+            print(f"鉁?娣诲姞浣滃搧澶辫触 {work['title']}: {e}")
 
     conn.commit()
     conn.close()
-    print("\n成功添加 IP 版权作品！")
+    print("\n鎴愬姛娣诲姞 IP 鐗堟潈浣滃搧锛?)
 
 if __name__ == '__main__':
     add_ip_works()
+

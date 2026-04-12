@@ -5,7 +5,7 @@ result = subprocess.run(
     [sys.executable, 'app.py'],
     capture_output=True,
     text=True,
-    cwd=r'd:\fangtang\fangtang'
+    cwd=r'd:\fangtang\ciliAI'
 )
 
 with open(r'd:\fangtang\flask_output.txt', 'w', encoding='utf-8') as f:

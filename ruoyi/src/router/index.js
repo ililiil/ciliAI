@@ -46,7 +46,7 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  document.title = `${to.meta.title || '方塘AI'} - 后台管理`
+  document.title = `${to.meta.title || 'CiliAI'} - 后台管理`
   const token = localStorage.getItem('admin_token')
   if (to.path !== '/login' && !token) {
     next('/login')

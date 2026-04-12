@@ -71,7 +71,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="学员名称" prop="student_name">
-              <el-input v-model="form.student_name" placeholder="请输入学员名称" />
+              <el-input v-model="form.student_name" placeholder="请输入学员姓名" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -99,7 +99,7 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="算力成本" prop="cost">
-              <el-input v-model="form.cost" placeholder="如：约1000算力/分钟" />
+              <el-input v-model="form.cost" placeholder="如：1000算力/分钟" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -111,13 +111,13 @@
 
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="市场售价" prop="price">
+            <el-form-item label="市场价格" prop="price">
               <el-input v-model="form.price" placeholder="如：150-300元/分钟" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="版权信息" prop="copyright">
-              <el-input v-model="form.copyright" placeholder="如：归方塘所有" />
+              <el-input v-model="form.copyright" placeholder="如：归CiliAI所有" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -126,10 +126,10 @@
           <el-select v-model="form.tags" multiple placeholder="请选择标签" style="width: 100%;">
             <el-option label="AI动画" value="AI动画" />
             <el-option label="AI真人" value="AI真人" />
-            <el-option label="仙侠" value="仙侠" />
-            <el-option label="年代" value="年代" />
-            <el-option label="现代言情" value="现代言情" />
-            <el-option label="玄幻" value="玄幻" />
+            <el-option label="古风" value="古风" />
+            <el-option label="穿越" value="穿越" />
+            <el-option label="现代科幻" value="现代科幻" />
+            <el-option label="悬疑" value="悬疑" />
             <el-option label="都市" value="都市" />
           </el-select>
         </el-form-item>
@@ -213,7 +213,7 @@ const form = reactive({
   cost: '',
   duration: '',
   price: '',
-  copyright: '归方塘所有',
+  copyright: '归CiliAI所有',
   tags: [],
   introduction: '',
   category: 'IP版权库'
@@ -221,7 +221,7 @@ const form = reactive({
 
 const rules = {
   title: [{ required: true, message: '请输入作品名称', trigger: 'blur' }],
-  student_name: [{ required: true, message: '请输入学员名称', trigger: 'blur' }],
+  student_name: [{ required: true, message: '请输入学员姓名', trigger: 'blur' }],
   image: [{ required: true, message: '请输入封面图片URL', trigger: 'blur' }]
 }
 
@@ -250,7 +250,7 @@ const showCreateDialog = () => {
   form.cost = ''
   form.duration = ''
   form.price = ''
-  form.copyright = '归方塘所有'
+  form.copyright = '归CiliAI所有'
   form.tags = []
   form.introduction = ''
   form.category = 'IP版权库'

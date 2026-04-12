@@ -1,4 +1,4 @@
-# 方塘 AI 平台 - 数据为空问题诊断报告
+﻿# CiliAI 平台 - 数据为空问题诊断报告
 
 ## 📋 问题概述
 
@@ -13,12 +13,12 @@
 ## 🔍 根本原因分析
 
 ### 问题 1: API 端点缺失
-- **位置**: [fangtang/src/views/Home.vue:L141](file:///d:/fangtang/fangtang/src/views/Home.vue#L141)
+- **位置**: [ciliAI/src/views/Home.vue:L141](file:///d:/ciliAI/ciliAI/src/views/Home.vue#L141)
 - **原因**: 前端硬编码调用 `http://localhost:5002/api/works`
 - **影响**: 用户端无法获取 IP 作品列表
 
 ### 问题 2: 数据库表不存在
-- **位置**: [fangtang/app.py](file:///d:/fangtang/fangtang/app.py#L156-178)
+- **位置**: [ciliAI/app.py](file:///d:/ciliAI/ciliAI/app.py#L156-178)
 - **原因**: `init_db()` 函数缺少 `ip_works` 表的创建代码
 - **影响**: `/api/works` 端点查询失败，返回空响应
 
@@ -30,18 +30,18 @@
 ## ✅ 修复方案
 
 ### 修复 1: 在主应用中添加 `/api/works` 端点
-**文件**: [fangtang/app.py:L1311-1347](file:///d:/fangtang/fangtang/app.py#L1311-1347)
+**文件**: [ciliAI/app.py:L1311-1347](file:///d:/ciliAI/ciliAI/app.py#L1311-1347)
 - 新增 `get_public_works()` 函数
 - 从 `ip_works` 表读取数据
 - 添加完善的错误处理
 
 ### 修复 2: 添加数据库表创建代码
-**文件**: [fangtang/app.py:L158-176](file:///d:/fangtang/fangtang/app.py#L158-176)
+**文件**: [ciliAI/app.py:L158-176](file:///d:/ciliAI/ciliAI/app.py#L158-176)
 - 在 `init_db()` 函数中添加 `ip_works` 表创建语句
 - 表结构与管理后台完全兼容
 
 ### 修复 3: 修改前端 API 调用
-**文件**: [fangtang/src/views/Home.vue:L141](file:///d:/fangtang/fangtang/src/views/Home.vue#L141)
+**文件**: [ciliAI/src/views/Home.vue:L141](file:///d:/ciliAI/ciliAI/src/views/Home.vue#L141)
 - 从 `http://localhost:5002/api/works` 改为 `/api/works`
 - 利用 Vite 代理自动转发到本地后端
 
@@ -55,7 +55,7 @@
 
 ### 数据库状态
 ```bash
-✓ 数据库文件: fangtang/fangtang.db
+✓ 数据库文件: ciliAI/ciliAI.db
 ✓ ip_works 表存在
 ✓ 记录数量: 17 条
   - IP版权库: 13 条
@@ -73,7 +73,7 @@
 
 ### 1. 重启后端服务
 ```bash
-cd d:\fangtang\fangtang
+cd d:\ciliAI\ciliAI
 # 停止现有服务（如果正在运行）
 # Ctrl+C
 
@@ -105,7 +105,7 @@ http://localhost:5001/api/works
 ### 4. 前端测试
 ```bash
 # 开发模式
-cd d:\fangtang\fangtang
+cd d:\ciliAI\ciliAI
 npm run dev
 
 # 访问 http://localhost:3000
@@ -118,7 +118,7 @@ npm run dev
 ```
 ┌─────────────────┐
 │   用户端前端     │ 端口 3000
-│  (fangtang)     │
+│  (ciliAI)     │
 └────────┬────────┘
          │ /api/* (Vite 代理)
          ▼
@@ -135,7 +135,7 @@ npm run dev
          ▼
 ┌─────────────────┐
 │  SQLite 数据库   │
-│ fangtang.db     │
+│ ciliAI.db     │
 │                 │
 │ ✓ users         │
 │ ✓ projects      │
@@ -170,12 +170,12 @@ npm run dev
 ## ⚠️ 注意事项
 
 1. **数据库路径**: 两个应用使用同一个数据库文件
-   - fadmin: `d:/fangtang/fangtang/fangtang.db`
-   - fangtang: `d:/fangtang/fangtang/fangtang.db`
+   - ruoyi: `d:/ciliAI/ciliAI/ciliAI.db`
+   - ciliAI: `d:/ciliAI/ciliAI/ciliAI.db`
 
 2. **服务端口**: 避免端口冲突
-   - fadmin: 5002
-   - fangtang: 5001
+   - ruoyi: 5002
+   - ciliAI: 5001
 
 3. **CORS 配置**: 两个应用都已启用 CORS
 
@@ -183,12 +183,14 @@ npm run dev
 
 ## 📚 相关文件
 
-- 主应用: [fangtang/app.py](file:///d:/fangtang/fangtang/app.py)
-- 前端首页: [fangtang/src/views/Home.vue](file:///d:/fangtang/fangtang/src/views/Home.vue)
-- 前端项目页: [fangtang/src/views/Works.vue](file:///d:/fangtang/fangtang/src/views/Works.vue)
-- Vite 配置: [fangtang/vite.config.js](file:///d:/fangtang/fangtang/vite.config.js)
-- 测试脚本: [test_api_fix.py](file:///d:/fangtang/test_api_fix.py)
+- 主应用: [ciliAI/app.py](file:///d:/ciliAI/ciliAI/app.py)
+- 前端首页: [ciliAI/src/views/Home.vue](file:///d:/ciliAI/ciliAI/src/views/Home.vue)
+- 前端项目页: [ciliAI/src/views/Works.vue](file:///d:/ciliAI/ciliAI/src/views/Works.vue)
+- Vite 配置: [ciliAI/vite.config.js](file:///d:/ciliAI/ciliAI/vite.config.js)
+- 测试脚本: [test_api_fix.py](file:///d:/ciliAI/test_api_fix.py)
 
 ## 🎉 结论
 
 **问题已完全修复！** 所有测试通过，数据库和 API 均正常工作。请重启后端服务以应用数据库更新。
+
+

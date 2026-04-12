@@ -2,7 +2,7 @@ import subprocess
 import sys
 import os
 
-os.chdir(r'd:\fangtang\fangtang')
+os.chdir(r'd:\fangtang\ciliAI')
 os.environ['PYTHONUNBUFFERED'] = '1'
 
 proc = subprocess.Popen(
@@ -10,7 +10,7 @@ proc = subprocess.Popen(
     stdout=subprocess.PIPE,
     stderr=subprocess.STDOUT,
     text=True,
-    cwd=r'd:\fangtang\fangtang'
+    cwd=r'd:\fangtang\ciliAI'
 )
 
 lines = []
@@ -24,6 +24,6 @@ except:
 
 proc.wait(timeout=5)
 
-with open(r'd:\fangtang\fangtang\flask_debug.txt', 'w', encoding='utf-8') as f:
+with open(r'd:\fangtang\ciliAI\flask_debug.txt', 'w', encoding='utf-8') as f:
     f.write(f"Return code: {proc.returncode}\n")
     f.write("\n".join(lines))

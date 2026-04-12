@@ -1,11 +1,11 @@
-# 方塘AI短剧平台 - 项目结构整理
+﻿# CiliAI短剧平台 - 项目结构整理
 
 ## 一、项目整体结构
 
 ```
-d:\fangtang\                          # 项目根目录
+d:\ciliAI\                          # 项目根目录
 │
-├── fangtang\                          # 用户应用端（主应用）
+├── ciliAI\                          # 用户应用端（主应用）
 │   ├── src\                           # Vue前端源码
 │   ├── public\                        # 静态资源
 │   ├── dist\                         # 生产构建产物
@@ -20,9 +20,9 @@ d:\fangtang\                          # 项目根目录
 │   ├── docker-compose.yml            # Docker编排
 │   ├── start.bat                      # Windows启动脚本
 │   ├── deploy.sh                     # Linux部署脚本
-│   └── fangtang.db                   # SQLite数据库
+│   └── ciliAI.db                   # SQLite数据库
 │
-├── fadmin\                            # 管理后台端
+├── ruoyi\                            # 管理后台端
 │   ├── src\                          # Vue前端源码
 │   ├── templates\                    # HTML模板
 │   ├── uploads\                      # 上传文件目录
@@ -44,7 +44,7 @@ d:\fangtang\                          # 项目根目录
 ### 2.1 目录树
 
 ```
-fangtang\
+ciliAI\
 │
 ├── src\                              # Vue前端源码目录
 │   ├── components\                    # 可复用组件
@@ -159,7 +159,7 @@ fangtang\
 ├── deploy.sh                        # Linux部署脚本
 ├── start.bat                       # Windows启动脚本
 │
-└── fangtang.db                     # 【重要】SQLite数据库
+└── ciliAI.db                     # 【重要】SQLite数据库
     表：users, projects, generation_records,
         chat_messages, compute_power_logs, invite_codes, ip_works
 ```
@@ -169,7 +169,7 @@ fangtang\
 | 文件 | 类型 | 功能 | 重要性 |
 |-----|------|------|-------|
 | `app.py` | Python | Flask后端API主应用 | ★★★★★ |
-| `fangtang.db` | SQLite | 数据库文件 | ★★★★★ |
+| `ciliAI.db` | SQLite | 数据库文件 | ★★★★★ |
 | `.env` | 配置 | API密钥配置 | ★★★★★ |
 | `requirements.txt` | 依赖 | Python依赖清单 | ★★★★ |
 | `package.json` | 依赖 | Node依赖清单 | ★★★★ |
@@ -183,7 +183,7 @@ fangtang\
 ### 3.1 目录树
 
 ```
-fadmin\
+ruoyi\
 │
 ├── src\                              # Vue前端源码
 │   ├── api\                          # API调用封装
@@ -255,7 +255,7 @@ fadmin\
 
 ### 4.1 数据库文件
 
-- **位置**：`fangtang/fangtang.db`
+- **位置**：`ciliAI/ciliAI.db`
 - **类型**：SQLite 3
 - **初始化**：首次启动自动创建
 
@@ -369,15 +369,15 @@ fadmin\
 
 | 文件 | 位置 | 用途 |
 |-----|------|------|
-| `Dockerfile` | fangtang/ | 用户应用Docker配置 |
-| `docker-compose.yml` | fangtang/ | Docker编排配置 |
+| `Dockerfile` | ciliAI/ | 用户应用Docker配置 |
+| `docker-compose.yml` | ciliAI/ | Docker编排配置 |
 
 ### 7.2 部署脚本
 
 | 文件 | 位置 | 用途 |
 |-----|------|------|
-| `start.bat` | fangtang/ | Windows一键启动 |
-| `deploy.sh` | fangtang/ | Linux部署脚本 |
+| `start.bat` | ciliAI/ | Windows一键启动 |
+| `deploy.sh` | ciliAI/ | Linux部署脚本 |
 
 ---
 
@@ -385,7 +385,7 @@ fadmin\
 
 ### 8.1 环境变量
 
-**文件**：`fangtang/.env`
+**文件**：`ciliAI/.env`
 
 ```bash
 # 火山引擎密钥
@@ -397,11 +397,13 @@ VOLC_SK=你的SecretAccessKey
 
 | 服务 | 端口 | 配置文件 |
 |-----|------|---------|
-| 用户应用后端 | 5001 | fangtang/app.py |
-| 管理后台后端 | 5002 | fadmin/app.py |
-| 管理后台前端 | 3001 | fadmin/vite.config.js |
+| 用户应用后端 | 5001 | ciliAI/app.py |
+| 管理后台后端 | 5002 | ruoyi/app.py |
+| 管理后台前端 | 3001 | ruoyi/vite.config.js |
 
 ---
 
 **文档版本**：1.0  
 **最后更新**：2026-04-12
+
+

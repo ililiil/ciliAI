@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0, r'd:\fangtang\fangtang')
+sys.path.insert(0, r'd:\fangtang\ciliAI')
 
 try:
     from app import app

@@ -15,7 +15,7 @@ load_dotenv()
 app = Flask(__name__, static_folder='templates', static_url_path='')
 CORS(app)
 
-DATABASE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'fangtang', 'fangtang.db')
+DATABASE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'ciliAI', 'fangtang.db')
 
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
@@ -261,7 +261,7 @@ def create_work():
     cost = data.get('cost', '')
     duration = data.get('duration', '')
     price = data.get('price', '')
-    copyright = data.get('copyright', '归方塘所有')
+    copyright = data.get('copyright', '归CiliAI所有')
     introduction = data.get('introduction', '')
     category = data.get('category', 'IP版权库')
     

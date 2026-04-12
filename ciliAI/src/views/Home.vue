@@ -146,8 +146,8 @@ const fetchWorks = async () => {
         tags: work.tags ? JSON.parse(work.tags) : []
       }))
       
-      works.value = allWorks.filter(w => !w.student_name || w.student_name === '方塘官方')
-      communityWorks.value = allWorks.filter(w => w.student_name && w.student_name !== '方塘官方')
+      works.value = allWorks.filter(w => !w.student_name || w.student_name === 'CiliAI官方')
+      communityWorks.value = allWorks.filter(w => w.student_name && w.student_name !== 'CiliAI官方')
     }
   } catch (error) {
     console.error('获取作品列表失败:', error)

@@ -1,6 +1,6 @@
 import sqlite3
 
-DATABASE = 'fangtang/fangtang.db'
+DATABASE = 'ciliAI/fangtang.db'
 
 def verify_data():
     conn = sqlite3.connect(DATABASE)

@@ -1,7 +1,7 @@
 import sqlite3
 import os
 
-DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fangtang', 'fangtang.db')
+DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ciliAI', 'fangtang.db')
 
 def update_all_works_category():
     if not os.path.exists(DATABASE):
@@ -18,7 +18,7 @@ def update_all_works_category():
 
     updated_count = 0
     for work_id, student_name, current_category in all_works:
-        if not student_name or student_name == '方塘官方' or student_name == 'Fangtang Official':
+        if not student_name or student_name == 'CiliAI官方' or student_name == 'CiliAI Official':
             new_category = 'IP版权库'
         else:
             new_category = '社区分享'

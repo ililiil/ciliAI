@@ -2,7 +2,7 @@
   <div class="login-container">
     <div class="login-box">
       <div class="login-header">
-        <h1>方塘AI</h1>
+        <h1>CiliAI</h1>
         <p>后台管理系统</p>
       </div>
       <el-form :model="form" :rules="rules" ref="formRef" class="login-form">

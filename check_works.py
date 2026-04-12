@@ -1,7 +1,7 @@
 import sqlite3
 import os
 
-DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'fangtang', 'fangtang.db')
+DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'ciliAI', 'fangtang.db')
 
 def check_works():
     if not os.path.exists(DATABASE):
