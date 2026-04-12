@@ -76,7 +76,7 @@
                   <line x1="12" y1="5" x2="12" y2="19"></line>
                   <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
-                鏂板璇?              </button>
+                鏂板璇              </button>
             </div>
             <div class="chat-list">
               <div 
@@ -104,8 +104,8 @@
                 </div>
               </div>
               <div v-if="chatList.length === 0" class="empty-chat-list">
-                <p>鏆傛棤瀵硅瘽璁板綍</p>
-                <p class="hint">鐐瑰嚮"鏂板璇?寮€濮?/p>
+<p></p>
+<p class="hint"></p>
               </div>
             </div>
           </div>
@@ -118,8 +118,8 @@
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                   </svg>
                 </div>
-                <p>寮€濮嬩笌AI瀵硅瘽</p>
-                <p class="hint">杈撳叆鎮ㄧ殑闂锛孉I灏嗕负鎮ㄦ彁渚涘府鍔?/p>
+<p></p>
+                <p class="hint">杈撳叆鎮ㄧ殑闂佽檺锛孉I灏嗕负鎮ㄦ彁渚涘府鍔</p>
               </div>
               <div 
                 v-for="message in currentMessages" 
@@ -139,7 +139,7 @@
                     <span class="loading-dot"></span>
                   </div>
                   <div v-else-if="message.status === 'error'" class="message-status error">
-                    鍙戦€佸け璐?                  </div>
+                    鍙戦€佸け璐                  </div>
                 </div>
               </div>
             </div>
@@ -189,7 +189,7 @@
                 </div>
               </div>
               <div v-if="imageHistory.length === 0" class="empty-history">
-                <p>鏆傛棤鐢熷浘璁板綍</p>
+<p></p>
               </div>
             </div>
           </div>
@@ -199,7 +199,7 @@
               <h3 class="section-title">鐢熷浘鍙傛暟</h3>
               <div class="params-form">
                 <div class="form-item">
-                  <label>鎻愮ず璇?/label>
+                  <label>鎻愮ず璇</label>
                   <el-input
                     v-model="imageParams.prompt"
                     type="textarea"
@@ -243,7 +243,7 @@
                   @click="generateImage"
                   :loading="isGenerating"
                 >
-                  {{ isGenerating ? '鐢熸垚涓?..' : '寮€濮嬬敓鎴? }}
+                  {{ isGenerating ? '鐢熸垚涓?..' : '寮€濮嬬敓鎴?' }}
                 </el-button>
               </div>
             </div>
@@ -258,8 +258,8 @@
                     <polyline points="21 15 16 10 5 21"></polyline>
                   </svg>
                 </div>
-                <p>鏆傛棤鐢熸垚缁撴灉</p>
-                <p class="hint">璁剧疆鍙傛暟鍚庣偣鍑?寮€濮嬬敓鎴?</p>
+<p></p>
+<p class="hint"></p>
               </div>
               <div v-else class="result-grid">
                 <div 
@@ -310,7 +310,7 @@
                 </div>
               </div>
               <div v-if="extendHistory.length === 0" class="empty-history">
-                <p>鏆傛棤鎵╁浘璁板綍</p>
+<p></p>
               </div>
             </div>
           </div>
@@ -339,7 +339,7 @@
                   </el-upload>
                 </div>
                 <div class="form-item">
-                  <label>鎵╁睍鍚庡昂瀵?/label>
+                  <label>鎵╁睍鍚庡昂瀵</label>
                   <el-select v-model="extendParams.size" placeholder="閫夋嫨灏哄">
                     <el-option label="2048 x 2048 (2K)" value="2048x2048" />
                     <el-option label="2304 x 1728 (4:3)" value="2304x1728" />
@@ -348,7 +348,7 @@
                   </el-select>
                 </div>
                 <div class="form-item">
-                  <label>鎻愮ず璇?/label>
+                  <label>鎻愮ず璇</label>
                   <el-input
                     v-model="extendParams.prompt"
                     type="textarea"
@@ -379,8 +379,8 @@
                     <line x1="3" y1="16" x2="21" y2="16"></line>
                   </svg>
                 </div>
-                <p>鏆傛棤鎵╁睍缁撴灉</p>
-                <p class="hint">涓婁紶鍥剧墖鍚庣偣鍑?寮€濮嬫墿灞?</p>
+<p></p>
+<p class="hint"></p>
               </div>
               <div v-else class="result-grid">
                 <div 
@@ -431,7 +431,7 @@
                 </div>
               </div>
               <div v-if="editHistory.length === 0" class="empty-history">
-                <p>鏆傛棤鏀瑰浘璁板綍</p>
+<p></p>
               </div>
             </div>
           </div>
@@ -473,11 +473,11 @@
                     </div>
                   </div>
                   <div class="no-image" v-else>
-                    <p>璇峰厛涓婁紶鍘熷浘</p>
+<p></p>
                   </div>
                 </div>
                 <div class="form-item">
-                  <label>鎻愮ず璇?/label>
+                  <label>鎻愮ず璇</label>
                   <el-input
                     v-model="editParams.prompt"
                     type="textarea"
@@ -505,8 +505,8 @@
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                   </svg>
                 </div>
-                <p>鏆傛棤淇敼缁撴灉</p>
-                <p class="hint">涓婁紶鍥剧墖鍜孧ask鍥惧悗鐐瑰嚮"寮€濮嬩慨鏀?</p>
+<p></p>
+<p class="hint"></p>
               </div>
               <div v-else class="result-grid">
                 <div 
@@ -558,6 +558,9 @@ const route = useRoute()
 const router = useRouter()
 
 const currentInviteCode = inject('currentInviteCode', ref(''))
+
+const accessKeyId = import.meta.env.VITE_VOLC_AK || ''
+const secretAccessKey = import.meta.env.VITE_VOLC_SK || ''
 
 // Dify API 淇℃伅
 const difyApiKey = 'app-l38yBomZ4wAiYktOqJ6kaXfp'
