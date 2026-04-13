@@ -157,7 +157,7 @@ const handleLogin = async () => {
 .input-row {
   display: flex;
   align-items: center;
-  background-color: #2a2a2a;
+  background-color: #BACACB;
   border-radius: 8px;
   margin-bottom: 16px;
   height: 52px;
@@ -171,10 +171,10 @@ const handleLogin = async () => {
   align-items: center;
   gap: 6px;
   padding: 0 16px;
-  color: #fff;
+  color: #425D5F;
   font-size: 16px;
   font-weight: 500;
-  border-right: 1px solid #3a3a3a;
+  border-right: 1px solid #425D5F;
   height: 100%;
   cursor: pointer;
 }
@@ -186,7 +186,7 @@ const handleLogin = async () => {
   background: transparent;
   border: none;
   outline: none;
-  color: #fff;
+  color: #425D5F;
   font-size: 14px;
   padding: 0 16px;
   height: 100%;
@@ -205,17 +205,17 @@ const handleLogin = async () => {
 }
 
 .code-input {
-  background-color: #2a2a2a;
+  background-color: #BACACB;
   border-radius: 8px;
 }
 
 .verify-btn {
   width: 120px;
   height: 52px;
-  background-color: #4a4a4a;
+  background-color: #BACACB;
   border: none;
   border-radius: 8px;
-  color: #fff;
+  color: #425D5F;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -235,8 +235,8 @@ const handleLogin = async () => {
   align-items: center;
   justify-content: center;
   padding: 0 16px;
-  color: #a3e635;
-  border-right: 1px solid #3a3a3a;
+  color: #425D5F;
+  border-right: 1px solid #425D5F;
   height: 100%;
 }
 
@@ -244,10 +244,10 @@ const handleLogin = async () => {
   width: 100%;
   max-width: 300px;
   height: 52px;
-  background: linear-gradient(135deg, #a3e635 0%, #84cc16 100%);
+  background: linear-gradient(135deg, #FAA943 0%, #FDE7A2 100%);
   border: none;
   border-radius: 8px;
-  color: #1d1d1d;
+  color: #425D5F;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
@@ -257,7 +257,7 @@ const handleLogin = async () => {
 
 .login-submit-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(163, 230, 53, 0.3);
+  box-shadow: 0 4px 12px rgba(250, 169, 67, 0.3);
 }
 
 .login-submit-btn:disabled {
@@ -280,17 +280,17 @@ const handleLogin = async () => {
   width: 18px;
   height: 18px;
   border-radius: 4px;
-  border: 2px solid #a3e635;
+  border: 2px solid #425D5F;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  color: #1d1d1d;
+  color: #425D5F;
 }
 
 .checkbox.checked {
-  background-color: #a3e635;
+  background-color: #425D5F;
 }
 
 .auto-login-text {
@@ -301,7 +301,7 @@ const handleLogin = async () => {
 
 <style>
 .login-dialog {
-  --el-dialog-bg-color: #1d1d1d !important;
+  --el-dialog-bg-color: #F8F7F2 !important;
   --el-dialog-border-radius: 12px !important;
   --el-dialog-padding-primary: 0 !important;
 }

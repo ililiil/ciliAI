@@ -100,7 +100,7 @@ const handleCreate = () => {
 
 .form-label {
   display: block;
-  color: #fff;
+  color: #425D5F;
   font-size: 14px;
   font-weight: 500;
   margin-bottom: 12px;
@@ -108,18 +108,18 @@ const handleCreate = () => {
 
 .form-input {
   width: 100%;
-  background-color: #2a2a2a;
+  background-color: #BACACB;
   border: none;
   border-radius: 8px;
   padding: 12px 16px;
-  color: #fff;
+  color: #425D5F;
   font-size: 14px;
   outline: none;
   transition: all 0.3s ease;
 }
 
 .form-input:focus {
-  box-shadow: 0 0 0 2px rgba(163, 230, 53, 0.3);
+  box-shadow: 0 0 0 2px rgba(250, 169, 67, 0.3);
 }
 
 .form-input::placeholder {
@@ -142,25 +142,25 @@ const handleCreate = () => {
 
 .cancel-btn {
   padding: 10px 24px;
-  background-color: #4a4a4a;
+  background-color: #BACACB;
   border: none;
   border-radius: 6px;
-  color: #fff;
+  color: #425D5F;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .cancel-btn:hover {
-  background-color: #5a5a5a;
+  background-color: #425D5F;
 }
 
 .create-btn {
   padding: 10px 24px;
-  background: linear-gradient(135deg, #a3e635 0%, #84cc16 100%);
+  background: linear-gradient(135deg, #FAA943 0%, #FDE7A2 100%);
   border: none;
   border-radius: 6px;
-  color: #1d1d1d;
+  color: #425D5F;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
@@ -169,19 +169,19 @@ const handleCreate = () => {
 
 .create-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(163, 230, 53, 0.3);
+  box-shadow: 0 4px 12px rgba(250, 169, 67, 0.3);
 }
 </style>
 
 <style>
 .create-project-dialog {
-  --el-dialog-bg-color: #1d1d1d !important;
+  --el-dialog-bg-color: #F8F7F2 !important;
   --el-dialog-border-radius: 12px !important;
-  --el-dialog-title-color: #fff !important;
+  --el-dialog-title-color: #425D5F !important;
 }
 
 .create-project-dialog .el-dialog__header {
-  border-bottom: 1px solid #2a2a2a;
+  border-bottom: 1px solid #BACACB;
   padding: 20px 24px;
 }
 

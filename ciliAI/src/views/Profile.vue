@@ -157,7 +157,7 @@ const handleSecurity = (item) => {
 .computing-power {
   margin-top: 15px;
   padding: 15px;
-  background-color: #2a2a2a;
+  background-color: #BACACB;
   border-radius: 8px;
   text-align: center;
 }
@@ -165,14 +165,14 @@ const handleSecurity = (item) => {
 .computing-power h3 {
   margin: 0 0 8px 0;
   font-size: 14px;
-  color: #888;
+  color: #425D5F;
 }
 
 .power-amount {
   margin: 0;
   font-size: 24px;
   font-weight: bold;
-  color: #a3e635;
+  color: #425D5F;
 }
 
 .info-section {

@@ -247,8 +247,9 @@ const tabs = [
 
 const activeTab = ref('all')
 
-// 模拟订单数据
-const orders = ref([
+// 订单数据 - 从 localStorage 读取以与管理后台同步
+const orders = ref([])
+const initialOrders = [
   {
     id: 1,
     title: '现代都市情感短剧制作',
@@ -282,7 +283,21 @@ const orders = ref([
     tags: ['AI动画', '科幻题材'],
     contactCount: 8
   }
-])
+]
+
+// 初始化订单数据
+const initOrders = () => {
+  const storedOrders = localStorage.getItem('admin_orders')
+  if (storedOrders) {
+    orders.value = JSON.parse(storedOrders)
+  } else {
+    orders.value = initialOrders
+    localStorage.setItem('admin_orders', JSON.stringify(initialOrders))
+  }
+}
+
+// 在组件挂载时初始化
+initOrders()
 
 // 根据选中标签筛选订单
 const filteredOrders = computed(() => {
@@ -367,13 +382,13 @@ const handleContact = (order) => {
 .page-title {
   font-size: 24px;
   font-weight: 600;
-  color: #ffffff;
+  color: #425D5F;
   margin: 0;
 }
 
 .publish-btn {
-  background-color: #a3e635;
-  color: #1a1a1a;
+  background-color: #425D5F;
+  color: #F8F7F2;
   border: none;
   padding: 8px 20px;
   border-radius: 4px;
@@ -384,9 +399,9 @@ const handleContact = (order) => {
 }
 
 .publish-btn:hover {
-  background-color: #8bc34a;
+  background-color: #FAA943;
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(163, 230, 53, 0.3);
+  box-shadow: 0 2px 8px rgba(250, 169, 67, 0.3);
 }
 
 /* 标签筛选 */
@@ -409,13 +424,13 @@ const handleContact = (order) => {
 }
 
 .tab-item:hover {
-  color: #a3e635;
-  background-color: rgba(163, 230, 53, 0.1);
+  color: #425D5F;
+  background-color: rgba(250, 169, 67, 0.1);
 }
 
 .tab-item.active {
-  color: #1a1a1a;
-  background-color: #a3e635;
+  color: #F8F7F2;
+  background-color: #425D5F;
   font-weight: 500;
 }
 
@@ -431,17 +446,17 @@ const handleContact = (order) => {
   align-items: center;
   justify-content: center;
   padding: 80px 20px;
-  color: #666;
+  color: #425D5F;
 }
 
 .empty-icon {
   margin-bottom: 16px;
-  color: #444;
+  color: #425D5F;
 }
 
 .empty-text {
   font-size: 14px;
-  color: #666;
+  color: #425D5F;
   margin: 0;
 }
 
@@ -454,7 +469,7 @@ const handleContact = (order) => {
 
 /* 订单卡片 */
 .order-card {
-  background-color: #232323;
+  background-color: #BACACB;
   border-radius: 8px;
   overflow: hidden;
   transition: all 0.3s ease;
@@ -495,18 +510,18 @@ const handleContact = (order) => {
 }
 
 .order-status.recruiting {
-  background-color: #a3e635;
-  color: #1a1a1a;
+  background-color: #425D5F;
+  color: #F8F7F2;
 }
 
 .order-status.pending {
-  background-color: #f59e0b;
-  color: #1a1a1a;
+  background-color: #FDE7A2;
+  color: #425D5F;
 }
 
 .order-status.ended {
-  background-color: #666;
-  color: #fff;
+  background-color: #BACACB;
+  color: #425D5F;
 }
 
 .order-info {
@@ -516,7 +531,7 @@ const handleContact = (order) => {
 .order-title {
   font-size: 16px;
   font-weight: 600;
-  color: #ffffff;
+  color: #425D5F;
   margin: 0 0 12px 0;
   line-height: 1.4;
   overflow: hidden;
@@ -537,11 +552,11 @@ const handleContact = (order) => {
   align-items: center;
   gap: 6px;
   font-size: 13px;
-  color: #999;
+  color: #425D5F;
 }
 
 .meta-item svg {
-  color: #a3e635;
+  color: #425D5F;
 }
 
 .order-footer {
@@ -558,16 +573,16 @@ const handleContact = (order) => {
 }
 
 .tag {
-  background-color: rgba(163, 230, 53, 0.15);
-  color: #a3e635;
+  background-color: rgba(250, 169, 67, 0.15);
+  color: #425D5F;
   font-size: 12px;
   padding: 4px 10px;
   border-radius: 4px;
 }
 
 .contact-btn {
-  background-color: rgba(163, 230, 53, 0.15);
-  color: #a3e635;
+  background-color: rgba(250, 169, 67, 0.15);
+  color: #425D5F;
   font-size: 12px;
   padding: 4px 10px;
   border-radius: 4px;
@@ -577,8 +592,8 @@ const handleContact = (order) => {
 }
 
 .contact-btn:hover {
-  background-color: #a3e635;
-  color: #1a1a1a;
+  background-color: #425D5F;
+  color: #F8F7F2;
 }
 
 /* 响应式设计 */
@@ -614,18 +629,18 @@ const handleContact = (order) => {
 
 /* 发布商单弹窗样式 */
 .publish-dialog {
-  --el-dialog-bg-color: #1a1a1a !important;
+  --el-dialog-bg-color: #F8F7F2 !important;
   --el-dialog-border-radius: 4px !important;
-  --el-dialog-title-color: #fff !important;
+  --el-dialog-title-color: #425D5F !important;
 }
 
 .publish-dialog .el-dialog__header {
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid #BACACB;
   padding: 16px 20px;
 }
 
 .publish-dialog .el-dialog__title {
-  color: #ffffff;
+  color: #425D5F;
   font-size: 16px;
   font-weight: 600;
 }
@@ -634,54 +649,54 @@ const handleContact = (order) => {
   padding: 20px;
   max-height: 80vh;
   overflow-y: auto;
-  background-color: #1a1a1a;
+  background-color: #F8F7F2;
 }
 
 .publish-dialog .el-dialog__footer {
-  border-top: 1px solid #333;
+  border-top: 1px solid #BACACB;
   padding: 16px 20px;
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  background-color: #1a1a1a;
+  background-color: #F8F7F2;
 }
 
 /* 强制覆盖Element Plus对话框背景色 */
 .publish-dialog .el-dialog {
-  background-color: #1a1a1a !important;
+  background-color: #F8F7F2 !important;
   border-radius: 4px !important;
   overflow: hidden;
 }
 
 /* 强制覆盖对话框内容区域背景色 */
 .publish-dialog .el-dialog .el-dialog__body {
-  background-color: #1a1a1a !important;
+  background-color: #F8F7F2 !important;
 }
 
 .publish-dialog .el-dialog .el-dialog__header {
-  background-color: #1a1a1a !important;
+  background-color: #F8F7F2 !important;
 }
 
 .publish-dialog .el-dialog .el-dialog__footer {
-  background-color: #1a1a1a !important;
+  background-color: #F8F7F2 !important;
 }
 
 /* 更高特异性的选择器 */
 .el-overlay .el-overlay-dialog .publish-dialog .el-dialog {
-  background-color: #1a1a1a !important;
+  background-color: #F8F7F2 !important;
 }
 
 /* 针对Element Plus的特定结构 */
 [data-id*="publish-dialog"] .el-dialog,
 .el-dialog[data-view="publish-dialog"],
 .publish-dialog[data-view] .el-dialog {
-  background-color: #1a1a1a !important;
+  background-color: #F8F7F2 !important;
 }
 
 /* 警告框 */
 .warning-box {
-  background-color: rgba(245, 158, 11, 0.2);
-  border: 1px solid #f59e0b;
+  background-color: rgba(250, 169, 67, 0.2);
+  border: 1px solid #FAA943;
   border-radius: 4px;
   padding: 12px;
   margin-bottom: 20px;
@@ -691,7 +706,7 @@ const handleContact = (order) => {
 }
 
 .warning-box .el-icon {
-  color: #f59e0b;
+  color: #FAA943;
   margin-top: 2px;
   font-size: 16px;
 }
@@ -702,7 +717,7 @@ const handleContact = (order) => {
 
 .warning-text p {
   margin: 0 0 4px 0;
-  color: #f59e0b;
+  color: #FAA943;
   font-size: 14px;
   line-height: 1.4;
 }
@@ -725,7 +740,7 @@ const handleContact = (order) => {
 
 /* 表单标签 */
 .publish-dialog .el-form-item__label {
-  color: #66b1ff;
+  color: #425D5F;
   font-weight: 500;
   font-size: 14px;
   margin-bottom: 8px;
@@ -734,8 +749,8 @@ const handleContact = (order) => {
 
 /* 表单输入框 */
 .publish-dialog .el-input__wrapper {
-  background-color: #1a1a1a;
-  border: 1px solid #333;
+  background-color: #F8F7F2;
+  border: 1px solid #BACACB;
   border-radius: 4px;
   padding: 10px 12px;
   box-shadow: none;
@@ -743,54 +758,54 @@ const handleContact = (order) => {
 }
 
 .publish-dialog .el-input__wrapper:hover {
-  border-color: #444;
+  border-color: #425D5F;
   box-shadow: none;
 }
 
 .publish-dialog .el-input__wrapper.is-focus {
-  border-color: #66b1ff;
-  box-shadow: 0 0 0 1px rgba(102, 177, 255, 0.2);
+  border-color: #425D5F;
+  box-shadow: 0 0 0 1px rgba(66, 93, 95, 0.2);
 }
 
 .publish-dialog .el-input__inner {
-  color: #fff;
+  color: #425D5F;
   font-size: 14px;
 }
 
 .publish-dialog .el-input__inner::placeholder {
-  color: #666;
+  color: #425D5F;
 }
 
 /* 选择器 */
 .publish-dialog .el-select__wrapper {
-  background-color: #1a1a1a;
-  border: 1px solid #333;
+  background-color: #F8F7F2;
+  border: 1px solid #BACACB;
   border-radius: 4px;
   padding: 10px 12px;
   box-shadow: none;
 }
 
 .publish-dialog .el-select__wrapper:hover {
-  border-color: #444;
+  border-color: #425D5F;
   box-shadow: none;
 }
 
 .publish-dialog .el-select__wrapper.is-focused {
-  border-color: #66b1ff;
-  box-shadow: 0 0 0 1px rgba(102, 177, 255, 0.2);
+  border-color: #425D5F;
+  box-shadow: 0 0 0 1px rgba(66, 93, 95, 0.2);
 }
 
 .publish-dialog .el-select__placeholder {
-  color: #666;
+  color: #425D5F;
   font-size: 14px;
 }
 
 .publish-dialog .el-select__caret {
-  color: #666;
+  color: #425D5F;
 }
 
 .publish-dialog .el-select__selected-item {
-  color: #fff;
+  color: #425D5F;
 }
 
 /* 日期选择器 */
@@ -800,27 +815,27 @@ const handleContact = (order) => {
 
 .publish-dialog .el-date-editor .el-input__wrapper {
   width: 100%;
-  background-color: #1a1a1a;
-  border: 1px solid #333;
+  background-color: #F8F7F2;
+  border: 1px solid #BACACB;
   border-radius: 4px;
   padding: 10px 12px;
 }
 
 .publish-dialog .el-date-editor .el-input__inner {
-  color: #fff;
+  color: #425D5F;
 }
 
 .publish-dialog .el-date-editor .el-input__prefix {
-  color: #666;
+  color: #425D5F;
 }
 
 /* 文本域 */
 .publish-dialog .el-textarea__inner {
-  background-color: #1a1a1a;
-  border: 1px solid #333;
+  background-color: #F8F7F2;
+  border: 1px solid #BACACB;
   border-radius: 4px;
   padding: 10px 12px;
-  color: #fff;
+  color: #425D5F;
   font-size: 14px;
   resize: none;
   transition: all 0.3s ease;
@@ -828,49 +843,49 @@ const handleContact = (order) => {
 }
 
 .publish-dialog .el-textarea__inner:hover {
-  border-color: #444;
+  border-color: #425D5F;
 }
 
 .publish-dialog .el-textarea__inner:focus {
-  border-color: #66b1ff;
-  box-shadow: 0 0 0 1px rgba(102, 177, 255, 0.2);
+  border-color: #425D5F;
+  box-shadow: 0 0 0 1px rgba(66, 93, 95, 0.2);
 }
 
 .publish-dialog .el-textarea__inner::placeholder {
-  color: #666;
+  color: #425D5F;
 }
 
 /* 上传区域 */
 .upload-area {
-  border: 1px dashed #333;
+  border: 1px dashed #BACACB;
   border-radius: 4px;
   padding: 24px 20px;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  background-color: #1a1a1a;
+  background-color: #F8F7F2;
 }
 
 .upload-area:hover {
-  border-color: #66b1ff;
-  background-color: rgba(102, 177, 255, 0.05);
+  border-color: #425D5F;
+  background-color: rgba(66, 93, 95, 0.05);
 }
 
 .upload-icon {
   font-size: 28px;
-  color: #666;
+  color: #425D5F;
   margin-bottom: 10px;
 }
 
 .upload-text p {
   margin: 0;
-  color: #999;
+  color: #425D5F;
   font-size: 14px;
 }
 
 .upload-text p:last-child {
   font-size: 12px;
-  color: #666;
+  color: #425D5F;
   margin-top: 4px;
 }
 
@@ -886,9 +901,9 @@ const handleContact = (order) => {
 
 .participation-options .el-button {
   flex: 1;
-  border: 1px solid #333;
-  background-color: #1a1a1a;
-  color: #999;
+  border: 1px solid #BACACB;
+  background-color: #F8F7F2;
+  color: #425D5F;
   justify-content: center;
   gap: 8px;
   padding: 8px 12px;
@@ -898,8 +913,8 @@ const handleContact = (order) => {
 }
 
 .participation-options .el-button:hover {
-  border-color: #444;
-  color: #ccc;
+  border-color: #425D5F;
+  color: #425D5F;
 }
 
 .participation-options .el-button.active {
@@ -934,27 +949,27 @@ const handleContact = (order) => {
 }
 
 .publish-dialog .dialog-footer .el-button:not(.submit-btn) {
-  background-color: #333;
-  border: 1px solid #444;
-  color: #fff;
+  background-color: #BACACB;
+  border: 1px solid #BACACB;
+  color: #425D5F;
 }
 
 .publish-dialog .dialog-footer .el-button:not(.submit-btn):hover {
-  background-color: #444;
-  border-color: #555;
+  background-color: #425D5F;
+  border-color: #425D5F;
 }
 
 .publish-dialog .dialog-footer .submit-btn {
-  background-color: #4caf50;
-  border: 1px solid #4caf50;
-  color: #fff;
+  background-color: #425D5F;
+  border: 1px solid #425D5F;
+  color: #F8F7F2;
   font-weight: 500;
 }
 
 .publish-dialog .dialog-footer .submit-btn:hover {
-  background-color: #45a049;
-  border-color: #45a049;
-  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+  background-color: #FAA943;
+  border-color: #FAA943;
+  box-shadow: 0 2px 4px rgba(250, 169, 67, 0.3);
 }
 
 /* 响应式设计 */
@@ -970,17 +985,17 @@ const handleContact = (order) => {
 
 /* 联系弹窗样式 */
 .contact-dialog {
-  --el-dialog-bg-color: #1d1d1d;
-  --el-dialog-header-color: #ffffff;
-  --el-dialog-border-color: #333;
+  --el-dialog-bg-color: #F8F7F2;
+  --el-dialog-header-color: #425D5F;
+  --el-dialog-border-color: #BACACB;
 }
 
 .contact-dialog .el-dialog__header {
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid #BACACB;
 }
 
 .contact-dialog .el-dialog__title {
-  color: #ffffff;
+  color: #425D5F;
   font-size: 18px;
   font-weight: 600;
 }
@@ -991,7 +1006,7 @@ const handleContact = (order) => {
 }
 
 .contact-dialog .el-dialog__footer {
-  border-top: 1px solid #333;
+  border-top: 1px solid #BACACB;
   padding-top: 20px;
 }
 
@@ -1006,7 +1021,7 @@ const handleContact = (order) => {
   width: 200px;
   height: 200px;
   margin-bottom: 20px;
-  background-color: #ffffff;
+  background-color: #F8F7F2;
   padding: 10px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);

@@ -2,7 +2,7 @@
   <div class="layout-container">
     <div class="layout-sidebar flex flex-col relative">
       <div style="display: flex; align-items: center; justify-content: center; height: 63px; padding: 0 16px;">
-        <div style="text-align: center; font-size: 1.5rem; font-weight: bold; color: white;">CiliAI</div>
+        <div style="text-align: center; font-size: 1.5rem; font-weight: bold; color: #425D5F;">CiliAI</div>
       </div>
       <div class="flex-1 flex flex-col min-h-0 overflow-y-auto">
         <el-menu
@@ -11,8 +11,8 @@
           mode="vertical"
           @select="handleMenuSelect"
           background-color="transparent"
-          text-color="#fff"
-          active-text-color="#a3e635"
+          text-color="#425D5F"
+          active-text-color="#425D5F"
           :unique-opened="true"
         >
           <el-menu-item index="1">
@@ -192,15 +192,15 @@ const handleMenuSelect = (index) => {
 .layout-container {
   display: flex;
   height: 100vh;
-  background-color: #1d1d1d;
-  color: #ffffff;
+  background-color: #F8F7F2;
+  color: #425D5F;
   overflow: hidden;
 }
 
 .layout-sidebar {
   width: 200px;
-  border-right: 1px solid #2a2a2a;
-  background-color: #1d1d1d;
+  border-right: 1px solid #BACACB;
+  background-color: #F8F7F2;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -209,7 +209,7 @@ const handleMenuSelect = (index) => {
 
 .sidebar-footer {
   padding: 16px;
-  border-top: 1px solid #2a2a2a;
+  border-top: 1px solid #BACACB;
   margin-top: auto;
 }
 
@@ -222,7 +222,7 @@ const handleMenuSelect = (index) => {
 }
 
 .footer-item:hover {
-  color: #a3e635;
+  color: #425D5F;
 }
 
 .footer-item .el-icon {
@@ -232,22 +232,22 @@ const handleMenuSelect = (index) => {
 
 .footer-item .value {
   margin-left: auto;
-  color: #a3e635;
+  color: #425D5F;
   font-weight: bold;
 }
 
 .footer-login {
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid #2a2a2a;
+  border-top: 1px solid #BACACB;
 }
 
 .footer-login .login-btn {
   width: 100%;
   padding: 10px 16px;
   font-size: 14px;
-  color: #1d1d1d;
-  background-color: #a3e635;
+  color: #F8F7F2;
+  background-color: #FAA943;
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -256,9 +256,9 @@ const handleMenuSelect = (index) => {
 }
 
 .footer-login .login-btn:hover {
-  background-color: #8bc34a;
+  background-color: #FDE7A2;
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(163, 230, 53, 0.3);
+  box-shadow: 0 2px 8px rgba(250, 169, 67, 0.3);
 }
 
 .footer-login .logout-text {
@@ -266,13 +266,13 @@ const handleMenuSelect = (index) => {
   text-align: center;
   padding: 10px 16px;
   font-size: 14px;
-  color: #999;
+  color: #425D5F;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .footer-login .logout-text:hover {
-  color: #a3e635;
+  color: #FAA943;
 }
 
 .layout-main {
@@ -284,12 +284,12 @@ const handleMenuSelect = (index) => {
 
 .layout-main .layout-header {
   height: 60px;
-  border-bottom: 1px solid #2a2a2a;
+  border-bottom: 1px solid #BACACB;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
-  background-color: #1d1d1d;
+  background-color: #F8F7F2;
 }
 
 .header-nav {
@@ -298,7 +298,7 @@ const handleMenuSelect = (index) => {
 }
 
 .nav-item {
-  color: #999;
+  color: #425D5F;
   text-decoration: none;
   font-size: 14px;
   padding: 8px 0;
@@ -307,11 +307,11 @@ const handleMenuSelect = (index) => {
 }
 
 .nav-item:hover {
-  color: #a3e635;
+  color: #425D5F;
 }
 
 .nav-item.active {
-  color: #a3e635;
+  color: #425D5F;
 }
 
 .nav-item.active::after {
@@ -321,7 +321,7 @@ const handleMenuSelect = (index) => {
   left: 0;
   right: 0;
   height: 2px;
-  background-color: #a3e635;
+  background-color: #425D5F;
 }
 
 .header-user {
@@ -336,14 +336,14 @@ const handleMenuSelect = (index) => {
 
 .user-id {
   font-size: 14px;
-  color: #999;
+  color: #425D5F;
 }
 
 .layout-main .layout-content {
   flex: 1;
   padding: 24px;
   overflow-y: auto;
-  background-color: #1d1d1d;
+  background-color: #F8F7F2;
 }
 
 .fade-enter-active,
@@ -364,7 +364,7 @@ const handleMenuSelect = (index) => {
   /* 隐藏滚动条但保留滚动功能 */
   /* Firefox */
   scrollbar-width: thin;
-  scrollbar-color: #404040 #1d1d1d;
+  scrollbar-color: #BACACB #F8F7F2;
 }
 
 /* WebKit 浏览器 (Chrome, Safari) */
@@ -376,25 +376,25 @@ const handleMenuSelect = (index) => {
 
 .layout-content::-webkit-scrollbar-track,
 .layout-sidebar .flex-1::-webkit-scrollbar-track {
-  background: #1d1d1d;
+  background: #F8F7F2;
   border-radius: 4px;
 }
 
 .layout-content::-webkit-scrollbar-thumb,
 .layout-sidebar .flex-1::-webkit-scrollbar-thumb {
-  background: #404040;
+  background: #BACACB;
   border-radius: 4px;
   transition: background 0.3s ease;
 }
 
 .layout-content::-webkit-scrollbar-thumb:hover,
 .layout-sidebar .flex-1::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: #425D5F;
 }
 
 .layout-content::-webkit-scrollbar-thumb:active,
 .layout-sidebar .flex-1::-webkit-scrollbar-thumb:active {
-  background: #666;
+  background: #425D5F;
 }
 
 /* 自定义Element Plus菜单样式 */
@@ -412,13 +412,13 @@ const handleMenuSelect = (index) => {
 }
 
 :deep(.el-menu-item:hover) {
-  background-color: rgba(163, 230, 53, 0.1) !important;
-  color: #a3e635 !important;
+  background-color: rgba(250, 169, 67, 0.1) !important;
+  color: #425D5F !important;
 }
 
 :deep(.el-menu-item.is-active) {
-  background-color: rgba(163, 230, 53, 0.2) !important;
-  color: #a3e635 !important;
+  background-color: rgba(250, 169, 67, 0.2) !important;
+  color: #425D5F !important;
 }
 
 :deep(.el-menu-item .el-icon) {

@@ -472,7 +472,7 @@ defineExpose({
 .pm-title {
   font-size: 24px;
   font-weight: 600;
-  color: #fff;
+  color: #425D5F;
   margin: 0;
 }
 
@@ -484,7 +484,7 @@ defineExpose({
 }
 
 .stat-card {
-  background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+  background: linear-gradient(135deg, #BACACB 0%, #F8F7F2 100%);
   border-radius: 12px;
   padding: 20px;
   display: flex;
@@ -526,13 +526,13 @@ defineExpose({
 .stat-value {
   font-size: 28px;
   font-weight: 700;
-  color: #fff;
+  color: #425D5F;
   line-height: 1.2;
 }
 
 .stat-label {
   font-size: 14px;
-  color: #888;
+  color: #425D5F;
   margin-top: 4px;
 }
 
@@ -565,13 +565,13 @@ defineExpose({
 
 .project-card:hover {
   transform: translateY(-4px);
-  border-color: #a3e635;
+  border-color: #425D5F;
   box-shadow: 0 8px 24px rgba(163, 230, 53, 0.15);
 }
 
 .project-cover {
   height: 160px;
-  background: #1a1a1a;
+  background: #F8F7F2;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -596,7 +596,7 @@ defineExpose({
 .project-title {
   font-size: 16px;
   font-weight: 600;
-  color: #fff;
+  color: #425D5F;
   margin: 0 0 8px 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -665,7 +665,7 @@ defineExpose({
 }
 
 .record-card {
-  background: #1a1a1a;
+  background: #F8F7F2;
   border-radius: 8px;
   overflow: hidden;
 }
@@ -732,8 +732,8 @@ defineExpose({
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #a3e635;
-  color: #1a1a1a;
+  background: #425D5F;
+  color: #F8F7F2;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -743,8 +743,8 @@ defineExpose({
 }
 
 .chat-message.assistant .message-avatar {
-  background: #3b82f6;
-  color: #fff;
+  background: #425D5F;
+  color: #F8F7F2;
 }
 
 .message-content {
@@ -752,16 +752,16 @@ defineExpose({
 }
 
 .message-text {
-  background: #2a2a2a;
+  background: #BACACB;
   padding: 12px 16px;
   border-radius: 12px;
   font-size: 14px;
-  color: #fff;
+  color: #425D5F;
   line-height: 1.5;
 }
 
 .chat-message.assistant .message-text {
-  background: #1e3a5f;
+  background: #BACACB;
 }
 
 .message-time {

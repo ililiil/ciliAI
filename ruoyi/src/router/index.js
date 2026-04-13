@@ -28,7 +28,13 @@ const routes = [
         path: 'works',
         name: 'Works',
         component: () => import('../views/Works.vue'),
-        meta: { title: '内容管理', icon: 'Picture' }
+        meta: { title: '作品管理', icon: 'Picture' }
+      },
+      {
+        path: 'order-management',
+        name: 'OrderManagement',
+        component: () => import('../views/OrderManagement.vue'),
+        meta: { title: '接单管理', icon: 'Document' }
       },
       {
         path: 'users',

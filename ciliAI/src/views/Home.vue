@@ -2,15 +2,14 @@
   <div class="home-container">
     <el-tabs v-model="activeTab" class="home-tabs">
       <el-tab-pane label="IP版权库" name="works">
-        <!-- 广告位区域 -->
         <div class="advertisements">
           <div class="ad-item" v-for="(ad, index) in ads" :key="index">
             <img :src="ad.src" :alt="ad.alt" class="ad-image">
           </div>
         </div>
         
-        <div class="works-grid">
-          <div v-for="work in works" :key="work.id" class="work-card">
+        <div class="works-grid ip-library-grid">
+          <div v-for="work in works" :key="work.id" class="work-card ip-library-card">
             <div class="work-image" @click="openNovelDetail(work)">
               <img 
                 :src="work.image" 
@@ -26,84 +25,54 @@
               </div>
             </div>
             <div class="work-info">
-                <h3 class="work-title">{{ work.title }}</h3>
-                <div class="work-stats">
-                  <div class="stat-item">
-                    <span class="stat-label">算力成本：</span>
-                    <span class="stat-value">{{ work.cost }}</span>
-                  </div>
-                  <div class="stat-item">
-                    <span class="stat-label">制作时长：</span>
-                    <span class="stat-value">{{ work.duration }}</span>
-                  </div>
-                  <div class="stat-item">
-                    <span class="stat-label">市场售价：</span>
-                    <span class="stat-value">{{ work.price }}</span>
-                  </div>
-                  <div class="stat-item">
-                    <span class="stat-label">版权信息：</span>
-                    <span class="stat-value">番茄小说</span>
-                  </div>
-                  <div class="stat-item">
-                    <span class="stat-label">分账模式：</span>
-                    <span class="stat-value">100%分账</span>
-                  </div>
+              <h3 class="work-title">{{ work.title }}</h3>
+              <div class="work-stats simplified-stats">
+                <div class="stat-item">
+                  <span class="stat-label">版权信息：</span>
+                  <span class="stat-value">{{ work.copyright || '番茄小说' }}</span>
+                </div>
+                <div class="stat-item">
+                  <span class="stat-label">分账模式：</span>
+                  <span class="stat-value">100%分账</span>
                 </div>
               </div>
+            </div>
           </div>
         </div>
       </el-tab-pane>
       <el-tab-pane label="社区分享" name="community">
-        <div class="works-grid">
-          <div v-for="work in communityWorks" :key="work.id" class="work-card">
-            <div class="work-image" @click="openNovelDetail(work)">
-              <img 
-                :src="work.image" 
-                :alt="work.title" 
-                class="work-image-img"
-                @error="handleImageError"
-              >
-              <div class="work-tags">
-                <span v-for="tag in work.tags" :key="tag" class="tag">{{ tag }}</span>
+        <div class="community-grid">
+          <div v-for="work in communityWorks" :key="work.id" class="community-card">
+            <div class="community-layout">
+              <div class="community-image-section" @click="openNovelDetail(work)">
+                <img 
+                  :src="work.image" 
+                  :alt="work.title" 
+                  class="community-image"
+                  @error="handleImageError"
+                >
+                <div class="community-tags">
+                  <span v-for="tag in work.tags" :key="tag" class="tag">{{ tag }}</span>
+                </div>
+                <div class="community-overlay">
+                  <span>查看详情</span>
+                </div>
               </div>
-              <div class="view-detail-overlay">
-                <span>查看详情</span>
+              <div class="community-info-section">
+                <div class="community-header">
+                  <div class="community-meta">
+                    <div class="meta-row">
+                      <span class="meta-label">作者名：</span>
+                      <span class="meta-value">{{ work.studentName || 'CiliAI学员' }}</span>
+                    </div>
+                    <div class="meta-row">
+                      <span class="meta-label">作品名：</span>
+                      <span class="meta-value">{{ work.title }}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <div class="work-info">
-                <div class="work-meta">
-                  <div class="meta-item">
-                    <span class="meta-label">学员名称：</span>
-                    <span class="meta-value">{{ work.studentName }}</span>
-                  </div>
-                  <div class="meta-item">
-                    <span class="meta-label">作品名称：</span>
-                    <span class="meta-value">{{ work.title }}</span>
-                  </div>
-                </div>
-                <div class="work-stats">
-                  <div class="stat-item">
-                    <span class="stat-label">算力成本：</span>
-                    <span class="stat-value">{{ work.cost }}</span>
-                  </div>
-                  <div class="stat-item">
-                    <span class="stat-label">制作时长：</span>
-                    <span class="stat-value">{{ work.duration }}</span>
-                  </div>
-                  <div class="stat-item">
-                    <span class="stat-label">市场售价：</span>
-                    <span class="stat-value">{{ work.price }}</span>
-                  </div>
-                  <div class="stat-item">
-                    <span class="stat-label">版权信息：</span>
-                    <span class="stat-value">番茄小说</span>
-                  </div>
-                  <div class="stat-item">
-                    <span class="stat-label">分账模式：</span>
-                    <span class="stat-value">100%分账</span>
-                  </div>
-                </div>
-              </div>
           </div>
         </div>
       </el-tab-pane>
@@ -146,8 +115,14 @@ const fetchWorks = async () => {
         tags: work.tags ? JSON.parse(work.tags) : []
       }))
       
-      works.value = allWorks.filter(w => !w.student_name || w.student_name === 'CiliAI官方')
-      communityWorks.value = allWorks.filter(w => w.student_name && w.student_name !== 'CiliAI官方')
+      works.value = allWorks.filter(w => !w.student_name || 
+        w.student_name === 'CiliAI官方' || 
+        w.student_name === '方塘官方' || 
+        w.student_name === 'Fangtang Official')
+      communityWorks.value = allWorks.filter(w => w.student_name && 
+        w.student_name !== 'CiliAI官方' && 
+        w.student_name !== '方塘官方' && 
+        w.student_name !== 'Fangtang Official')
     }
   } catch (error) {
     console.error('获取作品列表失败:', error)
@@ -166,6 +141,29 @@ const openNovelDetail = (work) => {
   selectedNovel.value = work
   showNovelModal.value = true
 }
+
+const communityComments = {
+  25: [
+    { id: 1, author: '星空姐姐', avatar: '星', avatarColor: '#667eea', rating: 5, time: '2小时前', content: '视觉效果太惊艳了，空间站的构建非常宏大，氛围也很到位。AI生成的画面质量完全不输专业制作团队，强烈推荐！', likes: 328, replies: 45, isTop: true, isVip: true },
+    { id: 2, author: '科幻迷小张', avatar: '科', avatarColor: '#f093fb', rating: 5, time: '5小时前', content: '终于有一部能让我沉浸其中的科幻作品了。剧情紧凑不拖沓，角色塑造立绘精美，会继续追更的！', likes: 245, replies: 32, isTop: false, isVip: false }
+  ],
+  26: [
+    { id: 1, author: '时光收藏家', avatar: '时', avatarColor: '#a18cd1', rating: 5, time: '3小时前', content: '这个穿越设计太有新意了！不是简单的回到过去，而是与不同时空线的自己相遇，创意满分！', likes: 287, replies: 56, isTop: true, isVip: true },
+    { id: 2, author: '热血动漫爱好者', avatar: '热', avatarColor: '#fbc2eb', rating: 5, time: '8小时前', content: '每一集都有新的惊喜，根本停不下来！已经三刷了，每次都能发现新的细节。', likes: 234, replies: 41, isTop: false, isVip: false }
+  ],
+  27: [
+    { id: 1, author: '动作片发烧友', avatar: '动', avatarColor: '#ff6b6b', rating: 5, time: '1小时前', content: '战斗场面太燃了！每一个动作戏都设计得行云流水，看得热血沸腾。这制作水准绝对一流！', likes: 412, replies: 67, isTop: true, isVip: true },
+    { id: 2, author: '都市白领小李', avatar: '都', avatarColor: '#4ecdc4', rating: 5, time: '4小时前', content: '主角人设太清了！既能又能，剧情全程在线。商战部分特别精彩，非常有代入感！', likes: 356, replies: 52, isTop: false, isVip: false }
+  ],
+  28: [
+    { id: 1, author: '古风控小雅', avatar: '古', avatarColor: '#d299c2', rating: 5, time: '2小时前', content: '古风画面太唯美了，特效做得非常精致，服饰设计古典雅致，看起来是用心之作！', likes: 523, replies: 89, isTop: true, isVip: true },
+    { id: 2, author: '悬疑小说家', avatar: '悬', avatarColor: '#fdeaa8', rating: 5, time: '6小时前', content: '世界观构建得非常完整，逻辑线清晰。主角的成长历程让人感同身受，加油！', likes: 445, replies: 72, isTop: false, isVip: true }
+  ]
+}
+
+const getCommunityComments = (workId) => {
+  return communityComments[workId] || []
+}
 </script>
 
 <style scoped>
@@ -182,11 +180,11 @@ const openNovelDetail = (work) => {
 }
 
 .home-tabs :deep(.el-tabs__item) {
-  color: #ffffff !important; /* 设置未选中标签的文字颜色为白色 */
+  color: #425D5F !important; /* 设置未选中标签的文字颜色为白色 */
 }
 
 .home-tabs :deep(.el-tabs__item.is-active) {
-  color: #a3e635 !important; /* 保持选中标签的颜色为绿色 */
+  color: #425D5F !important; /* 保持选中标签的颜色为绿色 */
 }
 
 .home-tabs :deep(.el-tabs__nav-wrap)::after {
@@ -205,7 +203,8 @@ const openNovelDetail = (work) => {
   height: 120px;
   border-radius: 8px;
   overflow: hidden;
-  background-color: #2c2c2c;
+  background-color: #BACACB;
+  border: 1px solid rgba(186, 202, 203, 0.5);
 }
 
 .ad-image {
@@ -222,16 +221,17 @@ const openNovelDetail = (work) => {
 }
 
 .work-card {
-  background-color: #232323;
+  background-color: #F8F7F2;
+  border: 1px solid #BACACB;
   border-radius: 8px;
   overflow: hidden;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 8px rgba(66, 93, 95, 0.15);
 }
 
 .work-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 16px rgba(66, 93, 95, 0.25);
 }
 
 .work-image {
@@ -258,13 +258,13 @@ const openNovelDetail = (work) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(66, 93, 95, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
   transition: opacity 0.3s ease;
-  color: #ffffff;
+  color: #F8F7F2;
   font-weight: 600;
   font-size: 16px;
 }
@@ -282,44 +282,56 @@ const openNovelDetail = (work) => {
 }
 
 .tag {
-  background-color: rgba(163, 230, 53, 0.8);
-  color: #1a1a1a;
+  background-color: rgba(250, 169, 67, 0.9);
+  color: #425D5F;
   font-size: 12px;
   padding: 4px 8px;
   border-radius: 4px;
   font-weight: 500;
+  border: 1px solid rgba(250, 169, 67, 0.3);
 }
 
 .work-info {
   padding: 16px;
+  background-color: #F8F7F2;
 }
 
 .work-title {
   margin: 0 0 12px 0;
   font-size: 16px;
   font-weight: 600;
-  color: #ffffff;
+  color: #425D5F;
+  border-bottom: 1px solid #BACACB;
+  padding-bottom: 12px;
 }
 
 .work-stats {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .stat-item {
   display: flex;
   justify-content: space-between;
   font-size: 14px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(186, 202, 203, 0.3);
+}
+
+.stat-item:last-child {
+  border-bottom: none;
 }
 
 .stat-label {
-  color: #999;
+  color: #425D5F;
+  font-weight: 400;
 }
 
 .stat-value {
-  color: #a3e635;
-  font-weight: 500;
+  color: #425D5F;
+  font-weight: 600;
 }
 
 /* 响应式设计 */
@@ -347,7 +359,7 @@ const openNovelDetail = (work) => {
   gap: 8px;
   margin-bottom: 12px;
   padding-bottom: 12px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid #BACACB;
 }
 
 .meta-item {
@@ -357,12 +369,370 @@ const openNovelDetail = (work) => {
 }
 
 .meta-label {
-  color: #999;
+  color: #425D5F;
   min-width: 70px;
 }
 
 .meta-value {
-  color: #fff;
+  color: #425D5F;
   font-weight: 500;
+}
+
+.ip-library-grid {
+  gap: 20px;
+}
+
+.ip-library-card .work-info {
+  padding: 12px;
+}
+
+.ip-library-card .work-title {
+  font-size: 15px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+}
+
+.ip-library-card .simplified-stats {
+  margin-top: 8px;
+}
+
+.ip-library-card .simplified-stats .stat-item {
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.ip-library-card .work-image {
+  height: 180px;
+}
+
+.community-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+}
+
+.community-card {
+  background-color: #F8F7F2;
+  border: 1px solid #BACACB;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 12px rgba(66, 93, 95, 0.15);
+}
+
+.community-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(66, 93, 95, 0.25);
+}
+
+.community-layout {
+  display: flex;
+  min-height: 320px;
+}
+
+.community-image-section {
+  flex-shrink: 0;
+  width: 280px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.community-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.community-card:hover .community-image {
+  transform: scale(1.05);
+}
+
+.community-tags {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.community-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(66, 93, 95, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  color: #F8F7F2;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.community-image-section:hover .community-overlay {
+  opacity: 1;
+}
+
+.community-info-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  gap: 16px;
+  background-color: #F8F7F2;
+  overflow-y: auto;
+  max-height: 320px;
+}
+
+.community-info-section::-webkit-scrollbar {
+  width: 6px;
+}
+
+.community-info-section::-webkit-scrollbar-track {
+  background: #BACACB;
+  border-radius: 3px;
+}
+
+.community-info-section::-webkit-scrollbar-thumb {
+  background: #425D5F;
+  border-radius: 3px;
+}
+
+.community-header {
+  background: linear-gradient(135deg, #BACACB 0%, #F8F7F2 100%);
+  border: 1px solid #425D5F;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.community-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.meta-row {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.meta-row .meta-label {
+  color: #425D5F;
+  min-width: 70px;
+}
+
+.meta-row .meta-value {
+  color: #425D5F;
+  font-weight: 600;
+}
+
+.community-params {
+  background-color: #BACACB;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.params-title {
+  color: #425D5F;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+}
+
+.params-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.param-item {
+  display: flex;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.param-label {
+  color: #425D5F;
+  min-width: 70px;
+}
+
+.param-value {
+  color: #425D5F;
+  font-weight: 500;
+  flex: 1;
+  word-break: break-word;
+}
+
+.community-comments {
+  flex: 1;
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.community-comments::-webkit-scrollbar {
+  width: 4px;
+}
+
+.community-comments::-webkit-scrollbar-track {
+  background: #2a2a2a;
+  border-radius: 2px;
+}
+
+.community-comments::-webkit-scrollbar-thumb {
+  background: #425D5F;
+  border-radius: 2px;
+}
+
+.comments-title {
+  color: #F8F7F2;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #333;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.comment-item {
+  background-color: #252525;
+  border-radius: 8px;
+  padding: 10px;
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.comment-item:hover {
+  background-color: #2a2a2a;
+  border-color: #444;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.comment-author-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.comment-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #F8F7F2;
+  font-weight: 600;
+  font-size: 12px;
+  box-shadow: 0 2px 6px rgba(66, 93, 95, 0.3);
+}
+
+.comment-author-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.comment-author {
+  font-size: 13px;
+  font-weight: 600;
+  color: #F8F7F2;
+}
+
+.vip-badge {
+  padding: 2px 6px;
+  background: linear-gradient(135deg, #FAA943 0%, #FDE7A2 100%);
+  color: #425D5F;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.comment-rating {
+  display: flex;
+  gap: 1px;
+}
+
+.comment-rating .star {
+  color: #444;
+  font-size: 12px;
+}
+
+.comment-rating .star.active {
+  color: #ffd700;
+}
+
+.comment-body {
+  padding-left: 42px;
+}
+
+.comment-text {
+  font-size: 13px;
+  color: #ccc;
+  line-height: 1.5;
+  margin: 0 0 8px 0;
+}
+
+.comment-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.comment-time {
+  font-size: 11px;
+  color: #888;
+}
+
+.comment-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.action-item {
+  font-size: 11px;
+  color: #666;
+}
+
+.action-item:hover {
+  color: #FAA943;
+}
+
+@media (max-width: 768px) {
+  .community-layout {
+    flex-direction: column;
+    min-height: auto;
+  }
+  
+  .community-image-section {
+    width: 100%;
+    height: 200px;
+  }
+  
+  .community-info-section {
+    max-height: none;
+    padding: 16px;
+    gap: 12px;
+  }
 }
 </style>

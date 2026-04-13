@@ -1,23 +1,23 @@
 /* 全局样式覆盖 */
 :root {
-  --el-dialog-bg-color: #1a1a1a !important;
-  --el-bg-color: #1a1a1a !important;
+  --el-dialog-bg-color: #F8F7F2 !important;
+  --el-bg-color: #F8F7F2 !important;
 }
 
 .el-dialog__wrapper .el-overlay .el-overlay-dialog .el-dialog {
-  background-color: #1a1a1a !important;
+  background-color: #F8F7F2 !important;
 }
 
 /* 确保对话框内容区域背景色 */
 .el-dialog__body {
-  background-color: #1a1a1a !important;
+  background-color: #F8F7F2 !important;
 }
 
 /* 针对特定类名的发布商单对话框 */
 .publish-dialog .el-dialog {
-  background-color: #1a1a1a !important;
+  background-color: #F8F7F2 !important;
 }
 
 .publish-dialog .el-dialog .el-dialog__body {
-  background-color: #1a1a1a !important;
+  background-color: #F8F7F2 !important;
 }

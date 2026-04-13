@@ -178,7 +178,7 @@ const showMoreMenu = (event, project) => {
 <style scoped>
 .works-page {
   padding: 20px 24px;
-  background-color: #1d1d1d;
+  background-color: #F8F7F2;
   min-height: 100%;
 }
 
@@ -210,7 +210,7 @@ const showMoreMenu = (event, project) => {
 }
 
 .tab.active {
-  color: #a3e635;
+  color: #425D5F;
 }
 
 .tab.active::after {
@@ -220,23 +220,23 @@ const showMoreMenu = (event, project) => {
   left: 0;
   right: 0;
   height: 2px;
-  background-color: #a3e635;
+  background-color: #425D5F;
 }
 
 .tab-count {
-  color: #666;
+  color: #425D5F;
   margin-left: 4px;
 }
 
 .tab.active .tab-count {
-  color: #a3e635;
+  color: #425D5F;
 }
 
 /* 创建按钮 */
 .create-btn {
-  background-color: #a3e635;
-  border-color: #a3e635;
-  color: #1d1d1d;
+  background-color: #425D5F;
+  border-color: #425D5F;
+  color: #F8F7F2;
   font-weight: 500;
   padding: 8px 16px;
   font-size: 14px;
@@ -244,8 +244,8 @@ const showMoreMenu = (event, project) => {
 }
 
 .create-btn:hover {
-  background-color: #8bc34a;
-  border-color: #8bc34a;
+  background-color: #FAA943;
+  border-color: #FAA943;
 }
 
 .create-btn .el-icon {
@@ -261,7 +261,7 @@ const showMoreMenu = (event, project) => {
 }
 
 .project-card {
-  background-color: #2a2a2a;
+  background-color: #BACACB;
   border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
@@ -298,19 +298,19 @@ const showMoreMenu = (event, project) => {
   right: 8px;
   width: 28px;
   height: 28px;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(66, 93, 95, 0.8);
   border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: #fff;
+  color: #F8F7F2;
   font-size: 14px;
 }
 
 .more-btn:hover {
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(66, 93, 95, 0.9);
 }
 
 /* 集数标签 */
@@ -319,10 +319,10 @@ const showMoreMenu = (event, project) => {
   bottom: 8px;
   right: 8px;
   padding: 2px 8px;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(66, 93, 95, 0.8);
   border-radius: 4px;
   font-size: 12px;
-  color: #fff;
+  color: #F8F7F2;
 }
 
 /* 项目信息 */
@@ -333,7 +333,7 @@ const showMoreMenu = (event, project) => {
 .project-title {
   font-size: 14px;
   font-weight: 500;
-  color: #fff;
+  color: #425D5F;
   margin: 0 0 8px 0;
   line-height: 1.4;
   white-space: nowrap;

@@ -1349,6 +1349,47 @@ def get_public_works():
             'error': str(e)
         }), 500
 
+@app.route('/api/proxy-image', methods=['GET'])
+def proxy_image():
+    image_url = request.args.get('url')
+    
+    if not image_url:
+        return jsonify({'status': 'error', 'message': '缺少图片URL'}), 400
+    
+    if not image_url.startswith('https://whhongyi.com.cn'):
+        return jsonify({'status': 'error', 'message': '不支持的图片域名'}), 400
+    
+    try:
+        logger.info(f"Proxying image request: {image_url[:80]}...")
+        
+        headers = {
+            'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
+            'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36',
+            'Referer': 'https://whhongyi.com.cn/',
+            'Origin': 'https://whhongyi.com.cn'
+        }
+        
+        response = req_lib.get(image_url, headers=headers, stream=True, timeout=30)
+        
+        if response.status_code != 200:
+            logger.error(f"Image proxy failed: {response.status_code}")
+            return jsonify({'status': 'error', 'message': f'获取图片失败: {response.status_code}'}), response.status_code
+        
+        content_type = response.headers.get('Content-Type', 'image/jpeg')
+        
+        return Response(
+            response.iter_content(chunk_size=8192),
+            content_type=content_type,
+            headers={
+                'Cache-Control': 'public, max-age=3600',
+                'Content-Length': response.headers.get('Content-Length')
+            }
+        )
+    except Exception as e:
+        logger.error(f"Image proxy error: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
 if __name__ == '__main__':
     if not VOLC_AK or not VOLC_SK:
         print("WARNING: VOLC_AK or VOLC_SK not found in environment variables!")

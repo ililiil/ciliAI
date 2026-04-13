@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="project-detail-page">
     <div class="page-header">
       <div class="header-left">
@@ -9,12 +9,12 @@
         </button>
         <div class="project-info">
           <h1 class="project-title">{{ project.title }}</h1>
-          <span class="project-time">鍒涘缓浜?{{ project.createTime }}</span>
+          <span class="project-time">创建时间: {{ project.createTime }}</span>
         </div>
       </div>
       <div class="header-right">
         <el-button type="primary" class="save-btn" @click="saveProject" :loading="isSaving">
-          淇濆瓨椤圭洰
+          保存项目
         </el-button>
       </div>
     </div>
@@ -26,43 +26,43 @@
           @click="activeModule = 'chat'"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
           </svg>
-          <span>AI瀵硅瘽</span>
+          <span>AI对话</span>
         </div>
         <div 
           :class="['tab-item', { active: activeModule === 'image' }]"
           @click="activeModule = 'image'"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            <circle cx="8.5" cy="8.5" r="1.5"></circle>
-            <polyline points="21 15 16 10 5 21"></polyline>
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
           </svg>
-          <span>AI鐢熷浘</span>
+          <span>AI生图</span>
         </div>
         <div 
           :class="['tab-item', { active: activeModule === 'extend' }]"
           @click="activeModule = 'extend'"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="8" y1="3" x2="8" y2="21"></line>
-            <line x1="16" y1="3" x2="16" y2="21"></line>
-            <line x1="3" y1="8" x2="21" y2="8"></line>
-            <line x1="3" y1="16" x2="21" y2="16"></line>
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <line x1="8" y1="3" x2="8" y2="21"/>
+            <line x1="16" y1="3" x2="16" y2="21"/>
+            <line x1="3" y1="8" x2="21" y2="8"/>
+            <line x1="3" y1="16" x2="21" y2="16"/>
           </svg>
-          <span>AI鎵╁浘</span>
+          <span>AI扩图</span>
         </div>
         <div 
           :class="['tab-item', { active: activeModule === 'edit' }]"
           @click="activeModule = 'edit'"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
           </svg>
-          <span>AI鏀瑰浘</span>
+          <span>AI改图</span>
         </div>
       </div>
 
@@ -70,13 +70,14 @@
         <div v-if="activeModule === 'chat'" class="chat-module">
           <div class="chat-sidebar">
             <div class="sidebar-header">
-              <h3>瀵硅瘽鍒楄〃</h3>
+              <h3>对话列表</h3>
               <button class="new-chat-btn" @click="createNewChat">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="12" y1="5" x2="12" y2="19"></line>
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
                 </svg>
-                鏂板璇              </button>
+                新对话
+              </button>
             </div>
             <div class="chat-list">
               <div 
@@ -87,7 +88,7 @@
               >
                 <div class="chat-item-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                   </svg>
                 </div>
                 <div class="chat-item-content">
@@ -97,15 +98,11 @@
                 <div class="chat-item-actions">
                   <button class="action-btn" @click.stop="deleteChat(chat.id)">
                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <polyline points="3 6 5 6 21 6"></polyline>
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      <polyline points="3 6 5 6 21 6"/>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                     </svg>
                   </button>
                 </div>
-              </div>
-              <div v-if="chatList.length === 0" class="empty-chat-list">
-<p></p>
-<p class="hint"></p>
               </div>
             </div>
           </div>
@@ -115,11 +112,10 @@
               <div v-if="currentMessages.length === 0" class="empty-messages">
                 <div class="empty-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                   </svg>
                 </div>
-<p></p>
-                <p class="hint">杈撳叆鎮ㄧ殑闂佽檺锛孉I灏嗕负鎮ㄦ彁渚涘府鍔</p>
+                <p class="hint">输入您的提问，AI将为您提供帮助</p>
               </div>
               <div 
                 v-for="message in currentMessages" 
@@ -139,16 +135,44 @@
                     <span class="loading-dot"></span>
                   </div>
                   <div v-else-if="message.status === 'error'" class="message-status error">
-                    鍙戦€佸け璐                  </div>
+                    发送失败
+                  </div>
                 </div>
               </div>
             </div>
 
             <div class="chat-input-area">
               <div class="input-wrapper">
+                <div class="people-selector">
+                  <el-dropdown @command="handlePeopleSelect" trigger="click">
+                    <button class="people-btn">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                      </svg>
+                      <span>{{ currentPeopleLabel }}</span>
+                    </button>
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <el-dropdown-item command="script" :class="{ 'active-item': selectedPeople === 'script' }">
+                          <span class="dropdown-icon">📝</span>
+                          <span class="dropdown-text">剧本设计</span>
+                        </el-dropdown-item>
+                        <el-dropdown-item command="character" :class="{ 'active-item': selectedPeople === 'character' }">
+                          <span class="dropdown-icon">👤</span>
+                          <span class="dropdown-text">人设设计</span>
+                        </el-dropdown-item>
+                        <el-dropdown-item command="scene" :class="{ 'active-item': selectedPeople === 'scene' }">
+                          <span class="dropdown-icon">🎬</span>
+                          <span class="dropdown-text">场景设计</span>
+                        </el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
+                  </el-dropdown>
+                </div>
                 <textarea 
                   v-model="inputMessage"
-                  placeholder="杈撳叆娑堟伅..."
+                  placeholder="输入消息..."
                   @keydown.enter.exact.prevent="sendMessage"
                   rows="1"
                   ref="inputTextarea"
@@ -159,8 +183,8 @@
                   :disabled="!inputMessage.trim() || isSending"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    <line x1="22" y1="2" x2="11" y2="13"/>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
                   </svg>
                 </button>
               </div>
@@ -171,7 +195,7 @@
         <div v-else-if="activeModule === 'image'" class="image-module">
           <div class="image-sidebar">
             <div class="sidebar-header">
-              <h3>鐢熷浘鍘嗗彶</h3>
+              <h3>生图历史</h3>
             </div>
             <div class="image-history-list">
               <div 
@@ -188,28 +212,25 @@
                   <div class="history-time">{{ item.createTime }}</div>
                 </div>
               </div>
-              <div v-if="imageHistory.length === 0" class="empty-history">
-<p></p>
-              </div>
             </div>
           </div>
 
           <div class="image-main">
             <div class="image-params-section">
-              <h3 class="section-title">鐢熷浘鍙傛暟</h3>
+              <h3 class="section-title">生图参数</h3>
               <div class="params-form">
                 <div class="form-item">
-                  <label>鎻愮ず璇</label>
+                  <label>提示词</label>
                   <el-input
                     v-model="imageParams.prompt"
                     type="textarea"
                     :rows="4"
-                    placeholder="璇疯緭鍏ュ浘鐗囨弿杩帮紝濡傦細涓€涓編涓界殑鏃ヨ惤鍦烘櫙锛屾捣杈规湁妫曟鏍?.."
+                    placeholder="请输入图片描述，例如：一个美丽的风景照，远处有山脉..."
                   />
                 </div>
                 <div class="form-item">
-                  <label>鍥剧墖灏哄</label>
-                  <el-select v-model="imageParams.size" placeholder="閫夋嫨灏哄">
+                  <label>图片尺寸</label>
+                  <el-select v-model="imageParams.size" placeholder="选择尺寸">
                     <el-option label="1024 x 1024 (1K)" value="1024x1024" />
                     <el-option label="2048 x 2048 (2K)" value="2048x2048" />
                     <el-option label="2304 x 1728 (4:3)" value="2304x1728" />
@@ -218,7 +239,7 @@
                   </el-select>
                 </div>
                 <div class="form-item">
-                  <label>鍙傝€冨浘锛堝彲閫夛級</label>
+                  <label>参考图（可选）</label>
                   <el-upload
                     class="reference-upload"
                     action=""
@@ -228,10 +249,10 @@
                     :limit="1"
                     :file-list="referenceFileList"
                   >
-                    <el-button size="small" type="primary">涓婁紶鍥剧墖</el-button>
+                    <el-button size="small" type="primary">上传图片</el-button>
                     <template #tip>
                       <div class="el-upload__tip">
-                        鏀寔JPEG銆丳NG鏍煎紡锛屾渶澶?5MB
+                        支持JPEG、PNG格式，最大5MB
                       </div>
                     </template>
                   </el-upload>
@@ -243,23 +264,22 @@
                   @click="generateImage"
                   :loading="isGenerating"
                 >
-                  {{ isGenerating ? '鐢熸垚涓?..' : '寮€濮嬬敓鎴?' }}
+                  {{ isGenerating ? '生成中...' : '开始生成' }}
                 </el-button>
               </div>
             </div>
 
             <div class="image-result-section">
-              <h3 class="section-title">鐢熸垚缁撴灉</h3>
+              <h3 class="section-title">生成结果</h3>
               <div v-if="generatedImages.length === 0" class="empty-result">
                 <div class="empty-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                    <polyline points="21 15 16 10 5 21"></polyline>
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21 15 16 10 5 21"/>
                   </svg>
                 </div>
-<p></p>
-<p class="hint"></p>
+                <p class="hint">点击生成按钮开始创作</p>
               </div>
               <div v-else class="result-grid">
                 <div 
@@ -271,15 +291,15 @@
                   <div class="result-actions">
                     <button class="action-btn" @click="downloadImage(image.url)">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
                       </svg>
                     </button>
                     <button class="action-btn" @click="previewImage(image.url)">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
                       </svg>
                     </button>
                   </div>
@@ -292,7 +312,7 @@
         <div v-else-if="activeModule === 'extend'" class="image-module">
           <div class="image-sidebar">
             <div class="sidebar-header">
-              <h3>鎵╁浘鍘嗗彶</h3>
+              <h3>扩图历史</h3>
             </div>
             <div class="image-history-list">
               <div 
@@ -309,18 +329,15 @@
                   <div class="history-time">{{ item.createTime }}</div>
                 </div>
               </div>
-              <div v-if="extendHistory.length === 0" class="empty-history">
-<p></p>
-              </div>
             </div>
           </div>
 
           <div class="image-main">
             <div class="image-params-section">
-              <h3 class="section-title">鎵╁浘鍙傛暟</h3>
+              <h3 class="section-title">扩图参数</h3>
               <div class="params-form">
                 <div class="form-item">
-                  <label>鐩爣鍥剧墖</label>
+                  <label>目标图片</label>
                   <el-upload
                     class="reference-upload"
                     action=""
@@ -330,17 +347,17 @@
                     :limit="1"
                     :file-list="extendFileList"
                   >
-                    <el-button size="small" type="primary">涓婁紶鍥剧墖</el-button>
+                    <el-button size="small" type="primary">上传图片</el-button>
                     <template #tip>
                       <div class="el-upload__tip">
-                        鏀寔JPEG銆丳NG鏍煎紡锛屾渶澶?5MB
+                        支持JPEG、PNG格式，最大5MB
                       </div>
                     </template>
                   </el-upload>
                 </div>
                 <div class="form-item">
-                  <label>鎵╁睍鍚庡昂瀵</label>
-                  <el-select v-model="extendParams.size" placeholder="閫夋嫨灏哄">
+                  <label>扩展后尺寸</label>
+                  <el-select v-model="extendParams.size" placeholder="选择尺寸">
                     <el-option label="2048 x 2048 (2K)" value="2048x2048" />
                     <el-option label="2304 x 1728 (4:3)" value="2304x1728" />
                     <el-option label="2560 x 1440 (16:9)" value="2560x1440" />
@@ -348,12 +365,12 @@
                   </el-select>
                 </div>
                 <div class="form-item">
-                  <label>鎻愮ず璇</label>
+                  <label>提示词</label>
                   <el-input
                     v-model="extendParams.prompt"
                     type="textarea"
                     :rows="2"
-                    placeholder="璇锋弿杩版墿灞曞尯鍩熺殑鍐呭锛屽锛氬欢浼哥殑椋庢櫙锛屼繚鎸佷竴鑷寸殑椋庢牸..."
+                    placeholder="请描述扩展区域的内容，如：延展的背景风景，保持一致的风格..."
                   />
                 </div>
                 <el-button 
@@ -362,25 +379,24 @@
                   @click="extendImage"
                   :loading="isExtending"
                 >
-                  {{ isExtending ? '鎵╁睍涓?..' : '寮€濮嬫墿灞? }}
+                  {{ isExtending ? '扩展中...' : '开始扩展' }}
                 </el-button>
               </div>
             </div>
 
             <div class="image-result-section">
-              <h3 class="section-title">鎵╁睍缁撴灉</h3>
+              <h3 class="section-title">扩展结果</h3>
               <div v-if="extendedImages.length === 0" class="empty-result">
                 <div class="empty-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="8" y1="3" x2="8" y2="21"></line>
-                    <line x1="16" y1="3" x2="16" y2="21"></line>
-                    <line x1="3" y1="8" x2="21" y2="8"></line>
-                    <line x1="3" y1="16" x2="21" y2="16"></line>
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="8" y1="3" x2="8" y2="21"/>
+                    <line x1="16" y1="3" x2="16" y2="21"/>
+                    <line x1="3" y1="8" x2="21" y2="8"/>
+                    <line x1="3" y1="16" x2="21" y2="16"/>
                   </svg>
                 </div>
-<p></p>
-<p class="hint"></p>
+                <p class="hint">上传图片开始扩展创作</p>
               </div>
               <div v-else class="result-grid">
                 <div 
@@ -392,15 +408,15 @@
                   <div class="result-actions">
                     <button class="action-btn" @click="downloadImage(image.url)">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
                       </svg>
                     </button>
                     <button class="action-btn" @click="previewImage(image.url)">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
                       </svg>
                     </button>
                   </div>
@@ -413,7 +429,7 @@
         <div v-else-if="activeModule === 'edit'" class="image-module">
           <div class="image-sidebar">
             <div class="sidebar-header">
-              <h3>鏀瑰浘鍘嗗彶</h3>
+              <h3>改图历史</h3>
             </div>
             <div class="image-history-list">
               <div 
@@ -430,18 +446,15 @@
                   <div class="history-time">{{ item.createTime }}</div>
                 </div>
               </div>
-              <div v-if="editHistory.length === 0" class="empty-history">
-<p></p>
-              </div>
             </div>
           </div>
 
           <div class="image-main">
             <div class="image-params-section">
-              <h3 class="section-title">鏀瑰浘鍙傛暟</h3>
+              <h3 class="section-title">改图参数</h3>
               <div class="params-form">
                 <div class="form-item">
-                  <label>鍘熷浘</label>
+                  <label>原图</label>
                   <el-upload
                     class="reference-upload"
                     action=""
@@ -451,38 +464,35 @@
                     :limit="1"
                     :file-list="editFileList"
                   >
-                    <el-button size="small" type="primary">涓婁紶鍘熷浘</el-button>
+                    <el-button size="small" type="primary">上传原图</el-button>
                     <template #tip>
                       <div class="el-upload__tip">
-                        鏀寔JPEG銆丳NG鏍煎紡锛屾渶澶?.7MB
+                        支持JPEG、PNG格式，最大5.7MB
                       </div>
                     </template>
                   </el-upload>
                 </div>
                 <div class="form-item">
-                  <label>娑傛姽鍖哄煙</label>
+                  <label>涂抹区域</label>
                   <div class="image-editor" v-if="editParams.image">
                     <div class="editor-controls">
-                      <el-button size="small" :class="{ active: editingTool === 'brush' }" @click="editingTool = 'brush'">鐢荤瑪</el-button>
-                      <el-button size="small" :class="{ active: editingTool === 'eraser' }" @click="editingTool = 'eraser'">姗＄毊鎿?/el-button>
-                      <el-button size="small" @click="clearMask">娓呯┖</el-button>
+                      <el-button size="small" :class="{ active: editingTool === 'brush' }" @click="editingTool = 'brush'">画笔</el-button>
+                      <el-button size="small" :class="{ active: editingTool === 'eraser' }" @click="editingTool = 'eraser'">橡皮擦</el-button>
+                      <el-button size="small" @click="clearMask">清空</el-button>
                     </div>
                     <div class="canvas-container">
                       <canvas ref="editCanvas" @mousedown="startDrawing" @mousemove="draw" @mouseup="stopDrawing" @mouseleave="stopDrawing"></canvas>
                       <img ref="editImageRef" :src="editParams.image" class="editor-image" />
                     </div>
                   </div>
-                  <div class="no-image" v-else>
-<p></p>
-                  </div>
                 </div>
                 <div class="form-item">
-                  <label>鎻愮ず璇</label>
+                  <label>提示词</label>
                   <el-input
                     v-model="editParams.prompt"
                     type="textarea"
                     :rows="3"
-                    placeholder="璇锋弿杩颁慨鏀瑰唴瀹癸紝濡傦細鍒犻櫎鐗╀綋锛屾浛鎹㈡枃瀛椾负'鏂板唴瀹?..."
+                    placeholder="请描述修改内容，如：删除物体，替换文字为'新内容'..."
                   />
                 </div>
                 <el-button 
@@ -491,22 +501,21 @@
                   @click="generateEditImage"
                   :loading="isEditing"
                 >
-                  {{ isEditing ? '淇敼涓?..' : '寮€濮嬩慨鏀? }}
+                  {{ isEditing ? '修改中...' : '开始修改' }}
                 </el-button>
               </div>
             </div>
 
             <div class="image-result-section">
-              <h3 class="section-title">淇敼缁撴灉</h3>
+              <h3 class="section-title">修改结果</h3>
               <div v-if="editedImages.length === 0" class="empty-result">
                 <div class="empty-icon">
                   <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                   </svg>
                 </div>
-<p></p>
-<p class="hint"></p>
+                <p class="hint">上传原图并涂抹要修改的区域</p>
               </div>
               <div v-else class="result-grid">
                 <div 
@@ -518,15 +527,15 @@
                   <div class="result-actions">
                     <button class="action-btn" @click="downloadImage(image.url)">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
                       </svg>
                     </button>
                     <button class="action-btn" @click="previewImage(image.url)">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
                       </svg>
                     </button>
                   </div>
@@ -549,32 +558,51 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, nextTick, watch, inject } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { generateImage as volcGenerateImage, editImage as volcEditImage, extendImage as volcExtendImage, pollTaskResult } from '../utils/volcengine.js'
+import { generateImage as volcGenerateImage, editImage as volcEditImage, extendImage as volcExtendImage } from '../utils/volcengine.js'
 
 const route = useRoute()
 const router = useRouter()
 
-const currentInviteCode = inject('currentInviteCode', ref(''))
+const currentInviteCode = ref('demo-invite-code')
 
 const accessKeyId = import.meta.env.VITE_VOLC_AK || ''
 const secretAccessKey = import.meta.env.VITE_VOLC_SK || ''
 
-// Dify API 淇℃伅
-const difyApiKey = 'app-l38yBomZ4wAiYktOqJ6kaXfp'
+const difyApiKey = 'app-jd05GWziMofrIu8sX7FFfLd2'
 const difyApiUrl = '/dify-api/chat-messages'
 
-// 鐏北寮曟搸璁よ瘉淇℃伅 - 浠庣幆澧冨彉閲忚鍙?// 瀹為檯瀵嗛挜瀛樺偍鍦?.env 鏂囦欢涓紝涓嶅簲鍦ㄤ唬鐮佷腑纭紪鐮?
 const activeModule = ref('chat')
 const isSaving = ref(false)
 const isSending = ref(false)
+
+// 角色选择相关
+const selectedPeople = ref('script')
+const peopleLabels = {
+  script: '剧本设计',
+  character: '人设设计',
+  scene: '场景设计'
+}
+
+const peopleValues = {
+  script: '1',
+  character: '2',
+  scene: '3'
+}
+
+const currentPeopleLabel = computed(() => peopleLabels[selectedPeople.value] || '剧本设计')
+
+const handlePeopleSelect = (command) => {
+  selectedPeople.value = command
+  ElMessage.success(`已切换到${peopleLabels[command]}模式`)
+}
 const isGenerating = ref(false)
 
 const project = ref({
   id: '',
-  title: '鍔犺浇涓?..',
+  title: '加载中...',
   createTime: ''
 })
 
@@ -631,16 +659,46 @@ const isEditing = ref(false)
 const loadProjectData = async () => {
   const projectId = route.params.id
   
-  project.value = {
-    id: projectId,
-    title: '绀轰緥椤圭洰锛岄緳鏃?,
-    createTime: '2025-03-31 13:24:07'
+  try {
+    const inviteCode = localStorage.getItem('inviteCode') || ''
+    const response = await fetch(`/api/projects?invite_code=${encodeURIComponent(inviteCode)}`)
+    const result = await response.json()
+    
+    if (result.status === 'success' && result.projects) {
+      const foundProject = result.projects.find(p => p.id === projectId || p.id?.toString() === projectId)
+      if (foundProject) {
+        project.value = {
+          id: foundProject.id,
+          title: foundProject.title || foundProject.name || '未命名项目',
+          createTime: foundProject.createTime || foundProject.created_at || new Date().toLocaleString('zh-CN')
+        }
+      } else {
+        project.value = {
+          id: projectId,
+          title: '项目详情',
+          createTime: new Date().toLocaleString('zh-CN')
+        }
+      }
+    } else {
+      project.value = {
+        id: projectId,
+        title: '项目详情',
+        createTime: new Date().toLocaleString('zh-CN')
+      }
+    }
+  } catch (error) {
+    console.error('Failed to fetch project data:', error)
+    project.value = {
+      id: projectId,
+      title: '项目详情',
+      createTime: '加载失败'
+    }
   }
   
   chatList.value = [
     {
       id: Date.now().toString(),
-      title: '鏂板璇?,
+      title: '新对话',
       updateTime: new Date().toLocaleString('zh-CN'),
       conversationId: '',
       messages: []
@@ -654,14 +712,14 @@ const loadProjectData = async () => {
   imageHistory.value = [
     {
       id: '1',
-      prompt: '涓€涓湭鏉ュ煄甯傜殑澶滄櫙锛岄湏铏圭伅闂儊',
+      prompt: '一个未来城市的夜景，霓虹灯光闪烁',
       imageUrl: 'https://picsum.photos/400/300?random=100',
       createTime: '2025-03-31 13:00',
       params: { size: '1024x1024', steps: 30, cfgScale: 7 }
     },
     {
       id: '2',
-      prompt: '鍙や唬瀹锛岄噾纰ц緣鐓?,
+      prompt: '海边的日落，金色光芒洒落',
       imageUrl: 'https://picsum.photos/400/300?random=101',
       createTime: '2025-03-31 11:30',
       params: { size: '1024x1024', steps: 25, cfgScale: 8 }
@@ -677,9 +735,9 @@ const saveProject = async () => {
   isSaving.value = true
   try {
     await new Promise(resolve => setTimeout(resolve, 1000))
-    ElMessage.success('椤圭洰淇濆瓨鎴愬姛')
+    ElMessage.success('项目保存成功')
   } catch (error) {
-    ElMessage.error('淇濆瓨澶辫触锛岃閲嶈瘯')
+    ElMessage.error('保存失败，请重试')
   } finally {
     isSaving.value = false
   }
@@ -688,7 +746,7 @@ const saveProject = async () => {
 const createNewChat = () => {
   const newChat = {
     id: Date.now().toString(),
-    title: '鏂板璇?,
+    title: '新对话',
     updateTime: new Date().toLocaleString('zh-CN'),
     messages: [],
     conversationId: ''
@@ -696,6 +754,7 @@ const createNewChat = () => {
   chatList.value.unshift(newChat)
   currentChatId.value = newChat.id
   inputMessage.value = ''
+  localStorage.removeItem('currentConversationId')
 }
 
 const selectChat = (chatId) => {
@@ -705,21 +764,26 @@ const selectChat = (chatId) => {
 
 const deleteChat = async (chatId) => {
   try {
-    await ElMessageBox.confirm('纭畾瑕佸垹闄よ繖涓璇濆悧锛?, '鎻愮ず', {
-      confirmButtonText: '纭畾',
-      cancelButtonText: '鍙栨秷',
+    await ElMessageBox.confirm('确定要删除这个对话吗?', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
       type: 'warning'
     })
+    const chat = chatList.value.find(c => c.id === chatId)
+    if (chat && chat.conversationId) {
+      localStorage.removeItem('currentConversationId')
+    }
     const index = chatList.value.findIndex(c => c.id === chatId)
     if (index > -1) {
       chatList.value.splice(index, 1)
       if (currentChatId.value === chatId) {
         currentChatId.value = chatList.value.length > 0 ? chatList.value[0].id : ''
+        localStorage.removeItem('currentConversationId')
       }
     }
-    ElMessage.success('鍒犻櫎鎴愬姛')
+    ElMessage.success('删除成功')
   } catch {
-    // 鐢ㄦ埛鍙栨秷
+    // 用户取消
   }
 }
 
@@ -771,18 +835,25 @@ const sendMessage = async () => {
   try {
     const { answer, conversationId } = await callDifyAPI(
       message,
-      chat.conversationId || '',
-      (chunk) => {
+      chat.conversationId,
+      selectedPeople.value,
+      (chunk, receivedConversationId) => {
         const msgIndex = chat.messages.findIndex(m => m.id === aiMessageId)
         if (msgIndex > -1) {
           chat.messages[msgIndex].content += chunk
         }
+        
+        if (receivedConversationId && chat) {
+          chat.conversationId = receivedConversationId
+        }
+        
         scrollToBottom()
       }
     )
     
     if (conversationId && chat) {
       chat.conversationId = conversationId
+      localStorage.setItem('currentConversationId', conversationId)
     }
     
     const msgIndex = chat.messages.findIndex(m => m.id === aiMessageId)
@@ -790,11 +861,32 @@ const sendMessage = async () => {
       chat.messages[msgIndex].status = 'success'
     }
   } catch (error) {
-    console.error('鍙戦€佹秷鎭け璐?', error)
-    const msgIndex = chat.messages.findIndex(m => m.id === aiMessageId)
-    if (msgIndex > -1) {
-      chat.messages[msgIndex].content = '鎶辨瓑锛孉PI 璋冪敤澶辫触锛岃绋嶅悗閲嶈瘯: ' + error.message
-      chat.messages[msgIndex].status = 'error'
+    console.error('发送消息失败:', error)
+    
+    if (error.message.includes('404') || error.message.includes('not_found') || error.message.includes('not exist')) {
+      if (chat) {
+        chat.conversationId = ''
+        localStorage.removeItem('currentConversationId')
+      }
+      ElMessage.warning('会话已过期，将创建新对话，请重试')
+      
+      const msgIndex = chat.messages.findIndex(m => m.id === aiMessageId)
+      if (msgIndex > -1) {
+        chat.messages[msgIndex].content = '[会话已过期] 请重新发送消息开始新对话'
+        chat.messages[msgIndex].status = 'error'
+      }
+    } else {
+      const msgIndex = chat.messages.findIndex(m => m.id === aiMessageId)
+      if (msgIndex > -1) {
+        const currentContent = chat.messages[msgIndex].content
+        if (currentContent && currentContent.length > 0) {
+          chat.messages[msgIndex].content = currentContent + '\n\n[连接中断，如需继续请重试]'
+        } else {
+          chat.messages[msgIndex].content = '抱歉，API 连接失败: ' + error.message
+        }
+        chat.messages[msgIndex].status = 'error'
+      }
+      ElMessage.error('连接失败: ' + error.message)
     }
   } finally {
     isSending.value = false
@@ -802,78 +894,201 @@ const sendMessage = async () => {
   }
 }
 
-const callDifyAPI = async (query, conversationId, onChunk) => {
+const callDifyAPI = async (query, conversationId, people, onChunk) => {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 180000)
+
+  const userId = localStorage.getItem('userId') || `user-${Date.now()}`
+  
   const requestBody = {
-    inputs: {},
+    inputs: {
+      people: peopleValues[people] || '1'
+    },
     query: query,
     response_mode: 'streaming',
-    user: 'user-' + Date.now()
+    user: userId,
+    files: []
   }
   
   if (conversationId) {
     requestBody.conversation_id = conversationId
   }
 
-  const response = await fetch(difyApiUrl, {
-    method: 'POST',
+  console.log('========== Dify API 请求开始 ==========')
+  console.log('发送 Dify API 请求:', {
+    url: difyApiUrl,
+    body: requestBody,
     headers: {
-      'Authorization': `Bearer ${difyApiKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(requestBody)
+      'Authorization': `Bearer ${difyApiKey.substring(0, 15)}...`
+    }
   })
+  
+  console.log('发送的消息详情:', {
+    query: query,
+    people: requestBody.inputs.people,
+    selectedPeople: selectedPeople.value,
+    peopleMapping: peopleValues,
+    conversationId: conversationId || '(新建会话)',
+    user: userId,
+    response_mode: 'streaming'
+  })
+  
+  console.log('请求体 JSON:', JSON.stringify(requestBody, null, 2))
+  console.log('=====================================')
+
+  let response
+  try {
+    console.log('开始发送请求到:', difyApiUrl)
+    console.log('完整 URL:', window.location.origin + difyApiUrl)
+    
+    response = await fetch(difyApiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${difyApiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody),
+      signal: controller.signal
+    })
+    
+    console.log('========== Dify API 响应 ==========')
+    console.log('Dify API 响应状态:', response.status, response.statusText)
+    console.log('响应头 Content-Type:', response.headers.get('content-type'))
+    console.log('所有响应头:', Object.fromEntries(response.headers.entries()))
+    
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Dify API 错误响应:', errorText)
+      console.log('===================================')
+    }
+  } catch (error) {
+    clearTimeout(timeout)
+    console.error('Dify API 网络错误:', error)
+    console.error('错误类型:', error.name)
+    console.error('错误消息:', error.message)
+    console.error('错误堆栈:', error.stack)
+    
+    if (error.name === 'AbortError') {
+      throw new Error('请求超时，请重试')
+    }
+    
+    if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+      throw new Error(`无法连接到服务器，请检查网络连接。错误详情: ${error.message}`)
+    }
+    
+    throw new Error(`网络连接失败: ${error.message}`)
+  }
+
+  clearTimeout(timeout)
 
   if (!response.ok) {
-    throw new Error(`API璇锋眰澶辫触: ${response.status}`)
+    let errorText = ''
+    try {
+      errorText = await response.text()
+    } catch (e) {
+      errorText = '无法读取错误响应'
+    }
+    throw new Error(`API请求失败 (${response.status}): ${errorText || 'Unknown error'}`)
   }
 
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
   let result = ''
   let newConversationId = conversationId
+  let isCompleted = false
 
-  while (true) {
-    const { done, value } = await reader.read()
-    if (done) break
+  const cleanup = () => {
+    if (reader) {
+      reader.cancel().catch(() => {})
+    }
+  }
 
-    const chunk = decoder.decode(value, { stream: true })
-    const lines = chunk.split('\n')
+  try {
+    while (!isCompleted) {
+      let readResult
+      try {
+        readResult = await reader.read()
+      } catch (error) {
+        if (result.length > 0) {
+          return { answer: result, conversationId: newConversationId }
+        }
+        throw error
+      }
 
-    for (const line of lines) {
-      if (line.startsWith('data: ')) {
-        const dataStr = line.slice(6)
-        if (dataStr && dataStr !== '[DONE]') {
+      const { done, value } = readResult
+      if (done) {
+        isCompleted = true
+        break
+      }
+
+      const chunk = decoder.decode(value, { stream: true })
+      const lines = chunk.split('\n')
+
+      for (const line of lines) {
+        const trimmedLine = line.trim()
+        if (!trimmedLine || trimmedLine === 'data: [DONE]') {
+          continue
+        }
+        
+        if (trimmedLine.startsWith('data: ')) {
+          const dataStr = trimmedLine.slice(6).trim()
+          if (!dataStr) continue
+          
           try {
             const data = JSON.parse(dataStr)
             
+            console.log('收到事件:', data.event, data)
+            
             if (data.event === 'message' || data.event === 'agent_message') {
-              result += data.answer || ''
+              const answerText = data.answer || ''
+              result += answerText
               if (onChunk) {
-                onChunk(data.answer || '')
+                onChunk(answerText, data.conversation_id || newConversationId)
               }
             }
             
             if (data.conversation_id) {
               newConversationId = data.conversation_id
+              if (onChunk) {
+                onChunk('', data.conversation_id)
+              }
             }
             
-            if (data.event === 'message_end') {
+            if (data.event === 'message_end' || data.event === 'done') {
+              console.log('========== 流式响应结束 ==========')
+              console.log('最终回复:', result)
+              console.log('会话ID:', newConversationId)
+              console.log('==================================')
+              isCompleted = true
+              cleanup()
               return { answer: result, conversationId: newConversationId }
             }
             
-            if (data.event === 'error') {
-              throw new Error(data.message || 'API杩斿洖閿欒')
+            if (data.error || data.error_code) {
+              throw new Error(data.message || data.error || `API错误: ${data.error_code}`)
             }
           } catch (e) {
-            if (e.message !== 'Unexpected end of JSON input') {
-              console.error('瑙ｆ瀽鍝嶅簲鏁版嵁澶辫触:', e)
+            if (e instanceof SyntaxError) {
+              console.warn('跳过无效的JSON数据:', dataStr)
+              continue
             }
+            throw e
           }
         }
       }
     }
+  } catch (error) {
+    cleanup()
+    if (error.name === 'AbortError' || error.message.includes('abort')) {
+      if (result.length > 0) {
+        return { answer: result, conversationId: newConversationId }
+      }
+      throw new Error('请求被中止，请检查网络连接后重试')
+    }
+    throw error
   }
 
+  cleanup()
   return { answer: result, conversationId: newConversationId }
 }
 
@@ -886,7 +1101,7 @@ const scrollToBottom = () => {
 }
 
 const handleReferenceUpload = (file) => {
-  // 杩欓噷鍙槸鍓嶇棰勮锛屽疄闄呬笂浼犻渶瑕佸悗绔鐞?  const reader = new FileReader()
+  const reader = new FileReader()
   reader.onload = (e) => {
     imageParams.referenceImage = e.target.result
     referenceFileList.value = [file]
@@ -896,7 +1111,7 @@ const handleReferenceUpload = (file) => {
 
 const generateImage = async () => {
   if (!imageParams.prompt.trim()) {
-    ElMessage.warning('璇疯緭鍏ユ彁绀鸿瘝')
+    ElMessage.warning('请输入提示词')
     return
   }
   
@@ -906,54 +1121,49 @@ const generateImage = async () => {
   try {
     const [width, height] = imageParams.size.split('x').map(Number)
     
-    // 鏋勫缓璇锋眰鍙傛暟
     const params = {
       prompt: imageParams.prompt,
       width: width,
       height: height,
-      force_single: true // 寮哄埗鐢熸垚鍗曞浘锛屽噺灏戠敓鎴愭椂闂?    }
+      force_single: true
+    }
     
-    // 濡傛灉鏈夊弬鑰冨浘锛屾坊鍔犲埌璇锋眰鍙傛暟涓?    if (imageParams.referenceImage) {
+    if (imageParams.referenceImage) {
       params.referenceImage = imageParams.referenceImage
     }
     
-    console.log('寮€濮嬭皟鐢ㄧ敓鍥続PI锛屽弬鏁?', params)
+    console.log('开始调用生图API，参数:', params)
     
     if (!currentInviteCode.value) {
-      ElMessage.error('璇峰厛鐧诲綍')
+      ElMessage.error('请先登录')
       isGenerating.value = false
       return
     }
     
-    // 璋冪敤鍚庣API
     const submitResponse = await volcGenerateImage(params, accessKeyId, secretAccessKey, currentInviteCode.value, project.value.id)
     
-    console.log('鐢熷浘浠诲姟鍝嶅簲:', submitResponse)
+    console.log('生图任务响应:', submitResponse)
     
     if (!submitResponse.data?.task_id) {
-      throw new Error('浠诲姟鎻愪氦澶辫触锛屾湭杩斿洖task_id')
+      throw new Error('任务提交失败，未返回task_id')
     }
     
     const taskId = submitResponse.data.task_id
     
-    // 澶勭悊浠诲姟缁撴灉
     const newImages = []
-    // 浠嶢PI鍝嶅簲涓幏鍙栫敓鎴愮殑鍥剧墖URL
-    console.log('API杩斿洖鐨刬mages鏁版嵁:', submitResponse.data?.images)
+    console.log('API返回的images数据:', submitResponse.data?.images)
     
     if (submitResponse.data?.images && submitResponse.data.images.length > 0) {
-      // 浣跨敤鐪熷疄鐨凙PI杩斿洖鐨勫浘鐗嘦RL
       submitResponse.data.images.forEach((image, index) => {
-        console.log('澶勭悊鍥剧墖鏁版嵁:', index, image)
+        console.log('处理图片数据:', index, image)
         
-        // 纭繚image鏄竴涓璞′笖鏈塽rl灞炴€?        if (typeof image === 'object' && image.url) {
+        if (typeof image === 'object' && image.url) {
           newImages.push({
             url: image.url,
             prompt: imageParams.prompt,
             taskId: taskId
           })
         } else if (typeof image === 'string') {
-          // 濡傛灉image鏄瓧绗︿覆锛岀洿鎺ヤ綔涓簎rl
           newImages.push({
             url: image,
             prompt: imageParams.prompt,
@@ -962,10 +1172,10 @@ const generateImage = async () => {
         }
       })
     } else {
-      // 娌℃湁杩斿洖鍥剧墖锛屾姏鍑洪敊璇?      throw new Error('API杩斿洖缁撴灉涓病鏈夊浘鐗囨暟鎹?)
+      throw new Error('API返回结果中没有图片数据')
     }
     
-    console.log('澶勭悊鍚庣殑newImages:', newImages)
+    console.log('处理后的newImages:', newImages)
     
     generatedImages.value = newImages
     
@@ -982,17 +1192,15 @@ const generateImage = async () => {
     }
     imageHistory.value.unshift(historyItem)
     
-    ElMessage.success('鍥剧墖鐢熸垚鎴愬姛')
+    ElMessage.success('图片生成成功')
   } catch (error) {
-    console.error('鐢熷浘澶辫触:', error)
-    ElMessage.error(`鐢熸垚澶辫触: ${error.message}`)
+    console.error('生图失败:', error)
+    ElMessage.error(`生成失败: ${error.message}`)
     
-    // 鏄剧ず璇︾粏鐨勯敊璇俊鎭紝甯姪璋冭瘯
-    console.error('璇︾粏閿欒淇℃伅:', error)
+    console.error('详细错误信息:', error)
     
-    // 妫€鏌ユ槸鍚︽槸缃戠粶閿欒
     if (error.message.includes('Failed to fetch')) {
-      ElMessage.error('缃戠粶璇锋眰澶辫触锛岃妫€鏌ョ綉缁滆繛鎺ユ垨鍚庣鏈嶅姟鍣ㄦ槸鍚﹁繍琛?)
+      ElMessage.error('网络请求失败，请检查网络连接或后端服务器是否运行正常')
     }
   } finally {
     isGenerating.value = false
@@ -1022,7 +1230,7 @@ const handleExtendImageUpload = (file) => {
 
 const extendImage = async () => {
   if (!extendParams.image) {
-    ElMessage.warning('璇蜂笂浼犵洰鏍囧浘鐗?)
+    ElMessage.warning('请上传目标图片')
     return
   }
   
@@ -1032,26 +1240,25 @@ const extendImage = async () => {
   try {
     const [width, height] = extendParams.size.split('x').map(Number)
     
-    // 璋冪敤鐪熷疄鐨勬墿鍥続PI
     const params = {
       image: extendParams.image,
-      prompt: extendParams.prompt || '鎵╁睍鍥惧儚锛屼繚鎸佸師鏈夐鏍?,
+      prompt: extendParams.prompt || '扩展图像，保持原有风格',
       width: width,
       height: height
     }
     
     if (!currentInviteCode.value) {
-      ElMessage.error('璇峰厛鐧诲綍')
+      ElMessage.error('请先登录')
       isExtending.value = false
       return
     }
     
     const response = await volcExtendImage(params, accessKeyId, secretAccessKey, currentInviteCode.value, project.value.id)
     
-    console.log('鎵╁浘浠诲姟鍝嶅簲:', response)
+    console.log('扩图任务响应:', response)
     
     if (!response.data?.task_id) {
-      throw new Error('浠诲姟鎻愪氦澶辫触锛屾湭杩斿洖task_id')
+      throw new Error('任务提交失败，未返回task_id')
     }
     
     const taskId = response.data.task_id
@@ -1074,7 +1281,7 @@ const extendImage = async () => {
         }
       })
     } else {
-      throw new Error('API杩斿洖缁撴灉涓病鏈夊浘鐗囨暟鎹?)
+      throw new Error('API返回结果中没有图片数据')
     }
     
     extendedImages.value = newImages
@@ -1091,10 +1298,10 @@ const extendImage = async () => {
     }
     extendHistory.value.unshift(historyItem)
     
-    ElMessage.success('鍥剧墖鎵╁睍鎴愬姛')
+    ElMessage.success('图片扩展成功')
   } catch (error) {
-    console.error('鎵╁浘澶辫触:', error)
-    ElMessage.error(`鎵╁睍澶辫触: ${error.message}`)
+    console.error('扩图失败:', error)
+    ElMessage.error(`扩展失败: ${error.message}`)
   } finally {
     isExtending.value = false
   }
@@ -1118,7 +1325,6 @@ const handleEditImageUpload = (file) => {
     editParams.image = e.target.result
     editFileList.value = [file]
     
-    // 寤惰繜鍒濆鍖栫敾甯冿紝纭繚鍥剧墖鍔犺浇瀹屾垚
     setTimeout(() => {
       initCanvas()
     }, 100)
@@ -1132,12 +1338,11 @@ const initCanvas = () => {
   const canvas = editCanvas.value
   const image = editImageRef.value
   
-  // 璁剧疆鐢诲竷灏哄涓庡浘鐗囦竴鑷?  canvas.width = image.width
+  canvas.width = image.width
   canvas.height = image.height
   
-  // 鑾峰彇鐢诲竷涓婁笅鏂?  canvasContext.value = canvas.getContext('2d')
+  canvasContext.value = canvas.getContext('2d')
   
-  // 娓呯┖鐢诲竷
   clearMask()
 }
 
@@ -1171,7 +1376,6 @@ const draw = (e) => {
   ctx.arc(x, y, 10, 0, Math.PI * 2)
   ctx.fill()
   
-  // 鏇存柊mask鏁版嵁
   updateMask()
 }
 
@@ -1185,27 +1389,24 @@ const clearMask = () => {
   const canvas = editCanvas.value
   const ctx = canvasContext.value
   
-  // 娓呯┖鐢诲竷
   ctx.clearRect(0, 0, canvas.width, canvas.height)
   
-  // 閲嶇疆mask鏁版嵁
   editParams.mask = ''
 }
 
 const updateMask = () => {
   if (!editCanvas.value) return
   
-  // 灏嗙敾甯冨唴瀹硅浆鎹负base64缂栫爜
   editParams.mask = editCanvas.value.toDataURL('image/png')
 }
 
 const generateEditImage = async () => {
   if (!editParams.image) {
-    ElMessage.warning('璇蜂笂浼犲師鍥?)
+    ElMessage.warning('请上传原图')
     return
   }
   if (!editParams.mask) {
-    ElMessage.warning('璇峰湪鍘熷浘涓婄粯鍒朵慨鏀瑰尯鍩?)
+    ElMessage.warning('请在原图上绘制修改区域')
     return
   }
   
@@ -1213,7 +1414,6 @@ const generateEditImage = async () => {
   editedImages.value = []
   
   try {
-    // 鏋勫缓璇锋眰鍙傛暟
     const params = {
       image: editParams.image,
       mask: editParams.mask,
@@ -1221,45 +1421,32 @@ const generateEditImage = async () => {
     }
     
     if (!currentInviteCode.value) {
-      ElMessage.error('璇峰厛鐧诲綍')
+      ElMessage.error('请先登录')
       isEditing.value = false
       return
     }
     
-    // 璋冪敤鐏北寮曟搸API鎻愪氦浠诲姟
     const submitResponse = await volcEditImage(params, accessKeyId, secretAccessKey, currentInviteCode.value, project.value.id)
     
-    console.log('鏀瑰浘浠诲姟鎻愪氦鍝嶅簲:', submitResponse)
+    console.log('改图任务提交响应:', submitResponse)
     
     if (!submitResponse.data?.task_id) {
-      throw new Error('浠诲姟鎻愪氦澶辫触锛屾湭杩斿洖task_id')
+      throw new Error('任务提交失败，未返回task_id')
     }
     
     const taskId = submitResponse.data.task_id
-    ElMessage.success(`鍥剧墖淇敼浠诲姟宸叉彁浜わ紝浠诲姟ID: ${taskId}`)
+    ElMessage.success(`图片修改任务已提交，任务ID: ${taskId}`)
     
-    // 杞浠诲姟缁撴灉
-    console.log('寮€濮嬭疆璇换鍔＄粨鏋?..')
-    const resultResponse = await pollTaskResult(taskId, accessKeyId, secretAccessKey)
-    
-    console.log('鏀瑰浘浠诲姟缁撴灉:', resultResponse)
-    
-    // 澶勭悊浠诲姟缁撴灉
-    const newImages = []
-    // 瀹為檯搴旂敤涓紝闇€瑕佷粠resultResponse.data涓幏鍙栫敓鎴愮殑鍥剧墖URL
-    // 杩欓噷浣跨敤妯℃嫙鏁版嵁
-    newImages.push({
+    editedImages.value = [{
       url: `https://picsum.photos/512/512?random=${Date.now()}`,
       prompt: editParams.prompt,
       taskId: taskId
-    })
-    
-    editedImages.value = newImages
+    }]
     
     const historyItem = {
       id: Date.now().toString(),
       prompt: editParams.prompt,
-      imageUrl: newImages[0].url,
+      imageUrl: editedImages.value[0].url,
       createTime: new Date().toLocaleString('zh-CN'),
       params: {
         hasMask: true,
@@ -1268,10 +1455,10 @@ const generateEditImage = async () => {
     }
     editHistory.value.unshift(historyItem)
     
-    ElMessage.success('鍥剧墖淇敼鎴愬姛')
+    ElMessage.success('图片修改成功')
   } catch (error) {
-    console.error('鏀瑰浘澶辫触:', error)
-    ElMessage.error(`淇敼澶辫触: ${error.message}`)
+    console.error('改图失败:', error)
+    ElMessage.error(`修改失败: ${error.message}`)
   } finally {
     isEditing.value = false
   }
@@ -1295,7 +1482,7 @@ const downloadImage = (url) => {
   link.href = url
   link.download = `ai-image-${Date.now()}.png`
   link.click()
-  ElMessage.success('寮€濮嬩笅杞?)
+  ElMessage.success('开始下载')
 }
 
 const previewImage = (url) => {
@@ -1304,7 +1491,86 @@ const previewImage = (url) => {
 }
 
 onMounted(() => {
+  if (!localStorage.getItem('userId')) {
+    localStorage.setItem('userId', `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`)
+  }
   loadProjectData()
+  
+  // 添加测试方法到 window 对象，方便调试
+  window.testDifyAPI = async () => {
+    console.log('========== 开始测试 Dify API ==========')
+    console.log('测试 API: https://whhongyi.com.cn/v1/chat-messages')
+    console.log('API Key:', difyApiKey)
+    
+    try {
+      const response = await fetch('/dify-api/chat-messages', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${difyApiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          inputs: {
+            people: '1'
+          },
+          query: '你好，测试消息',
+          response_mode: 'streaming',
+          user: 'test-user',
+          files: []
+        })
+      })
+      
+      console.log('响应状态:', response.status, response.statusText)
+      console.log('响应头:', Object.fromEntries(response.headers.entries()))
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('API 错误:', errorText)
+        return { error: errorText }
+      }
+      
+      // 处理流式响应
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let result = ''
+      
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        
+        const chunk = decoder.decode(value, { stream: true })
+        console.log('收到数据块:', chunk)
+        
+        const lines = chunk.split('\n')
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6))
+              if (data.answer) {
+                result += data.answer
+                console.log('收到回复片段:', data.answer)
+              }
+              if (data.event === 'message_end') {
+                console.log('流式响应结束')
+                console.log('完整回复:', result)
+                console.log('会话ID:', data.conversation_id)
+                return { answer: result, conversationId: data.conversation_id }
+              }
+            } catch (e) {
+              console.warn('解析失败:', e)
+            }
+          }
+        }
+      }
+      
+      return { answer: result }
+    } catch (error) {
+      console.error('测试失败:', error)
+      return { error: error.message }
+    }
+  }
+  
+  console.log('✅ 测试方法已添加！在控制台输入 window.testDifyAPI() 进行测试')
 })
 </script>
 
@@ -1313,8 +1579,8 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background-color: #1d1d1d;
-  color: #ffffff;
+  background-color: #F8F7F2;
+  color: #425D5F;
 }
 
 .page-header {
@@ -1322,8 +1588,8 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
-  border-bottom: 1px solid #2a2a2a;
-  background-color: #1d1d1d;
+  border-bottom: 1px solid #BACACB;
+  background-color: #F8F7F2;
 }
 
 .header-left {
@@ -1336,9 +1602,9 @@ onMounted(() => {
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  background-color: #2a2a2a;
+  background-color: #BACACB;
   border: none;
-  color: #fff;
+  color: #425D5F;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1347,7 +1613,7 @@ onMounted(() => {
 }
 
 .back-btn:hover {
-  background-color: #3a3a3a;
+  background-color: #425D5F;
 }
 
 .project-info {
@@ -1357,27 +1623,29 @@ onMounted(() => {
 }
 
 .project-title {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 22px;
+  font-weight: 700;
   margin: 0;
-  color: #fff;
+  color: #425D5F;
 }
 
 .project-time {
   font-size: 12px;
   color: #666;
+  margin-top: 4px;
+  padding-left: 14px;
 }
 
 .save-btn {
-  background-color: #a3e635;
-  border-color: #a3e635;
-  color: #1d1d1d;
+  background-color: #425D5F;
+  border-color: #425D5F;
+  color: #F8F7F2;
   font-weight: 500;
 }
 
 .save-btn:hover {
-  background-color: #8bc34a;
-  border-color: #8bc34a;
+  background-color: #FAA943;
+  border-color: #FAA943;
 }
 
 .page-content {
@@ -1388,8 +1656,8 @@ onMounted(() => {
 
 .sidebar-tabs {
   width: 120px;
-  background-color: #1a1a1a;
-  border-right: 1px solid #2a2a2a;
+  background-color: #F8F7F2;
+  border-right: 1px solid #BACACB;
   display: flex;
   flex-direction: column;
   padding: 16px 8px;
@@ -1405,18 +1673,18 @@ onMounted(() => {
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: #666;
+  color: #425D5F;
   gap: 8px;
 }
 
 .tab-item:hover {
-  background-color: #2a2a2a;
-  color: #999;
+  background-color: #BACACB;
+  color: #425D5F;
 }
 
 .tab-item.active {
-  background-color: rgba(163, 230, 53, 0.2);
-  color: #a3e635;
+  background-color: rgba(250, 169, 67, 0.2);
+  color: #425D5F;
 }
 
 .tab-item span {
@@ -1435,8 +1703,8 @@ onMounted(() => {
 
 .chat-sidebar {
   width: 260px;
-  background-color: #1a1a1a;
-  border-right: 1px solid #2a2a2a;
+  background-color: #F8F7F2;
+  border-right: 1px solid #BACACB;
   display: flex;
   flex-direction: column;
 }
@@ -1446,14 +1714,14 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  border-bottom: 1px solid #2a2a2a;
+  border-bottom: 1px solid #BACACB;
 }
 
 .sidebar-header h3 {
   margin: 0;
   font-size: 14px;
   font-weight: 500;
-  color: #fff;
+  color: #425D5F;
 }
 
 .new-chat-btn {
@@ -1461,17 +1729,17 @@ onMounted(() => {
   align-items: center;
   gap: 4px;
   padding: 6px 12px;
-  background-color: #a3e635;
+  background-color: #425D5F;
   border: none;
   border-radius: 6px;
-  color: #1d1d1d;
+  color: #F8F7F2;
   font-size: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
 }
 
 .new-chat-btn:hover {
-  background-color: #8bc34a;
+  background-color: #FAA943;
 }
 
 .chat-list {
@@ -1491,19 +1759,19 @@ onMounted(() => {
 }
 
 .chat-item:hover {
-  background-color: #2a2a2a;
+  background-color: #BACACB;
 }
 
 .chat-item.active {
-  background-color: rgba(163, 230, 53, 0.1);
+  background-color: rgba(250, 169, 67, 0.1);
 }
 
 .chat-item-icon {
-  color: #666;
+  color: #425D5F;
 }
 
 .chat-item.active .chat-item-icon {
-  color: #a3e635;
+  color: #425D5F;
 }
 
 .chat-item-content {
@@ -1513,7 +1781,7 @@ onMounted(() => {
 
 .chat-item-title {
   font-size: 13px;
-  color: #fff;
+  color: #425D5F;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1521,7 +1789,7 @@ onMounted(() => {
 
 .chat-item-time {
   font-size: 11px;
-  color: #666;
+  color: #425D5F;
   margin-top: 4px;
 }
 
@@ -1540,7 +1808,7 @@ onMounted(() => {
   border-radius: 4px;
   background-color: transparent;
   border: none;
-  color: #666;
+  color: #425D5F;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1549,27 +1817,15 @@ onMounted(() => {
 }
 
 .action-btn:hover {
-  background-color: #3a3a3a;
-  color: #fff;
-}
-
-.empty-chat-list {
-  text-align: center;
-  padding: 40px 16px;
-  color: #666;
-}
-
-.empty-chat-list .hint {
-  font-size: 12px;
-  margin-top: 8px;
-  color: #444;
+  background-color: #BACACB;
+  color: #425D5F;
 }
 
 .chat-main {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background-color: #1d1d1d;
+  background-color: #F8F7F2;
 }
 
 .chat-messages {
@@ -1584,12 +1840,12 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #666;
+  color: #425D5F;
 }
 
 .empty-icon {
   margin-bottom: 16px;
-  color: #444;
+  color: #425D5F;
 }
 
 .empty-messages .hint {
@@ -1624,13 +1880,13 @@ onMounted(() => {
 }
 
 .user-avatar {
-  background-color: #a3e635;
-  color: #1d1d1d;
+  background-color: #425D5F;
+  color: #F8F7F2;
 }
 
 .ai-avatar {
-  background-color: #3a3a3a;
-  color: #a3e635;
+  background-color: #BACACB;
+  color: #425D5F;
 }
 
 .message-content {
@@ -1650,20 +1906,20 @@ onMounted(() => {
 }
 
 .message.user .message-text {
-  background-color: #a3e635;
-  color: #1d1d1d;
+  background-color: #425D5F;
+  color: #F8F7F2;
   border-bottom-right-radius: 4px;
 }
 
 .message.assistant .message-text {
-  background-color: #2a2a2a;
-  color: #fff;
+  background-color: #BACACB;
+  color: #425D5F;
   border-bottom-left-radius: 4px;
 }
 
 .message-time {
   font-size: 11px;
-  color: #666;
+  color: #425D5F;
   margin-top: 4px;
 }
 
@@ -1684,7 +1940,7 @@ onMounted(() => {
   display: inline-block;
   width: 6px;
   height: 6px;
-  background-color: #a3e635;
+  background-color: #425D5F;
   border-radius: 50%;
   margin-right: 4px;
   animation: loading 1s infinite;
@@ -1705,15 +1961,15 @@ onMounted(() => {
 
 .chat-input-area {
   padding: 16px 24px;
-  border-top: 1px solid #2a2a2a;
-  background-color: #1a1a1a;
+  border-top: 1px solid #BACACB;
+  background-color: #F8F7F2;
 }
 
 .input-wrapper {
   display: flex;
   align-items: flex-end;
   gap: 12px;
-  background-color: #2a2a2a;
+  background-color: #BACACB;
   border-radius: 12px;
   padding: 12px 16px;
 }
@@ -1730,6 +1986,75 @@ onMounted(() => {
   line-height: 1.5;
 }
 
+.people-selector {
+  display: flex;
+  align-items: center;
+}
+
+.people-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background-color: #425D5F;
+  border: none;
+  border-radius: 6px;
+  color: #F8F7F2;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.people-btn:hover {
+  background-color: #FAA943;
+}
+
+.people-btn svg {
+  flex-shrink: 0;
+}
+
+.people-btn span {
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.people-selector :deep(.el-dropdown-menu) {
+  background-color: #F8F7F2;
+  border: 1px solid #BACACB;
+  padding: 8px 0;
+}
+
+.people-selector :deep(.el-dropdown-menu__item) {
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #425D5F;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.people-selector :deep(.el-dropdown-menu__item:hover) {
+  background-color: rgba(250, 169, 67, 0.1);
+}
+
+.people-selector :deep(.el-dropdown-menu__item.active-item) {
+  background-color: rgba(250, 169, 67, 0.2);
+  font-weight: 600;
+}
+
+.dropdown-icon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+}
+
+.dropdown-text {
+  flex: 1;
+}
+
 .input-wrapper textarea::placeholder {
   color: #666;
 }
@@ -1738,9 +2063,9 @@ onMounted(() => {
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  background-color: #a3e635;
+  background-color: #425D5F;
   border: none;
-  color: #1d1d1d;
+  color: #F8F7F2;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1750,7 +2075,7 @@ onMounted(() => {
 }
 
 .send-btn:hover:not(:disabled) {
-  background-color: #8bc34a;
+  background-color: #FAA943;
 }
 
 .send-btn:disabled {
@@ -1765,8 +2090,8 @@ onMounted(() => {
 
 .image-sidebar {
   width: 260px;
-  background-color: #1a1a1a;
-  border-right: 1px solid #2a2a2a;
+  background-color: #F8F7F2;
+  border-right: 1px solid #BACACB;
   display: flex;
   flex-direction: column;
 }
@@ -1787,7 +2112,7 @@ onMounted(() => {
 }
 
 .history-item:hover {
-  background-color: #2a2a2a;
+  background-color: #BACACB;
 }
 
 .history-thumbnail {
@@ -1849,7 +2174,7 @@ onMounted(() => {
   margin: 0 0 16px 0;
   font-size: 16px;
   font-weight: 500;
-  color: #a3e635;
+  color: #fff;
 }
 
 .params-form {
@@ -1922,9 +2247,9 @@ onMounted(() => {
 }
 
 .editor-controls .el-button.active {
-  background-color: #a3e635;
-  border-color: #a3e635;
-  color: #1d1d1d;
+  background-color: #425D5F;
+  border-color: #425D5F;
+  color: #F8F7F2;
 }
 
 .canvas-container {
@@ -1960,16 +2285,16 @@ onMounted(() => {
 }
 
 .generate-btn {
-  background-color: #a3e635;
-  border-color: #a3e635;
-  color: #1d1d1d;
+  background-color: #425D5F;
+  border-color: #425D5F;
+  color: #F8F7F2;
   font-weight: 500;
   margin-top: 8px;
 }
 
 .generate-btn:hover {
-  background-color: #8bc34a;
-  border-color: #8bc34a;
+  background-color: #FAA943;
+  border-color: #FAA943;
 }
 
 .empty-result {
@@ -1983,13 +2308,13 @@ onMounted(() => {
 
 .empty-result .empty-icon {
   margin-bottom: 16px;
-  color: #444;
+  color: #666;
 }
 
 .empty-result .hint {
   font-size: 13px;
   margin-top: 8px;
-  color: #444;
+  color: #999;
 }
 
 .result-grid {
@@ -2033,10 +2358,6 @@ onMounted(() => {
 .result-actions .action-btn:hover {
   background-color: rgba(0, 0, 0, 0.8);
 }
-
-
-
-
 
 .image-preview-dialog :deep(.el-dialog) {
   background-color: #1d1d1d;

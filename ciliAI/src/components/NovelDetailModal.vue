@@ -300,7 +300,7 @@ const addToProject = async () => {
 
 <style scoped>
 .novel-detail-dialog {
-  --el-dialog-bg-color: #1d1d1d !important;
+  --el-dialog-bg-color: #F8F7F2 !important;
   --el-dialog-border-radius: 12px !important;
   --el-dialog-padding-primary: 0 !important;
 }
@@ -311,7 +311,7 @@ const addToProject = async () => {
 }
 
 .dialog-header h2 {
-  color: #ffffff;
+  color: #425D5F;
   font-size: 20px;
   margin: 0;
 }
@@ -349,8 +349,8 @@ const addToProject = async () => {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background-color: rgba(0, 0, 0, 0.6);
-  color: white;
+  background-color: rgba(66, 93, 95, 0.9);
+  color: #F8F7F2;
   border: none;
   cursor: pointer;
   display: flex;
@@ -361,7 +361,7 @@ const addToProject = async () => {
 }
 
 .image-nav-btn:hover {
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: rgba(66, 93, 95, 1);
   transform: translateY(-50%) scale(1.1);
 }
 
@@ -395,12 +395,12 @@ const addToProject = async () => {
 }
 
 .indicator.active {
-  background-color: #a3e635;
+  background-color: #425D5F;
   width: 12px;
 }
 
 .indicator:hover {
-  background-color: #666;
+  background-color: #BACACB;
 }
 
 .novel-info-section {
@@ -411,20 +411,20 @@ const addToProject = async () => {
 }
 
 .info-item {
-  background-color: #2a2a2a;
+  background-color: #BACACB;
   border-radius: 8px;
   padding: 16px;
 }
 
 .info-title {
-  color: #a3e635;
+  color: #425D5F;
   font-size: 16px;
   font-weight: 600;
   margin: 0 0 12px 0;
 }
 
 .info-content {
-  color: #e0e0e0;
+  color: #425D5F;
   font-size: 14px;
   line-height: 1.6;
   margin: 0;
@@ -443,17 +443,17 @@ const addToProject = async () => {
 }
 
 .detail-label {
-  color: #999;
+  color: #425D5F;
 }
 
 .detail-value {
-  color: #a3e635;
+  color: #425D5F;
   font-weight: 500;
 }
 
 .author-info {
-  background: linear-gradient(135deg, #2a3a2a 0%, #1a2a1a 100%);
-  border: 1px solid #3a4a3a;
+  background: linear-gradient(135deg, #BACACB 0%, #F8F7F2 100%);
+  border: 1px solid #425D5F;
 }
 
 .author-grid {
@@ -469,12 +469,12 @@ const addToProject = async () => {
 }
 
 .author-label {
-  color: #8a9a8a;
+  color: #425D5F;
   min-width: 80px;
 }
 
 .author-value {
-  color: #a3e635;
+  color: #425D5F;
   font-weight: 600;
 }
 
@@ -486,7 +486,7 @@ const addToProject = async () => {
 
 .tag {
   background-color: rgba(163, 230, 53, 0.2);
-  color: #a3e635;
+  color: #425D5F;
   font-size: 12px;
   padding: 4px 8px;
   border-radius: 4px;
@@ -513,31 +513,31 @@ const addToProject = async () => {
 }
 
 .add-button {
-  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  background: linear-gradient(135deg, #425D5F 0%, #425D5F 100%);
   border: none;
-  color: #ffffff;
+  color: #F8F7F2;
 }
 
 .add-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-  background: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+  box-shadow: 0 4px 12px rgba(66, 93, 95, 0.3);
+  background: linear-gradient(135deg, #FAA943 0%, #FDE7A2 100%);
 }
 
 .create-button {
-  background: linear-gradient(135deg, #a3e635 0%, #84cc16 100%);
+  background: linear-gradient(135deg, #FAA943 0%, #FDE7A2 100%);
   border: none;
-  color: #1d1d1d;
+  color: #425D5F;
 }
 
 .create-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(163, 230, 53, 0.3);
-  background: linear-gradient(135deg, #84cc16 0%, #a3e635 100%);
+  box-shadow: 0 4px 12px rgba(250, 169, 67, 0.3);
+  background: linear-gradient(135deg, #FDE7A2 0%, #FAA943 100%);
 }
 
 .qr-code-dialog {
-  --el-dialog-bg-color: #1d1d1d !important;
+  --el-dialog-bg-color: #F8F7F2 !important;
   --el-dialog-border-radius: 12px !important;
 }
 
@@ -547,7 +547,7 @@ const addToProject = async () => {
 }
 
 .qr-code-content h3 {
-  color: #ffffff;
+  color: #425D5F;
   margin: 0 0 24px 0;
 }
 
@@ -563,14 +563,14 @@ const addToProject = async () => {
 }
 
 .qr-code-note {
-  color: #999;
+  color: #425D5F;
   font-size: 14px;
   margin-top: 16px;
 }
 
 .modal-comments {
   padding: 20px;
-  background: linear-gradient(180deg, #2a2a2a 0%, #232323 100%);
+  background: linear-gradient(180deg, #BACACB 0%, #F8F7F2 100%);
   border-radius: 8px;
   margin-top: 20px;
   max-height: 400px;
@@ -582,7 +582,7 @@ const addToProject = async () => {
 }
 
 .modal-comments::-webkit-scrollbar-track {
-  background: #2a2a2a;
+  background: #BACACB;
   border-radius: 3px;
 }
 
@@ -610,11 +610,11 @@ const addToProject = async () => {
   gap: 8px;
   font-size: 15px;
   font-weight: 600;
-  color: #fff;
+  color: #425D5F;
 }
 
 .comments-count {
-  color: #666;
+  color: #425D5F;
   font-weight: 400;
   font-size: 13px;
 }
@@ -680,10 +680,10 @@ const addToProject = async () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: #F8F7F2;
   font-weight: 600;
   font-size: 15px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px rgba(66, 93, 95, 0.3);
   transition: all 0.3s ease;
 }
 
@@ -731,13 +731,13 @@ const addToProject = async () => {
 .comment-author {
   font-size: 14px;
   font-weight: 600;
-  color: #fff;
+  color: #425D5F;
 }
 
 .vip-badge {
   padding: 2px 8px;
-  background: linear-gradient(135deg, #ffd700 0%, #ff6b6b 100%);
-  color: #fff;
+  background: linear-gradient(135deg, #FAA943 0%, #FDE7A2 100%);
+  color: #425D5F;
   font-size: 11px;
   font-weight: 600;
   border-radius: 4px;
@@ -780,7 +780,7 @@ const addToProject = async () => {
 }
 
 .action-item:hover {
-  color: #a3e635;
+  color: #425D5F;
 }
 
 @media (max-width: 768px) {

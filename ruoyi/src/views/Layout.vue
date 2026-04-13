@@ -20,10 +20,20 @@
           <el-icon><Ticket /></el-icon>
           <span>邀请码管理</span>
         </el-menu-item>
-        <el-menu-item index="/works">
-          <el-icon><Picture /></el-icon>
-          <span>内容管理</span>
-        </el-menu-item>
+        <el-sub-menu index="/content">
+          <template #title>
+            <el-icon><Picture /></el-icon>
+            <span>内容管理</span>
+          </template>
+          <el-menu-item index="/works">
+            <el-icon><Collection /></el-icon>
+            <span>作品管理</span>
+          </el-menu-item>
+          <el-menu-item index="/order-management">
+            <el-icon><Document /></el-icon>
+            <span>接单管理</span>
+          </el-menu-item>
+        </el-sub-menu>
         <el-menu-item index="/users">
           <el-icon><User /></el-icon>
           <span>用户管理</span>
@@ -60,6 +70,7 @@
 import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Picture, Document, Collection, Odometer, Ticket, User, UserFilled } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
