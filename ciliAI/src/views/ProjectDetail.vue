@@ -703,10 +703,10 @@ const route = useRoute()
 const router = useRouter()
 const updateComputingPower = inject('updateComputingPower')
 
-const currentInviteCode = ref('demo-invite-code')
+const currentInviteCode = ref(localStorage.getItem('inviteCode') || '')
 
-const accessKeyId = import.meta.env.VITE_VOLC_AK || ''
-const secretAccessKey = import.meta.env.VITE_VOLC_SK || ''
+const accessKeyId = import.meta.env.VITE_VOLC_AK_1 || import.meta.env.VITE_VOLC_AK || ''
+const secretAccessKey = import.meta.env.VITE_VOLC_SK_1 || import.meta.env.VITE_VOLC_SK || ''
 
 const difyApiKey = 'app-jd05GWziMofrIu8sX7FFfLd2'
 const difyApiUrl = '/dify-api/chat-messages'

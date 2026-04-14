@@ -1050,16 +1050,23 @@ def generate_image():
     invite_code = data.get('invite_code')
     project_id = data.get('project_id')
     prompt = data.get('prompt')
-    
+
+    logger.info(f"收到生图请求 - prompt: {prompt}, invite_code: {invite_code}, project_id: {project_id}")
+
     if not prompt:
+        logger.warning("生图请求失败: 未提供提示词")
         return jsonify({'status': 'error', 'message': '请输入提示词'}), 400
-    
+
     if not invite_code:
+        logger.warning("生图请求失败: 未提供邀请码")
         return jsonify({'status': 'error', 'message': '请先登录'}), 401
-    
+
     user_id = get_user_id_by_invite_code(invite_code)
     if not user_id:
+        logger.warning(f"生图请求失败: 用户不存在，邀请码={invite_code}")
         return jsonify({'status': 'error', 'message': '用户不存在，请重新登录'}), 401
+
+    logger.info(f"用户验证成功 - user_id: {user_id}")
     
     power_cost = POWER_COST['generate']
     success, remaining = deduct_compute_power(user_id, power_cost, 'generate', project_id, None, f'文生图: {prompt[:50]}...')
@@ -1073,22 +1080,21 @@ def generate_image():
         }), 400
     
     params = {
-        "req_key": "jimeng_t2i_v40",
+        "req_key": "jimeng_seedream46_cvtob",
         "prompt": prompt,
         "width": data.get('width', 1024),
-        "height": data.get('height', 1024),
-        "model_version": "v4.0"
+        "height": data.get('height', 1024)
     }
-    
+
     try:
         logger.info(f"Submitting task for prompt: {prompt}")
         visual_service = get_visual_service()
         submit_res = visual_service.common_json_handler("CVSync2AsyncSubmitTask", params)
-        
+
         if submit_res.get('code') != 10000:
             add_compute_power(user_id, power_cost, 'refund', f'生图失败退还: {prompt[:30]}...')
             return jsonify({'status': 'error', 'message': f"提交任务失败: {submit_res.get('message')}"}), 500
-        
+
         task_id = submit_res.get('data', {}).get('task_id')
         if not task_id:
             add_compute_power(user_id, power_cost, 'refund', f'生图失败退还: {prompt[:30]}...')
@@ -1097,11 +1103,11 @@ def generate_image():
         logger.info(f"Polling results for task_id: {task_id}")
         max_retries = 30
         retry_interval = 2
-        
+
         for i in range(max_retries):
             time.sleep(retry_interval)
             query_params = {
-                "req_key": "jimeng_t2i_v40",
+                "req_key": "jimeng_seedream46_cvtob",
                 "task_id": task_id
             }
             query_res = visual_service.common_json_handler("CVSync2AsyncGetResult", query_params)

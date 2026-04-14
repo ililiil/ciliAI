@@ -1,4 +1,5 @@
 import os
+import base64
 import threading
 import logging
 from typing import List, Dict, Optional
@@ -12,6 +13,10 @@ class KeyManager:
         self._current_index = 0
         self._lock = threading.Lock()
         self._initialized = False
+
+    def _decode_secret_key(self, sk: str) -> str:
+        """Secret Key - 直接返回原始值（SDK内部处理）"""
+        return sk
 
     def _load_keys(self):
         """从环境变量加载所有密钥组"""
@@ -33,14 +38,16 @@ class KeyManager:
                         ak = os.getenv('VOLC_AK')
                         sk = os.getenv('VOLC_SK')
                         if ak and sk:
-                            self._keys.append({'ak': ak, 'sk': sk, 'index': 0})
+                            decoded_sk = self._decode_secret_key(sk)
+                            self._keys.append({'ak': ak, 'sk': decoded_sk, 'index': 0})
                             logger.info(f"已加载旧版密钥组 0 (AK: {ak[:10]}...)")
                             index += 1
                             continue
                     break
 
                 if ak and sk:
-                    self._keys.append({'ak': ak, 'sk': sk, 'index': index})
+                    decoded_sk = self._decode_secret_key(sk)
+                    self._keys.append({'ak': ak, 'sk': decoded_sk, 'index': index})
                     logger.info(f"已加载密钥组 {index} (AK: {ak[:10]}...)")
 
                 index += 1
