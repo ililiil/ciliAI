@@ -43,7 +43,7 @@ def init_database():
     ''')
 
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS records (
+        CREATE TABLE IF NOT EXISTS generation_records (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
             project_id INTEGER,
@@ -55,6 +55,7 @@ def init_database():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             completed_at TIMESTAMP,
             task_id TEXT,
+            power_cost INTEGER DEFAULT 0,
             FOREIGN KEY (user_id) REFERENCES users (id),
             FOREIGN KEY (project_id) REFERENCES projects (id)
         )
@@ -138,6 +139,10 @@ def init_database():
             published_at TIMESTAMP
         )
     ''')
+
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_generation_records_user_id ON generation_records(user_id)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_generation_records_project_id ON generation_records(project_id)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_generation_records_type ON generation_records(type)')
 
     conn.commit()
 
