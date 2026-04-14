@@ -36,10 +36,18 @@ def verify_database():
         for code in codes:
             print(f"  ID: {code[0]}, 码: {code[1]}, 状态: {code[2]}, 算力: {code[3]}, 已使用: {code[5]}/{code[4]}")
 
-        cursor.execute('SELECT COUNT(*) FROM works')
+        cursor.execute('SELECT COUNT(*) FROM ip_works')
         works_count = cursor.fetchone()[0]
 
         print(f"\n作品数量: {works_count}")
+
+        cursor.execute('SELECT id, title, student_name, image, category, status FROM ip_works')
+        works = cursor.fetchall()
+
+        if works:
+            print("\n作品列表:")
+            for work in works:
+                print(f"  ID: {work[0]}, 标题: {work[1]}, 学生: {work[2]}, 分类: {work[4]}, 状态: {work[5]}")
 
         print("\n" + "=" * 60)
         print("✓ 数据库验证通过！所有功能正常。")

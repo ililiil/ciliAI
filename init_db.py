@@ -105,7 +105,7 @@ def init_database():
     ''')
 
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS works (
+        CREATE TABLE IF NOT EXISTS ip_works (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
             title TEXT NOT NULL,
@@ -118,6 +118,11 @@ def init_database():
             copyright TEXT,
             status TEXT DEFAULT 'active',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP,
+            introduction TEXT,
+            category TEXT DEFAULT 'IP版权库',
+            is_featured INTEGER DEFAULT 0,
+            sort_order INTEGER DEFAULT 0,
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
     ''')
@@ -160,9 +165,9 @@ def init_database():
             ''', (code, 'active', 1000, 10, admin_id))
 
         cursor.execute('''
-            INSERT INTO works (user_id, title, student_name, image, tags, cost, duration, price, copyright, status)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (admin_id, '示例作品1', '学生A', '/uploads/sample1.jpg', '["AI创作", "示例"]', '5', '30秒', '99', '归CiliAI所有', 'active'))
+            INSERT INTO ip_works (user_id, title, student_name, image, tags, cost, duration, price, copyright, introduction, category, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (admin_id, '示例作品1', '学生A', '/uploads/sample1.jpg', '["AI创作", "示例"]', '5', '30秒', '99', '归CiliAI所有', '这是一个示例作品', 'IP版权库', 'active'))
 
         conn.commit()
         print("✓ 初始数据创建完成")
