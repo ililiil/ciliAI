@@ -44,29 +44,7 @@
           </svg>
           <span>AI生图</span>
         </div>
-        <div 
-          :class="['tab-item', { active: activeModule === 'extend' }]"
-          @click="activeModule = 'extend'"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-            <line x1="8" y1="3" x2="8" y2="21"/>
-            <line x1="16" y1="3" x2="16" y2="21"/>
-            <line x1="3" y1="8" x2="21" y2="8"/>
-            <line x1="3" y1="16" x2="21" y2="16"/>
-          </svg>
-          <span>AI扩图</span>
-        </div>
-        <div 
-          :class="['tab-item', { active: activeModule === 'edit' }]"
-          @click="activeModule = 'edit'"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-          </svg>
-          <span>AI改图</span>
-        </div>
+
       </div>
 
       <div class="main-content">
@@ -1123,6 +1101,7 @@ const createNewChat = () => {
   currentChatId.value = newChat.id
   inputMessage.value = ''
   localStorage.removeItem('currentConversationId')
+  console.log('✅ 新对话已创建，conversationId 已清空')
 }
 
 const selectChat = (chatId) => {
@@ -1173,11 +1152,6 @@ const sendMessage = async () => {
     return
   }
   
-  userComputePower.value = powerCheckResult.remainingPower - 1
-  if (updateComputingPower) {
-    updateComputingPower(powerCheckResult.remainingPower - 1)
-  }
-  
   const message = inputMessage.value.trim()
   inputMessage.value = ''
   
@@ -1221,6 +1195,9 @@ const sendMessage = async () => {
   scrollToBottom()
   
   try {
+    console.log('========== 发送消息开始 ==========')
+    console.log('当前会话ID:', chat.conversationId || '(新会话)')
+    
     const { answer, conversationId } = await callDifyAPI(
       message,
       chat.conversationId,
@@ -1233,6 +1210,8 @@ const sendMessage = async () => {
         
         if (receivedConversationId && chat) {
           chat.conversationId = receivedConversationId
+          localStorage.setItem('currentConversationId', receivedConversationId)
+          console.log('✅ 会话ID已更新并保存:', receivedConversationId)
         }
         
         scrollToBottom()
@@ -1242,14 +1221,19 @@ const sendMessage = async () => {
     if (conversationId && chat) {
       chat.conversationId = conversationId
       localStorage.setItem('currentConversationId', conversationId)
+      console.log('✅ 最终会话ID已保存:', conversationId)
     }
     
     const msgIndex = chat.messages.findIndex(m => m.id === aiMessageId)
     if (msgIndex > -1) {
       chat.messages[msgIndex].status = 'success'
     }
+    
+    console.log('✅ 消息发送成功！')
+    console.log('==================================')
   } catch (error) {
-    console.error('发送消息失败:', error)
+    console.error('❌ 发送消息失败:', error)
+    console.error('错误信息:', error.message)
     
     fetchUserPower()
     
@@ -1272,16 +1256,30 @@ const sendMessage = async () => {
         chat.messages[msgIndex].status = 'error'
       }
       fetchUserPower()
+    } else if (error.message.includes('超时') || error.message.includes('timeout')) {
+      const msgIndex = chat.messages.findIndex(m => m.id === aiMessageId)
+      if (msgIndex > -1) {
+        const currentContent = chat.messages[msgIndex].content
+        if (currentContent && currentContent.length > 0) {
+          chat.messages[msgIndex].content = currentContent + '\n\n[⚠️ 请求超时，AI可能还在思考中...]'
+          chat.messages[msgIndex].status = 'success'
+        } else {
+          chat.messages[msgIndex].content = '[⚠️ 请求超时] ' + error.message
+          chat.messages[msgIndex].status = 'error'
+        }
+      }
+      ElMessage.warning('请求超时：' + error.message)
     } else {
       const msgIndex = chat.messages.findIndex(m => m.id === aiMessageId)
       if (msgIndex > -1) {
         const currentContent = chat.messages[msgIndex].content
         if (currentContent && currentContent.length > 0) {
-          chat.messages[msgIndex].content = currentContent + '\n\n[连接中断，如需继续请重试]'
+          chat.messages[msgIndex].content = currentContent + '\n\n[⚠️ 连接中断，如需继续请重试]'
+          chat.messages[msgIndex].status = 'success'
         } else {
           chat.messages[msgIndex].content = '抱歉，API 连接失败: ' + error.message
+          chat.messages[msgIndex].status = 'error'
         }
-        chat.messages[msgIndex].status = 'error'
       }
       ElMessage.error('连接失败: ' + error.message)
     }
@@ -1293,7 +1291,10 @@ const sendMessage = async () => {
 
 const callDifyAPI = async (query, conversationId, people, onChunk) => {
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 180000)
+  const timeout = setTimeout(() => {
+    console.warn('⏰ 请求超时触发（180秒），中止请求')
+    controller.abort()
+  }, 180000)
 
   const userId = localStorage.getItem('userId') || `user-${Date.now()}`
   const inviteCode = localStorage.getItem('inviteCode') || ''
@@ -1374,17 +1375,21 @@ const callDifyAPI = async (query, conversationId, people, onChunk) => {
     }
   } catch (error) {
     clearTimeout(timeout)
-    console.error('Dify API 网络错误:', error)
+    console.error('❌ Dify API 网络错误:', error)
     console.error('错误类型:', error.name)
     console.error('错误消息:', error.message)
     console.error('错误堆栈:', error.stack)
     
     if (error.name === 'AbortError') {
-      throw new Error('请求超时，请重试')
+      throw new Error('请求超时（180秒），请重试。如果问题持续存在，请检查网络连接。')
     }
     
     if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
       throw new Error(`无法连接到服务器，请检查网络连接。错误详情: ${error.message}`)
+    }
+    
+    if (error.message.includes('abort')) {
+      throw new Error('请求被中止，可能是网络问题或服务器无响应，请重试。')
     }
     
     throw new Error(`网络连接失败: ${error.message}`)
@@ -1420,7 +1425,9 @@ const callDifyAPI = async (query, conversationId, people, onChunk) => {
       try {
         readResult = await reader.read()
       } catch (error) {
+        console.error('❌ 读取流数据时出错:', error)
         if (result.length > 0) {
+          console.log('⚠️ 部分响应已接收，返回已获取的内容')
           return { answer: result, conversationId: newConversationId }
         }
         throw error
@@ -1432,74 +1439,84 @@ const callDifyAPI = async (query, conversationId, people, onChunk) => {
         break
       }
 
-      const chunk = decoder.decode(value, { stream: true })
-      const lines = chunk.split('\n')
+      try {
+        const chunk = decoder.decode(value, { stream: true })
+        const lines = chunk.split('\n')
 
-      for (const line of lines) {
-        const trimmedLine = line.trim()
-        if (!trimmedLine || trimmedLine === 'data: [DONE]') {
-          continue
-        }
-        
-        if (trimmedLine.startsWith('data: ')) {
-          const dataStr = trimmedLine.slice(6).trim()
-          if (!dataStr) continue
+        for (const line of lines) {
+          const trimmedLine = line.trim()
+          if (!trimmedLine || trimmedLine === 'data: [DONE]') {
+            continue
+          }
           
-          try {
-            const data = JSON.parse(dataStr)
+          if (trimmedLine.startsWith('data: ')) {
+            const dataStr = trimmedLine.slice(6).trim()
+            if (!dataStr) continue
             
-            console.log('收到事件:', data.event, data)
-            
-            if (data.event === 'message' || data.event === 'agent_message') {
-              const answerText = data.answer || ''
-              result += answerText
-              if (onChunk) {
-                onChunk(answerText, data.conversation_id || newConversationId)
+            try {
+              const data = JSON.parse(dataStr)
+              
+              console.log('收到事件:', data.event, data)
+              
+              if (data.event === 'message' || data.event === 'agent_message') {
+                const answerText = data.answer || ''
+                result += answerText
+                if (onChunk) {
+                  onChunk(answerText, data.conversation_id || newConversationId)
+                }
               }
-            }
-            
-            if (data.conversation_id) {
-              newConversationId = data.conversation_id
-              if (onChunk) {
-                onChunk('', data.conversation_id)
+              
+              if (data.conversation_id) {
+                newConversationId = data.conversation_id
+                console.log('✅ 收到新会话ID:', newConversationId)
+                if (onChunk) {
+                  onChunk('', data.conversation_id)
+                }
               }
+              
+              if (data.event === 'message_end' || data.event === 'done') {
+                console.log('========== 流式响应结束 ==========')
+                console.log('最终回复:', result)
+                console.log('会话ID:', newConversationId)
+                console.log('==================================')
+                isCompleted = true
+                cleanup()
+                return { answer: result, conversationId: newConversationId }
+              }
+              
+              if (data.error || data.error_code) {
+                throw new Error(data.message || data.error || `API错误: ${data.error_code}`)
+              }
+            } catch (e) {
+              if (e instanceof SyntaxError) {
+                console.warn('跳过无效的JSON数据:', dataStr)
+                continue
+              }
+              throw e
             }
-            
-            if (data.event === 'message_end' || data.event === 'done') {
-              console.log('========== 流式响应结束 ==========')
-              console.log('最终回复:', result)
-              console.log('会话ID:', newConversationId)
-              console.log('==================================')
-              isCompleted = true
-              cleanup()
-              return { answer: result, conversationId: newConversationId }
-            }
-            
-            if (data.error || data.error_code) {
-              throw new Error(data.message || data.error || `API错误: ${data.error_code}`)
-            }
-          } catch (e) {
-            if (e instanceof SyntaxError) {
-              console.warn('跳过无效的JSON数据:', dataStr)
-              continue
-            }
-            throw e
           }
         }
+      } catch (decodeError) {
+        console.error('❌ 解码数据块时出错:', decodeError)
+        continue
       }
     }
   } catch (error) {
     cleanup()
+    console.error('❌ 流式处理出错:', error)
+    
     if (error.name === 'AbortError' || error.message.includes('abort')) {
       if (result.length > 0) {
+        console.log('⚠️ 请求被中止但已有部分响应，返回已获取的内容')
         return { answer: result, conversationId: newConversationId }
       }
-      throw new Error('请求被中止，请检查网络连接后重试')
+      throw new Error('请求被中止，请检查网络连接后重试。')
     }
     throw error
   }
 
   cleanup()
+  console.log('✅ 流式响应处理完成')
   return { answer: result, conversationId: newConversationId }
 }
 
@@ -2714,7 +2731,8 @@ onMounted(() => {
 
 .image-params-section,
 .image-result-section {
-  background-color: #2a2a2a;
+  background-color: #fff;
+  border: 1px solid #BACACB;
   border-radius: 12px;
   padding: 20px;
 }
@@ -2723,7 +2741,7 @@ onMounted(() => {
   margin: 0 0 16px 0;
   font-size: 16px;
   font-weight: 500;
-  color: #fff;
+  color: #425D5F;
 }
 
 .params-form {
@@ -2740,7 +2758,7 @@ onMounted(() => {
 
 .form-item label {
   font-size: 13px;
-  color: #999;
+  color: #666;
 }
 
 .form-row {
@@ -2755,32 +2773,32 @@ onMounted(() => {
 .params-form :deep(.el-input__wrapper),
 .params-form :deep(.el-textarea__inner),
 .params-form :deep(.el-select .el-input__wrapper) {
-  background-color: #1d1d1d;
-  border: 1px solid #3a3a3a;
+  background-color: #F8F7F2;
+  border: 1px solid #BACACB;
   box-shadow: none;
 }
 
 .params-form :deep(.el-input__inner),
 .params-form :deep(.el-textarea__inner) {
-  color: #fff;
+  color: #425D5F;
 }
 
 .params-form :deep(.el-input__inner::placeholder),
 .params-form :deep(.el-textarea__inner::placeholder) {
-  color: #666;
-}
-
-.params-form :deep(.el-upload-list__item) {
-  background-color: #1d1d1d;
-  border: 1px solid #3a3a3a;
-}
-
-.params-form :deep(.el-upload-list__item-name) {
   color: #999;
 }
 
+.params-form :deep(.el-upload-list__item) {
+  background-color: #F8F7F2;
+  border: 1px solid #BACACB;
+}
+
+.params-form :deep(.el-upload-list__item-name) {
+  color: #425D5F;
+}
+
 .params-form :deep(.el-upload__tip) {
-  color: #666;
+  color: #999;
   font-size: 12px;
   margin-top: 4px;
 }
@@ -2804,9 +2822,10 @@ onMounted(() => {
 .canvas-container {
   position: relative;
   max-width: 100%;
-  border: 1px solid #3a3a3a;
+  border: 1px solid #BACACB;
   border-radius: 8px;
   overflow: hidden;
+  background-color: #F8F7F2;
 }
 
 .canvas-container canvas {
@@ -2825,12 +2844,13 @@ onMounted(() => {
 }
 
 .no-image {
-  border: 1px dashed #3a3a3a;
+  border: 1px dashed #BACACB;
   border-radius: 8px;
   padding: 40px 20px;
   text-align: center;
   color: #666;
   margin-top: 8px;
+  background-color: #F8F7F2;
 }
 
 .generate-btn {
@@ -2852,18 +2872,18 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 60px 0;
-  color: #666;
+  color: #425D5F;
 }
 
 .empty-result .empty-icon {
   margin-bottom: 16px;
-  color: #666;
+  color: #425D5F;
 }
 
 .empty-result .hint {
   font-size: 13px;
   margin-top: 8px;
-  color: #999;
+  color: #666;
 }
 
 .result-grid {

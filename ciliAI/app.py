@@ -11,6 +11,7 @@ from flask import Flask, request, jsonify, send_from_directory, g, Response, str
 from flask_cors import CORS
 from dotenv import load_dotenv
 from volcengine.visual.VisualService import VisualService
+from key_manager import key_manager
 
 load_dotenv()
 
@@ -559,12 +560,17 @@ def add_compute_power(user_id, amount, operation_type, description=None):
     db.commit()
     return new_power
 
-VOLC_AK = os.getenv('VOLC_AK')
-VOLC_SK = os.getenv('VOLC_SK')
+def get_visual_service():
+    """获取配置了当前密钥的 VisualService 实例"""
+    key_info = key_manager.get_next_key()
+    if not key_info:
+        raise ValueError("未找到有效的火山引擎密钥配置")
 
-visual_service = VisualService()
-visual_service.set_ak(VOLC_AK)
-visual_service.set_sk(VOLC_SK)
+    service = VisualService()
+    service.set_ak(key_info['ak'])
+    service.set_sk(key_info['sk'])
+    logger.info(f"使用密钥组 {key_info['index']} (AK: {key_info['ak'][:10]}...)")
+    return service
 
 @app.route('/')
 def index():
@@ -578,25 +584,40 @@ def dify_proxy():
         invite_code = body.get('invite_code')
         project_id = body.get('project_id')
         query = body.get('query', '')
+        conversation_id = body.get('conversation_id', '')
+        
+        logger.info(f"========== Dify Proxy 请求开始 ==========")
+        logger.info(f"邀请码: {invite_code}")
+        logger.info(f"项目ID: {project_id}")
+        logger.info(f"查询内容: {query[:100] if query else 'N/A'}...")
+        logger.info(f"会话ID: {conversation_id if conversation_id else '(新会话)'}")
+        logger.info(f"输入参数: {body.get('inputs', {})}")
         
         if not invite_code:
+            logger.error("缺少邀请码参数")
             return jsonify({'status': 'error', 'message': '缺少邀请码参数'}), 400
         
         user_id = get_user_id_by_invite_code(invite_code)
         if not user_id:
+            logger.error(f"用户不存在，邀请码: {invite_code}")
             return jsonify({'status': 'error', 'message': '用户不存在，请重新登录'}), 401
+        
+        logger.info(f"用户ID: {user_id}")
         
         power_cost = POWER_COST['chat']
         success, remaining = deduct_compute_power(user_id, power_cost, 'chat', project_id, None, 
                                                    f"对话: {query[:30]}...")
         
         if not success:
+            logger.warning(f"算力不足，用户ID: {user_id}, 当前算力: {remaining}, 需要: {power_cost}")
             return jsonify({
                 'status': 'error',
                 'message': f'算力不足，当前算力 {remaining}，需要 {power_cost} 算力',
                 'power_required': power_cost,
                 'power_current': remaining
             }), 400
+        
+        logger.info(f"算力已扣除，当前剩余: {remaining}")
         
         dify_url = 'https://whhongyi.com.cn/v1/chat-messages'
         headers = {
@@ -614,17 +635,37 @@ def dify_proxy():
         
         if body.get('conversation_id'):
             dify_body['conversation_id'] = body['conversation_id']
+            logger.info(f"发送Dify请求，使用会话ID: {body['conversation_id']}")
+        else:
+            logger.info("发送Dify请求，创建新会话")
         
-        logger.info(f"Dify proxy request: query={query[:50] if query else 'N/A'}")
+        logger.info(f"Dify API URL: {dify_url}")
+        logger.info(f"Dify 请求体: {json.dumps(dify_body, ensure_ascii=False)[:200]}")
         
-        resp = req_lib.post(dify_url, json=dify_body, headers=headers, stream=True, timeout=180)
-        logger.info(f"Dify upstream status: {resp.status_code}")
+        try:
+            resp = req_lib.post(dify_url, json=dify_body, headers=headers, stream=True, timeout=180)
+            logger.info(f"Dify 上游响应状态: {resp.status_code}")
+            logger.info(f"Dify 响应头: {dict(resp.headers)}")
+        except req_lib.exceptions.Timeout:
+            logger.error("❌ Dify API 请求超时（180秒）")
+            add_compute_power(user_id, power_cost, 'refund', f'Dify API超时退还: {query[:30]}...')
+            return jsonify({'status': 'error', 'message': 'Dify API 请求超时，请重试', 'refunded': True}), 504
+        except req_lib.exceptions.ConnectionError as e:
+            logger.error(f"❌ Dify API 连接错误: {str(e)}")
+            add_compute_power(user_id, power_cost, 'refund', f'Dify API连接错误退还: {query[:30]}...')
+            return jsonify({'status': 'error', 'message': f'Dify API 连接失败: {str(e)}', 'refunded': True}), 502
+        except Exception as e:
+            logger.error(f"❌ Dify API 请求失败: {str(e)}")
+            add_compute_power(user_id, power_cost, 'refund', f'Dify API错误退还: {query[:30]}...')
+            return jsonify({'status': 'error', 'message': f'Dify API 请求失败: {str(e)}', 'refunded': True}), 500
         
         if resp.status_code != 200:
             error_text = resp.text[:500]
-            logger.error(f"Dify upstream error: {error_text}")
+            logger.error(f"❌ Dify 上游错误: {error_text}")
             add_compute_power(user_id, power_cost, 'refund', f'Dify API失败退还: {query[:30]}...')
             return jsonify({'status': 'error', 'message': f'Dify API error: {resp.status_code}', 'refunded': True}), resp.status_code
+        
+        logger.info(f"✅ Dify API 请求成功，开始流式响应")
         
         user_message_id = None
         conversation_id = body.get('conversation_id', '')
@@ -648,17 +689,19 @@ def dify_proxy():
                               (datetime.now(), project_id))
                 
                 db.commit()
-                logger.info(f"Saved user message: {user_message_id}")
+                logger.info(f"✅ 已保存用户消息: {user_message_id}")
             except Exception as e:
-                logger.error(f"Failed to save user message: {str(e)}")
+                logger.error(f"❌ 保存用户消息失败: {str(e)}")
                 db.rollback()
             
             ai_response_text = ''
             ai_message_id = None
+            chunks_received = 0
             
             try:
                 for chunk in resp.iter_content(chunk_size=1024):
                     if chunk:
+                        chunks_received += 1
                         yield chunk
                         
                         try:
@@ -668,11 +711,16 @@ def dify_proxy():
                                 if data_str and data_str != '[DONE]':
                                     try:
                                         data = json.loads(data_str)
+                                        
                                         if data.get('event') in ['message', 'agent_message'] and data.get('answer'):
                                             ai_response_text += data['answer']
+                                        
                                         if data.get('conversation_id') and not conversation_id:
                                             conversation_id = data['conversation_id']
+                                            logger.info(f"✅ 收到新会话ID: {conversation_id}")
+                                        
                                         if data.get('event') in ['message_end', 'done']:
+                                            logger.info(f"✅ 收到消息结束事件")
                                             if not ai_message_id:
                                                 try:
                                                     ai_msg_cursor = db.execute('''
@@ -682,16 +730,18 @@ def dify_proxy():
                                                     ''', (project_id, user_id, conversation_id, 'assistant', ai_response_text, 0))
                                                     ai_message_id = ai_msg_cursor.lastrowid
                                                     db.commit()
-                                                    logger.info(f"Saved AI message: {ai_message_id}, length: {len(ai_response_text)}")
+                                                    logger.info(f"✅ 已保存AI消息: {ai_message_id}, 长度: {len(ai_response_text)}")
                                                 except Exception as e:
-                                                    logger.error(f"Failed to save AI message: {str(e)}")
+                                                    logger.error(f"❌ 保存AI消息失败: {str(e)}")
                                                     db.rollback()
                                     except json.JSONDecodeError:
                                         continue
                         except UnicodeDecodeError:
                             continue
+                
+                logger.info(f"✅ 流式响应完成，共接收 {chunks_received} 个数据块")
             except Exception as e:
-                logger.error(f"Stream error: {str(e)}")
+                logger.error(f"❌ 流式响应错误: {str(e)}")
                 add_compute_power(user_id, power_cost, 'refund', f'流式响应异常退还: {query[:30]}...')
                 yield f"data: {{'event': 'error', 'message': '{str(e)}'}}\n\n"
             finally:
@@ -704,14 +754,16 @@ def dify_proxy():
                         ''', (project_id, user_id, conversation_id, 'assistant', ai_response_text, 0))
                         ai_message_id = ai_msg_cursor.lastrowid
                         db.commit()
-                        logger.info(f"Saved AI message on stream end: {ai_message_id}")
+                        logger.info(f"✅ 流结束时保存AI消息: {ai_message_id}")
                     except Exception as e:
-                        logger.error(f"Failed to save AI message: {str(e)}")
+                        logger.error(f"❌ 保存AI消息失败: {str(e)}")
                         db.rollback()
                 try:
                     db.close()
                 except:
                     pass
+        
+        logger.info(f"========== Dify Proxy 响应开始 ==========")
         
         return Response(
             stream_with_context(generate()),
@@ -724,7 +776,8 @@ def dify_proxy():
             }
         )
     except Exception as e:
-        logger.error(f"Dify proxy error: {str(e)}")
+        logger.error(f"❌ Dify Proxy 错误: {str(e)}")
+        logger.error(f"错误堆栈: ", exc_info=True)
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 @app.route('/api/verify-invite-code', methods=['POST'])
@@ -1029,6 +1082,7 @@ def generate_image():
     
     try:
         logger.info(f"Submitting task for prompt: {prompt}")
+        visual_service = get_visual_service()
         submit_res = visual_service.common_json_handler("CVSync2AsyncSubmitTask", params)
         
         if submit_res.get('code') != 10000:
@@ -1153,6 +1207,7 @@ def inpaint_image():
 
     try:
         logger.info(f"Submitting inpaint task")
+        visual_service = get_visual_service()
         submit_res = visual_service.common_json_handler("CVSync2AsyncSubmitTask", params)
         
         if submit_res.get('code') != 10000:
@@ -1264,6 +1319,7 @@ def extend_image():
 
     try:
         logger.info(f"Submitting extend task")
+        visual_service = get_visual_service()
         submit_res = visual_service.common_json_handler("CVSync2AsyncSubmitTask", params)
         
         if submit_res.get('code') != 10000:
@@ -1373,6 +1429,7 @@ def super_resolution():
 
     try:
         logger.info(f"Submitting super resolution task")
+        visual_service = get_visual_service()
         submit_res = visual_service.common_json_handler("CVSync2AsyncSubmitTask", params)
         
         if submit_res.get('code') != 10000:
@@ -2869,6 +2926,9 @@ def unpublish_admin_advertisement(ad_id):
         return jsonify({'code': 500, 'msg': str(e)}), 500
 
 if __name__ == '__main__':
-    if not VOLC_AK or not VOLC_SK:
-        print("WARNING: VOLC_AK or VOLC_SK not found in environment variables!")
+    if key_manager.get_key_count() == 0:
+        print("WARNING: 未找到有效的火山引擎密钥配置！请检查 .env 文件中的 VOLC_AK_1 和 VOLC_SK_1")
+    else:
+        print(f"✓ 密钥管理器初始化完成，共 {key_manager.get_key_count()} 组密钥")
+
     app.run(host='0.0.0.0', port=5001, debug=False, use_reloader=False)
