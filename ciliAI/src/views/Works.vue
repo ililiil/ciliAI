@@ -142,14 +142,20 @@ const handleProjectCreate = async (formData) => {
   }
   
   try {
+    const requestBody = {
+      invite_code: inviteCode.value,
+      title: formData.projectName,
+      description: ''
+    }
+    
+    if (formData.cover) {
+      requestBody.cover_image = formData.cover
+    }
+    
     const response = await fetch('/api/projects', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        invite_code: inviteCode.value,
-        title: formData.projectName,
-        description: ''
-      })
+      body: JSON.stringify(requestBody)
     })
     
     const result = await response.json()

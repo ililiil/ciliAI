@@ -20,6 +20,38 @@
         />
       </div>
 
+      <!-- 封面图片 -->
+      <div class="form-row">
+        <label class="form-label">封面图片（可选）</label>
+        <div class="cover-upload-wrapper">
+          <input
+            type="file"
+            accept="image/*"
+            @change="handleCoverUpload"
+            ref="coverInput"
+            style="display: none;"
+          />
+          <div v-if="!form.cover" class="cover-upload-trigger" @click="triggerCoverUpload">
+            <div class="upload-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+            </div>
+            <div class="upload-text">点击上传封面图片</div>
+            <div class="upload-hint">支持 JPG、PNG 格式，建议尺寸 800x450，最大 5MB</div>
+          </div>
+          <div v-else class="cover-preview">
+            <img :src="form.cover" alt="封面预览" class="cover-preview-image" />
+            <div class="cover-preview-overlay">
+              <button class="remove-cover-btn" @click="removeCover">移除</button>
+              <button class="change-cover-btn" @click="triggerCoverUpload">更换</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- 剧集数 -->
       <div class="form-row">
         <label class="form-label">剧集数</label>
@@ -44,6 +76,7 @@
 
 <script setup>
 import { ref, reactive, watch } from 'vue'
+import { ElMessage } from 'element-plus'
 
 const props = defineProps({
   modelValue: {
@@ -55,10 +88,12 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'create'])
 
 const visible = ref(props.modelValue)
+const coverInput = ref(null)
 
 const form = reactive({
   projectName: '',
-  episodes: 0
+  episodes: 0,
+  cover: ''
 })
 
 watch(() => props.modelValue, (val) => {
@@ -70,7 +105,8 @@ watch(visible, (val) => {
   if (!val) {
     Object.assign(form, {
       projectName: '',
-      episodes: 0
+      episodes: 0,
+      cover: ''
     })
   }
 })
@@ -79,8 +115,43 @@ const handleCancel = () => {
   visible.value = false
 }
 
+const triggerCoverUpload = () => {
+  coverInput.value.click()
+}
+
+const handleCoverUpload = (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+  
+  const isImage = file.type.startsWith('image/')
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件！')
+    return
+  }
+  
+  const isLt5M = file.size / 1024 / 1024 < 5
+  if (!isLt5M) {
+    ElMessage.error('封面图片大小不能超过 5MB！')
+    return
+  }
+  
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    form.cover = e.target.result
+  }
+  reader.readAsDataURL(file)
+}
+
+const removeCover = () => {
+  form.cover = ''
+  if (coverInput.value) {
+    coverInput.value.value = ''
+  }
+}
+
 const handleCreate = () => {
   if (!form.projectName.trim()) {
+    ElMessage.warning('请输入项目名称')
     return
   }
   
@@ -130,6 +201,108 @@ const handleCreate = () => {
   color: #666;
   font-size: 12px;
   margin-top: 6px;
+}
+
+/* 封面上传 */
+.cover-upload-wrapper {
+  width: 100%;
+}
+
+.cover-upload-trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 20px;
+  cursor: pointer;
+  border: 2px dashed #dcdfe6;
+  border-radius: 8px;
+  transition: all 0.3s;
+  background-color: #fff;
+}
+
+.cover-upload-trigger:hover {
+  border-color: #425D5F;
+  background-color: rgba(66, 93, 95, 0.05);
+}
+
+.cover-upload-trigger .upload-icon {
+  color: #BACACB;
+}
+
+.cover-upload-trigger .upload-text {
+  font-size: 14px;
+  color: #425D5F;
+  font-weight: 500;
+}
+
+.cover-upload-trigger .upload-hint {
+  font-size: 12px;
+  color: #999;
+  text-align: center;
+}
+
+.cover-preview {
+  position: relative;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.cover-preview-image {
+  width: 100%;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #BACACB;
+}
+
+.cover-preview-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  border-radius: 8px;
+}
+
+.cover-preview:hover .cover-preview-overlay {
+  opacity: 1;
+}
+
+.remove-cover-btn,
+.change-cover-btn {
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: none;
+}
+
+.remove-cover-btn {
+  background-color: #f56c6c;
+  color: white;
+}
+
+.remove-cover-btn:hover {
+  background-color: #e64141;
+}
+
+.change-cover-btn {
+  background-color: #409eff;
+  color: white;
+}
+
+.change-cover-btn:hover {
+  background-color: #66b1ff;
 }
 
 /* 按钮 */
