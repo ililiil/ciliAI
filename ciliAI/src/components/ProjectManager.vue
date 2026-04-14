@@ -88,7 +88,7 @@
           <div class="cover-upload-wrapper">
             <el-upload
               class="cover-uploader"
-              action="#"
+              :action="''"
               :auto-upload="false"
               :on-change="handleCoverUpload"
               :file-list="coverFileList"

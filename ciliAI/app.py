@@ -25,6 +25,15 @@ DATABASE = 'fangtang.db'
 
 ADMIN_BASE_URL = os.getenv('ADMIN_BASE_URL', 'http://localhost:5002')
 
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'}
+
+def allowed_file(filename):
+    """检查文件扩展名是否允许"""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 def convert_image_url(image_url):
     """转换图片URL，将管理后台上传的图片路径转换为完整URL"""
     if not image_url or not isinstance(image_url, str):
@@ -36,7 +45,7 @@ def convert_image_url(image_url):
         return image_url
 
     if image_url.startswith('/uploads/'):
-        return f"{ADMIN_BASE_URL}{image_url}"
+        return f"http://localhost:5001{image_url}"
 
     return image_url
 
@@ -576,6 +585,10 @@ def get_visual_service():
 def index():
     return send_from_directory(app.static_folder, 'index.html')
 
+@app.route('/uploads/<path:filename>')
+def serve_upload(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
+
 @app.route('/dify-api/chat-messages', methods=['POST'])
 def dify_proxy():
     try:
@@ -585,6 +598,7 @@ def dify_proxy():
         project_id = body.get('project_id')
         query = body.get('query', '')
         conversation_id = body.get('conversation_id', '')
+        pre_deducted = body.get('pre_deducted', False)
         
         logger.info(f"========== Dify Proxy 请求开始 ==========")
         logger.info(f"邀请码: {invite_code}")
@@ -592,6 +606,7 @@ def dify_proxy():
         logger.info(f"查询内容: {query[:100] if query else 'N/A'}...")
         logger.info(f"会话ID: {conversation_id if conversation_id else '(新会话)'}")
         logger.info(f"输入参数: {body.get('inputs', {})}")
+        logger.info(f"算力已预扣减: {pre_deducted}")
         
         if not invite_code:
             logger.error("缺少邀请码参数")
@@ -605,19 +620,23 @@ def dify_proxy():
         logger.info(f"用户ID: {user_id}")
         
         power_cost = POWER_COST['chat']
-        success, remaining = deduct_compute_power(user_id, power_cost, 'chat', project_id, None, 
-                                                   f"对话: {query[:30]}...")
-        
-        if not success:
-            logger.warning(f"算力不足，用户ID: {user_id}, 当前算力: {remaining}, 需要: {power_cost}")
-            return jsonify({
-                'status': 'error',
-                'message': f'算力不足，当前算力 {remaining}，需要 {power_cost} 算力',
-                'power_required': power_cost,
-                'power_current': remaining
-            }), 400
-        
-        logger.info(f"算力已扣除，当前剩余: {remaining}")
+        if not pre_deducted:
+            success, remaining = deduct_compute_power(user_id, power_cost, 'chat', project_id, None, 
+                                                       f"对话: {query[:30]}...")
+            
+            if not success:
+                logger.warning(f"算力不足，用户ID: {user_id}, 当前算力: {remaining}，需要: {power_cost}")
+                return jsonify({
+                    'status': 'error',
+                    'message': f'算力不足，当前算力 {remaining}，需要 {power_cost} 算力',
+                    'power_required': power_cost,
+                    'power_current': remaining
+                }), 400
+            
+            logger.info(f"算力已扣除，当前剩余: {remaining}")
+        else:
+            remaining = get_user_compute_power(user_id)
+            logger.info(f"算力已预扣减，跳过扣减步骤，当前剩余: {remaining}")
         
         dify_url = 'https://whhongyi.com.cn/v1/chat-messages'
         headers = {
@@ -873,6 +892,39 @@ def get_user_power():
     return jsonify({
         'status': 'success',
         'compute_power': user['compute_power']
+    })
+
+@app.route('/api/power/deduct', methods=['POST'])
+def deduct_power_only():
+    """专门用于扣减算力的接口，不保存消息"""
+    data = request.json
+    invite_code = data.get('invite_code')
+    project_id = data.get('project_id')
+    message = data.get('message', '')
+    
+    if not invite_code:
+        return jsonify({'status': 'error', 'message': '缺少邀请码参数'}), 400
+    
+    user_id = get_user_id_by_invite_code(invite_code)
+    if not user_id:
+        return jsonify({'status': 'error', 'message': '用户不存在'}), 401
+    
+    power_cost = POWER_COST['chat']
+    success, remaining = deduct_compute_power(user_id, power_cost, 'chat', project_id, None, 
+                                             f"对话: {message[:50]}...")
+    
+    if not success:
+        return jsonify({
+            'status': 'error',
+            'message': f'算力不足，当前算力 {remaining}，需要 {power_cost} 算力',
+            'power_required': power_cost,
+            'power_current': remaining
+        }), 400
+    
+    return jsonify({
+        'status': 'success',
+        'power_cost': power_cost,
+        'remaining_power': remaining
     })
 
 @app.route('/api/user/power-logs', methods=['GET'])
@@ -1921,7 +1973,12 @@ def get_orders():
             image_url = order_dict.get('image', '').strip() if order_dict.get('image') else ''
             if not is_valid_image_url(image_url):
                 image_url = DEFAULT_COVER_IMAGES[order['id'] % len(DEFAULT_COVER_IMAGES)]
+            else:
+                image_url = convert_image_url(image_url)
             order_dict['image'] = image_url
+            
+            if order_dict.get('contact_count') is not None:
+                order_dict['contactCount'] = order_dict['contact_count']
             
             if order_dict.get('tags') and order_dict['tags']:
                 try:
@@ -2651,79 +2708,91 @@ def get_admin_orders():
 
 @app.route('/api/admin/orders', methods=['POST'])
 def create_admin_order():
-    data = request.json
-    
-    if not data or 'title' not in data:
-        return jsonify({'code': 400, 'msg': '缺少订单标题'}), 400
-    
-    title = data.get('title')
-    image = data.get('image', '')
-    qrcode = data.get('qrcode', '')
-    price = data.get('price', '')
-    deadline = data.get('deadline', '')
-    status = data.get('status', 'recruiting')
-    tags = data.get('tags', [])
-    contact_count = data.get('contactCount', 0)
-    
-    if isinstance(tags, list):
-        tags = json.dumps(tags, ensure_ascii=False)
-    
-    db = get_db()
-    cursor = db.execute('''
-        INSERT INTO orders (title, image, qrcode, price, deadline, status, tags, contact_count)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (title, image, qrcode, price, deadline, status, tags, contact_count))
-    db.commit()
-    
-    return jsonify({
-        'code': 200,
-        'msg': '订单创建成功',
-        'data': {'id': cursor.lastrowid}
-    })
+    try:
+        data = request.get_json(force=True)
+        
+        if not data or 'title' not in data:
+            return jsonify({'code': 400, 'msg': '缺少订单标题'}), 400
+        
+        title = data.get('title')
+        image = data.get('image', '')
+        qrcode = data.get('qrcode', '')
+        price = data.get('price', '')
+        deadline = data.get('deadline', '')
+        status = data.get('status', 'recruiting')
+        tags = data.get('tags', [])
+        contact_count = data.get('contactCount', 0)
+        
+        if isinstance(tags, list):
+            tags = json.dumps(tags, ensure_ascii=False)
+        
+        db = get_db()
+        cursor = db.execute('''
+            INSERT INTO orders (title, image, qrcode, price, deadline, status, tags, contact_count)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (title, image, qrcode, price, deadline, status, tags, contact_count))
+        db.commit()
+        
+        return jsonify({
+            'code': 200,
+            'msg': '订单创建成功',
+            'data': {'id': cursor.lastrowid}
+        })
+    except Exception as e:
+        logger.error(f"创建订单失败: {str(e)}")
+        return jsonify({'code': 500, 'msg': f'创建订单失败: {str(e)}'}), 500
 
 @app.route('/api/admin/orders/<int:order_id>', methods=['PUT'])
 def update_admin_order(order_id):
-    data = request.json
-    db = get_db()
-    
-    order = db.execute('SELECT * FROM orders WHERE id = ?', (order_id,)).fetchone()
-    if not order:
-        return jsonify({'code': 404, 'msg': '订单不存在'}), 404
-    
-    title = data.get('title', order['title'])
-    image = data.get('image', order['image'])
-    qrcode = data.get('qrcode', order['qrcode'])
-    price = data.get('price', order['price'])
-    deadline = data.get('deadline', order['deadline'])
-    status = data.get('status', order['status'])
-    tags = data.get('tags', order['tags'])
-    contact_count = data.get('contactCount', order.get('contact_count', 0))
-    
-    if isinstance(tags, list):
-        tags = json.dumps(tags, ensure_ascii=False)
-    
-    db.execute('''
-        UPDATE orders SET 
-            title = ?, image = ?, qrcode = ?, price = ?, deadline = ?, 
-            status = ?, tags = ?, contact_count = ?
-        WHERE id = ?
-    ''', (title, image, qrcode, price, deadline, status, tags, contact_count, order_id))
-    db.commit()
-    
-    return jsonify({'code': 200, 'msg': '订单更新成功'})
+    try:
+        data = request.get_json(force=True)
+        db = get_db()
+        
+        order = db.execute('SELECT * FROM orders WHERE id = ?', (order_id,)).fetchone()
+        if not order:
+            return jsonify({'code': 404, 'msg': '订单不存在'}), 404
+        
+        title = data.get('title', order['title'])
+        image = data.get('image', order['image'])
+        qrcode = data.get('qrcode', order['qrcode'])
+        price = data.get('price', order['price'])
+        deadline = data.get('deadline', order['deadline'])
+        status = data.get('status', order['status'])
+        tags = data.get('tags', order['tags'])
+        contact_count = data.get('contactCount', order.get('contact_count', 0))
+        
+        if isinstance(tags, list):
+            tags = json.dumps(tags, ensure_ascii=False)
+        
+        db.execute('''
+            UPDATE orders SET 
+                title = ?, image = ?, qrcode = ?, price = ?, deadline = ?, 
+                status = ?, tags = ?, contact_count = ?
+            WHERE id = ?
+        ''', (title, image, qrcode, price, deadline, status, tags, contact_count, order_id))
+        db.commit()
+        
+        return jsonify({'code': 200, 'msg': '订单更新成功'})
+    except Exception as e:
+        logger.error(f"更新订单失败: {str(e)}")
+        return jsonify({'code': 500, 'msg': f'更新订单失败: {str(e)}'}), 500
 
 @app.route('/api/admin/orders/<int:order_id>', methods=['DELETE'])
 def delete_admin_order(order_id):
-    db = get_db()
-    
-    order = db.execute('SELECT * FROM orders WHERE id = ?', (order_id,)).fetchone()
-    if not order:
-        return jsonify({'code': 404, 'msg': '订单不存在'}), 404
-    
-    db.execute('DELETE FROM orders WHERE id = ?', (order_id,))
-    db.commit()
-    
-    return jsonify({'code': 200, 'msg': '订单删除成功'})
+    try:
+        db = get_db()
+        
+        order = db.execute('SELECT * FROM orders WHERE id = ?', (order_id,)).fetchone()
+        if not order:
+            return jsonify({'code': 404, 'msg': '订单不存在'}), 404
+        
+        db.execute('DELETE FROM orders WHERE id = ?', (order_id,))
+        db.commit()
+        
+        return jsonify({'code': 200, 'msg': '订单删除成功'})
+    except Exception as e:
+        logger.error(f"删除订单失败: {str(e)}")
+        return jsonify({'code': 500, 'msg': f'删除订单失败: {str(e)}'}), 500
 
 @app.route('/api/admin/users', methods=['GET'])
 def get_admin_users():

@@ -4,16 +4,6 @@
     <div class="page-header">
       <h1 class="page-title">接单广场</h1>
       <button class="publish-btn" @click="showPublishModal = true" v-show="false">发布商单</button>
-      <button class="refresh-btn" @click="handleManualRefresh" :disabled="isRefreshing">
-        <svg v-if="!isRefreshing" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 2v6h-6"></path>
-          <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
-          <path d="M3 22v-6h6"></path>
-          <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
-        </svg>
-        <span v-if="isRefreshing">刷新中...</span>
-        <span v-else>刷新</span>
-      </button>
     </div>
 
     <!-- 标签筛选 -->
@@ -186,7 +176,7 @@
       <el-form-item label="剧本上传">
         <el-upload
           class="script-upload"
-          action=""
+          :action="''"
           :auto-upload="false"
           :on-change="handleScriptUpload"
           :file-list="scriptFileList"
@@ -204,7 +194,7 @@
         <div class="cover-upload-container">
           <el-upload
             class="cover-upload"
-            action="#"
+            :action="''"
             :auto-upload="false"
             :on-change="handleCoverUpload"
             :file-list="coverFileList"
@@ -234,7 +224,7 @@
       <el-form-item label="联系方式">
         <el-upload
           class="qrcode-upload"
-          action=""
+          :action="''"
           :auto-upload="false"
           :on-change="handleQrcodeUpload"
           :file-list="qrcodeFileList"
@@ -299,9 +289,6 @@ const POLL_INTERVAL = 5000
 // 定时器 ID
 let pollTimer = null
 
-// 手动刷新标记
-const isRefreshing = ref(false)
-
 // 图片缓存破坏参数
 const imageCacheBuster = ref(Date.now())
 
@@ -326,9 +313,6 @@ const initOrders = async () => {
 
 // 刷新订单数据
 const refreshOrders = async () => {
-  if (isRefreshing.value) return
-  
-  isRefreshing.value = true
   try {
     const response = await fetch('/api/orders')
     const result = await response.json()
@@ -350,8 +334,6 @@ const refreshOrders = async () => {
   } catch (error) {
     console.error('刷新订单数据失败:', error)
     orders.value = []
-  } finally {
-    isRefreshing.value = false
   }
 }
 
@@ -388,12 +370,6 @@ const getImageUrl = (order) => {
     console.error('图片 URL 无效:', order.image, error)
     return order.image
   }
-}
-
-// 手动刷新
-const handleManualRefresh = () => {
-  imageCacheBuster.value = Date.now()
-  refreshOrders()
 }
 
 // 组件挂载时初始化
@@ -631,32 +607,6 @@ const handleContact = (order) => {
   font-weight: 600;
   color: #425D5F;
   margin: 0;
-}
-
-.refresh-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background-color: #425D5F;
-  color: #F8F7F2;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.refresh-btn:hover:not(:disabled) {
-  background-color: #FAA943;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(250, 169, 67, 0.3);
-}
-
-.refresh-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 .publish-btn {

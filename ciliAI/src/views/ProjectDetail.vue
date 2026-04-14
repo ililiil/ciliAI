@@ -223,7 +223,7 @@
                   <label>参考图（可选）</label>
                   <el-upload
                     class="reference-upload"
-                    action=""
+                    :action="''"
                     :auto-upload="false"
                     :on-change="handleReferenceUpload"
                     :show-file-list="true"
@@ -384,7 +384,7 @@
                   <label>目标图片</label>
                   <el-upload
                     class="reference-upload"
-                    action=""
+                    :action="''"
                     :auto-upload="false"
                     :on-change="handleExtendImageUpload"
                     :show-file-list="true"
@@ -501,7 +501,7 @@
                   <label>原图</label>
                   <el-upload
                     class="reference-upload"
-                    action=""
+                    :action="''"
                     :auto-upload="false"
                     :on-change="handleEditImageUpload"
                     :show-file-list="true"
@@ -818,7 +818,7 @@
           <div class="cover-upload-container">
             <el-upload
               class="work-cover-uploader"
-              action="#"
+              :action="''"
               :auto-upload="false"
               :on-change="handleWorkCoverUpload"
               :file-list="workCoverFileList"
@@ -962,32 +962,41 @@ const checkAndDeductPower = async () => {
   
   isCheckingPower.value = true
   try {
-    const response = await fetch(`/api/user/power?invite_code=${encodeURIComponent(inviteCode)}`)
+    const response = await fetch('/api/power/deduct', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        invite_code: inviteCode,
+        project_id: project.value.id,
+        message: inputMessage.value.trim()
+      })
+    })
+    
     const result = await response.json()
     
     if (result.status !== 'success') {
-      return { success: false, message: '获取算力失败', remainingPower: 0 }
-    }
-    
-    const currentPower = result.compute_power
-    const requiredPower = 1
-    
-    if (currentPower < requiredPower) {
       return { 
         success: false, 
-        message: `算力不足，当前算力 ${currentPower}，需要 ${requiredPower} 算力`,
-        remainingPower: currentPower,
-        requiredPower: requiredPower
+        message: result.message || '算力不足',
+        remainingPower: result.power_current || 0
       }
+    }
+    
+    const remainingPower = result.remaining_power
+    if (updateComputingPower) {
+      updateComputingPower(remainingPower)
     }
     
     return { 
       success: true, 
-      remainingPower: currentPower 
+      remainingPower: remainingPower,
+      powerCost: result.power_cost
     }
   } catch (error) {
-    console.error('算力检查失败:', error)
-    return { success: false, message: '算力检查失败，请重试', remainingPower: 0 }
+    console.error('算力扣减失败:', error)
+    return { success: false, message: '算力扣减失败，请重试', remainingPower: 0 }
   } finally {
     isCheckingPower.value = false
   }
@@ -1539,7 +1548,8 @@ const callDifyAPI = async (query, conversationId, people, onChunk) => {
     query: query,
     response_mode: 'streaming',
     user: userId,
-    files: []
+    files: [],
+    pre_deducted: true
   }
   
   if (conversationId) {
@@ -2420,13 +2430,14 @@ onMounted(() => {
   font-weight: 700;
   margin: 0;
   color: #425D5F;
+  text-align: left;
 }
 
 .project-time {
   font-size: 12px;
-  color: #666;
+  color: #425D5F;
   margin-top: 4px;
-  padding-left: 14px;
+  text-align: left;
 }
 
 .save-btn {
@@ -2506,7 +2517,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #666;
+  color: #425D5F;
   font-size: 14px;
 }
 
@@ -2965,7 +2976,7 @@ onMounted(() => {
 }
 
 .input-wrapper textarea::placeholder {
-  color: #666;
+  color: #425D5F;
 }
 
 .send-btn {
@@ -3045,7 +3056,7 @@ onMounted(() => {
 
 .history-prompt {
   font-size: 12px;
-  color: #fff;
+  color: #425D5F;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3053,14 +3064,14 @@ onMounted(() => {
 
 .history-time {
   font-size: 11px;
-  color: #666;
+  color: #425D5F;
   margin-top: 4px;
 }
 
 .empty-history {
   text-align: center;
   padding: 40px 16px;
-  color: #666;
+  color: #425D5F;
 }
 
 .image-main {
@@ -3191,7 +3202,7 @@ onMounted(() => {
   border-radius: 8px;
   padding: 40px 20px;
   text-align: center;
-  color: #666;
+  color: #425D5F;
   margin-top: 8px;
   background-color: #F8F7F2;
 }
@@ -3226,7 +3237,7 @@ onMounted(() => {
 .empty-result .hint {
   font-size: 13px;
   margin-top: 8px;
-  color: #666;
+  color: #425D5F;
 }
 
 .result-grid {
@@ -3398,7 +3409,7 @@ onMounted(() => {
 
 .edit-action-bar .cancel-btn {
   background: #f5f5f5;
-  color: #666;
+  color: #425D5F;
   border: 1px solid #d9d9d9;
 }
 
@@ -3504,7 +3515,7 @@ onMounted(() => {
 
 .edit-work-dialog .el-input__inner::placeholder,
 .edit-work-dialog .el-textarea__inner::placeholder {
-  color: #666;
+  color: #425D5F;
 }
 
 .edit-work-dialog .el-select__wrapper {
@@ -3514,7 +3525,7 @@ onMounted(() => {
 }
 
 .edit-work-dialog .el-select__wrapper .el-select__placeholder {
-  color: #666;
+  color: #425D5F;
 }
 
 .edit-work-dialog .dialog-footer {
