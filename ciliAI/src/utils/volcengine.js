@@ -225,7 +225,9 @@ export const sendVolcEngineRequest = async (action, payload, accessKeyId, secret
       code: 10000,
       data: {
         task_id: data.task_id,
-        images: formattedImages
+        images: formattedImages,
+        remaining_power: data.remaining_power || 0,
+        power_cost: data.power_cost || 0
       },
       message: 'Success',
       request_id: `req_${Date.now()}`
@@ -350,7 +352,9 @@ export const editImage = async (params, accessKeyId, secretAccessKey, inviteCode
       code: 10000,
       data: {
         task_id: data.task_id,
-        images: formattedImages
+        images: formattedImages,
+        remaining_power: data.remaining_power || 0,
+        power_cost: data.power_cost || 0
       },
       message: 'Success',
       request_id: `req_${Date.now()}`
@@ -425,7 +429,9 @@ export const extendImage = async (params, accessKeyId, secretAccessKey, inviteCo
       code: 10000,
       data: {
         task_id: data.task_id,
-        images: formattedImages
+        images: formattedImages,
+        remaining_power: data.remaining_power || 0,
+        power_cost: data.power_cost || 0
       },
       message: 'Success',
       request_id: `req_${Date.now()}`
@@ -498,7 +504,9 @@ export const superResolution = async (params, accessKeyId, secretAccessKey, invi
       code: 10000,
       data: {
         task_id: data.task_id,
-        images: formattedImages
+        images: formattedImages,
+        remaining_power: data.remaining_power || 0,
+        power_cost: data.power_cost || 0
       },
       message: 'Success',
       request_id: `req_${Date.now()}`

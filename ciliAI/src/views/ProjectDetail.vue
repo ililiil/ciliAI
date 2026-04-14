@@ -263,26 +263,89 @@
                 <p class="hint">点击生成按钮开始创作</p>
               </div>
               <div v-else class="result-grid">
-                <div 
-                  v-for="(image, index) in generatedImages" 
+                <div
+                  v-for="(image, index) in generatedImages"
                   :key="index"
                   class="result-item"
                 >
-                  <img :src="image.url" :alt="image.prompt" @click="previewImage(image.url)" style="cursor: pointer;" />
-                  <div class="result-actions">
-                    <button class="action-btn" @click="downloadImage(image.url)">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="7 10 12 15 17 10"/>
-                        <line x1="12" y1="15" x2="12" y2="3"/>
-                      </svg>
-                    </button>
-                    <button class="action-btn" @click="previewImage(image.url)">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                        <circle cx="12" cy="12" r="3"/>
-                      </svg>
-                    </button>
+                  <div v-if="editingImageIndex === index" class="edit-overlay">
+                    <div class="edit-canvas-wrapper">
+                      <canvas
+                        :ref="el => { if (el) editCanvasInstance = el }"
+                        class="edit-mask-canvas"
+                        @mousedown="startEditDrawing"
+                        @mousemove="editDrawing"
+                        @mouseup="stopEditDrawing"
+                        @mouseleave="stopEditDrawing"
+                        @touchstart.prevent="startEditDrawingTouch"
+                        @touchmove.prevent="editDrawingTouch"
+                        @touchend="stopEditDrawing"
+                      ></canvas>
+                      <img :src="image.url" class="edit-base-image" />
+                    </div>
+                    <div class="edit-controls">
+                      <div class="edit-toolbar">
+                        <button
+                          :class="{ active: editingTool === 'brush' }"
+                          @click="editingTool = 'brush'"
+                        >
+                          画笔
+                        </button>
+                        <button
+                          :class="{ active: editingTool === 'eraser' }"
+                          @click="editingTool = 'eraser'"
+                        >
+                          橡皮擦
+                        </button>
+                        <button @click="clearEditMask">
+                          清空
+                        </button>
+                      </div>
+                      <div class="edit-prompt-input">
+                        <input
+                          v-model="editPrompt"
+                          type="text"
+                          placeholder="请输入提示词，描述要生成的内容..."
+                          class="prompt-input"
+                          @keyup.enter="applyEdit(image, index)"
+                        />
+                      </div>
+                      <div class="edit-action-bar">
+                        <button @click="cancelEdit" class="cancel-btn">
+                          取消
+                        </button>
+                        <button @click="applyEdit(image, index)" :disabled="isApplyingEdit" class="confirm-btn">
+                          {{ isApplyingEdit ? '处理中...' : '确认重绘' }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div v-else class="result-content">
+                    <img :src="image.url" :alt="image.prompt" @click="previewImage(image.url)" style="cursor: pointer;" />
+                    <div class="result-actions">
+                      <button class="action-btn" @click="startEdit(image, index)" title="局部重绘">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+                          <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+                          <path d="M2 2l7.586 7.586"/>
+                          <circle cx="11" cy="11" r="2"/>
+                        </svg>
+                      </button>
+                      <button class="action-btn" @click="downloadImage(image.url)" title="下载">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                          <polyline points="7 10 12 15 17 10"/>
+                          <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                      </button>
+                      <button class="action-btn" @click="previewImage(image.url)" title="预览">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                          <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -456,14 +519,169 @@
                 <div class="form-item">
                   <label>涂抹区域</label>
                   <div class="image-editor" v-if="editParams.image">
-                    <div class="editor-controls">
-                      <el-button size="small" :class="{ active: editingTool === 'brush' }" @click="editingTool = 'brush'">画笔</el-button>
-                      <el-button size="small" :class="{ active: editingTool === 'eraser' }" @click="editingTool = 'eraser'">橡皮擦</el-button>
-                      <el-button size="small" @click="clearMask">清空</el-button>
+                    <div class="editor-toolbar">
+                      <div class="tool-group">
+                        <button
+                          :class="['tool-btn', { active: editingTool === 'brush' }]"
+                          @click="editingTool = 'brush'"
+                          title="画笔工具"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+                            <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+                            <path d="M2 2l7.586 7.586"/>
+                            <circle cx="11" cy="11" r="2"/>
+                          </svg>
+                          <span>画笔</span>
+                        </button>
+                        <button
+                          :class="['tool-btn', { active: editingTool === 'eraser' }]"
+                          @click="editingTool = 'eraser'"
+                          title="橡皮擦"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 20H7L3 16c-.8-.8-.8-2 0-2.8L14.2 2a2 2 0 0 1 2.8 0L21 6a2 2 0 0 1 0 2.8L9 20"/>
+                            <path d="M6.5 13.5L12.5 7.5"/>
+                          </svg>
+                          <span>橡皮擦</span>
+                        </button>
+                      </div>
+
+                      <div class="tool-group brush-settings" v-if="editingTool === 'brush'">
+                        <div class="setting-item">
+                          <label>大小</label>
+                          <el-slider
+                            v-model="brushSettings.size"
+                            :min="5"
+                            :max="100"
+                            :step="5"
+                            show-stops
+                            :marks="brushSizeMarks"
+                            @change="updateBrushPreview"
+                          />
+                          <span class="value-label">{{ brushSettings.size }}px</span>
+                        </div>
+                        <div class="setting-item">
+                          <label>硬度</label>
+                          <el-slider
+                            v-model="brushSettings.hardness"
+                            :min="0"
+                            :max="100"
+                            :step="10"
+                            :marks="brushHardnessMarks"
+                          />
+                          <span class="value-label">{{ brushSettings.hardness }}%</span>
+                        </div>
+                        <div class="setting-item">
+                          <label>透明度</label>
+                          <el-slider
+                            v-model="brushSettings.opacity"
+                            :min="10"
+                            :max="100"
+                            :step="10"
+                            :marks="brushOpacityMarks"
+                          />
+                          <span class="value-label">{{ brushSettings.opacity }}%</span>
+                        </div>
+                        <div class="brush-preview">
+                          <div
+                            class="preview-dot"
+                            :style="{
+                              width: (brushSettings.size / 10) + 'px',
+                              height: (brushSettings.size / 10) + 'px',
+                              opacity: brushSettings.opacity / 100,
+                              background: getBrushGradient()
+                            }"
+                          ></div>
+                        </div>
+                      </div>
+
+                      <div class="tool-group">
+                        <button
+                          class="tool-btn"
+                          @click="undoEdit"
+                          :disabled="editHistoryStack.length === 0"
+                          title="撤销"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 7v6h6"/>
+                            <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>
+                          </svg>
+                          <span>撤销</span>
+                        </button>
+                        <button
+                          class="tool-btn"
+                          @click="redoEdit"
+                          :disabled="editRedoStack.length === 0"
+                          title="重做"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 7v6h-6"/>
+                            <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/>
+                          </svg>
+                          <span>重做</span>
+                        </button>
+                        <button
+                          class="tool-btn clear-btn"
+                          @click="clearMask"
+                          title="清空"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 6h18"/>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                          </svg>
+                          <span>清空</span>
+                        </button>
+                      </div>
                     </div>
-                    <div class="canvas-container">
-                      <canvas ref="editCanvas" @mousedown="startDrawing" @mousemove="draw" @mouseup="stopDrawing" @mouseleave="stopDrawing"></canvas>
-                      <img ref="editImageRef" :src="editParams.image" class="editor-image" />
+
+                    <div class="canvas-wrapper">
+                      <div class="canvas-container" @wheel="handleCanvasZoom">
+                        <div class="canvas-scroll-area" :style="{ transform: `scale(${canvasZoom})` }">
+                          <canvas
+                            ref="editCanvas"
+                            @mousedown="startDrawing"
+                            @mousemove="draw"
+                            @mouseup="stopDrawing"
+                            @mouseleave="stopDrawing"
+                            @touchstart="startDrawingTouch"
+                            @touchmove="drawTouch"
+                            @touchend="stopDrawing"
+                            :style="{ cursor: getCanvasCursor() }"
+                          ></canvas>
+                          <img ref="editImageRef" :src="editParams.image" class="editor-image" />
+                        </div>
+                      </div>
+                      <div class="canvas-zoom-controls">
+                        <button @click="zoomIn" title="放大">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="M21 21l-4.35-4.35"/>
+                            <path d="M11 8v6"/>
+                            <path d="M8 11h6"/>
+                          </svg>
+                        </button>
+                        <span class="zoom-level">{{ Math.round(canvasZoom * 100) }}%</span>
+                        <button @click="zoomOut" title="缩小">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="M21 21l-4.35-4.35"/>
+                            <path d="M8 11h6"/>
+                          </svg>
+                        </button>
+                        <button @click="resetZoom" title="重置">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 21l-6-6"/>
+                            <path d="M3 12a9 9 0 1 0 9-9"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="mask-preview">
+                      <h4>涂抹预览</h4>
+                      <canvas ref="maskPreviewCanvas" class="preview-canvas"></canvas>
                     </div>
                   </div>
                 </div>
@@ -857,10 +1075,23 @@ const editParams = reactive({
 })
 
 const editingTool = ref('brush')
-const isDrawing = ref(false)
 const editCanvas = ref(null)
-const editImageRef = ref(null)
 const canvasContext = ref(null)
+const editCanvasInstance = ref(null)
+
+// 简化的画笔设置
+const brushSettings = reactive({
+  size: 30
+})
+
+// 蒙版编辑状态
+const editingImageIndex = ref(null)
+const editingImageUrl = ref('')
+const editPrompt = ref('')
+const isApplyingEdit = ref(false)
+let lastX = 0
+let lastY = 0
+const editMaskData = ref('')
 
 const imageHistory = ref([])
 const extendHistory = ref([])
@@ -1774,143 +2005,228 @@ const handleEditImageUpload = (file) => {
   reader.readAsDataURL(file.raw)
 }
 
-const initCanvas = () => {
-  if (!editCanvas.value || !editImageRef.value) return
-  
-  const canvas = editCanvas.value
-  const image = editImageRef.value
-  
-  canvas.width = image.width
-  canvas.height = image.height
-  
-  canvasContext.value = canvas.getContext('2d')
-  
-  clearMask()
+// 蒙版编辑功能
+
+let isDrawing = false
+
+const startEdit = (image, index) => {
+  console.log('开始编辑图片:', image, index)
+  editingImageIndex.value = index
+  editingImageUrl.value = image.url
+
+  nextTick(() => {
+    setTimeout(() => {
+      initEditCanvas(image.url)
+    }, 100)
+  })
 }
 
-const startDrawing = (e) => {
-  isDrawing.value = true
-  draw(e)
+const initEditCanvas = (imageUrl) => {
+  if (!editCanvasInstance.value) return
+
+  const canvas = editCanvasInstance.value
+  const img = new Image()
+  img.crossOrigin = 'anonymous'
+
+  img.onload = () => {
+    canvas.width = img.width
+    canvas.height = img.height
+    canvasContext.value = canvas.getContext('2d')
+
+    // 清空蒙版
+    clearEditMask()
+  }
+
+  img.src = imageUrl
 }
 
-const draw = (e) => {
-  if (!isDrawing.value || !canvasContext.value || !editCanvas.value) return
-  
-  const canvas = editCanvas.value
+const startEditDrawing = (e) => {
+  isDrawing = true
+  const canvas = editCanvasInstance.value
+  if (!canvas) return
+
   const rect = canvas.getBoundingClientRect()
-  const x = e.clientX - rect.left
-  const y = e.clientY - rect.top
-  
+  const scaleX = canvas.width / rect.width
+  const scaleY = canvas.height / rect.height
+  lastX = (e.clientX - rect.left) * scaleX
+  lastY = (e.clientY - rect.top) * scaleY
+
+  editDrawing(e)
+}
+
+const editDrawing = (e) => {
+  if (!isDrawing || !canvasContext.value || !editCanvasInstance.value) return
+
+  const canvas = editCanvasInstance.value
+  const rect = canvas.getBoundingClientRect()
+  const scaleX = canvas.width / rect.width
+  const scaleY = canvas.height / rect.height
+  const x = (e.clientX - rect.left) * scaleX
+  const y = (e.clientY - rect.top) * scaleY
+
   const ctx = canvasContext.value
-  ctx.lineWidth = 20
+
+  ctx.lineWidth = brushSettings.size
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
-  
+
   if (editingTool.value === 'brush') {
     ctx.globalCompositeOperation = 'source-over'
-    ctx.fillStyle = 'white'
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
   } else {
     ctx.globalCompositeOperation = 'destination-out'
     ctx.fillStyle = 'black'
   }
-  
+
+  // 绘制线条
   ctx.beginPath()
-  ctx.arc(x, y, 10, 0, Math.PI * 2)
+  ctx.moveTo(lastX, lastY)
+  ctx.lineTo(x, y)
+  ctx.stroke()
+
+  // 绘制圆点
+  ctx.beginPath()
+  ctx.arc(x, y, brushSettings.size / 2, 0, Math.PI * 2)
   ctx.fill()
-  
-  updateMask()
+
+  lastX = x
+  lastY = y
 }
 
-const stopDrawing = () => {
-  isDrawing.value = false
+const stopEditDrawing = () => {
+  isDrawing = false
+  updateEditMask()
 }
 
-const clearMask = () => {
-  if (!canvasContext.value || !editCanvas.value) return
-  
-  const canvas = editCanvas.value
+const startEditDrawingTouch = (e) => {
+  const touch = e.touches[0]
+  const mouseEvent = new MouseEvent('mousedown', {
+    clientX: touch.clientX,
+    clientY: touch.clientY
+  })
+  startEditDrawing(mouseEvent)
+}
+
+const editDrawingTouch = (e) => {
+  const touch = e.touches[0]
+  const mouseEvent = new MouseEvent('mousemove', {
+    clientX: touch.clientX,
+    clientY: touch.clientY
+  })
+  editDrawing(mouseEvent)
+}
+
+const clearEditMask = () => {
+  if (!canvasContext.value || !editCanvasInstance.value) return
+
+  const canvas = editCanvasInstance.value
   const ctx = canvasContext.value
-  
+
   ctx.clearRect(0, 0, canvas.width, canvas.height)
-  
-  editParams.mask = ''
+  updateEditMask()
 }
 
-const updateMask = () => {
-  if (!editCanvas.value) return
-  
-  editParams.mask = editCanvas.value.toDataURL('image/png')
+const updateEditMask = () => {
+  if (!editCanvasInstance.value) return
+
+  editMaskData.value = editCanvasInstance.value.toDataURL('image/png')
 }
 
-const generateEditImage = async () => {
-  if (!editParams.image) {
-    ElMessage.warning('请上传原图')
+const applyEdit = async (image, index) => {
+  if (!editMaskData.value) {
+    ElMessage.warning('请先绘制要修改的区域')
     return
   }
-  if (!editParams.mask) {
-    ElMessage.warning('请在原图上绘制修改区域')
+
+  if (!editPrompt.value.trim()) {
+    ElMessage.warning('请输入提示词')
     return
   }
-  
-  isEditing.value = true
-  editedImages.value = []
-  
+
+  isApplyingEdit.value = true
+
   try {
+    console.log('开始局部重绘...')
+    console.log('图片URL:', editingImageUrl.value)
+    console.log('Mask长度:', editMaskData.value.length)
+    console.log('提示词:', editPrompt.value.trim())
+
+    // 将图片URL转换为base64
+    const imageBase64 = await urlToBase64(editingImageUrl.value)
+    console.log('图片Base64长度:', imageBase64.length)
+
     const params = {
-      image: editParams.image,
-      mask: editParams.mask,
-      prompt: editParams.prompt
+      image: imageBase64,
+      mask: editMaskData.value,
+      prompt: editPrompt.value.trim()
     }
-    
-    if (!currentInviteCode.value) {
-      ElMessage.error('请先登录')
-      isEditing.value = false
+
+    console.log('调用局部重绘API...')
+    const submitResponse = await volcEditImage(params, accessKeyId, secretAccessKey, currentInviteCode.value, project.value.id)
+    console.log('API响应:', submitResponse)
+
+    if (submitResponse.code === 10000 && submitResponse.data.images.length > 0) {
+      // 用返回的图片替换原图
+      generatedImages.value[index] = {
+        url: submitResponse.data.images[0].url,
+        prompt: image.prompt
+      }
+
+      ElMessage.success('局部重绘成功')
+      cancelEdit()
+    } else {
+      throw new Error(submitResponse.message || '处理失败')
+    }
+  } catch (error) {
+    console.error('局部重绘失败:', error)
+    ElMessage.error(`局部重绘失败: ${error.message}`)
+  } finally {
+    isApplyingEdit.value = false
+  }
+}
+
+const cancelEdit = () => {
+  editingImageIndex.value = null
+  editingImageUrl.value = ''
+  editPrompt.value = ''
+  editMaskData.value = ''
+  if (editCanvasInstance.value) {
+    clearEditMask()
+  }
+}
+
+// 辅助函数：将URL转换为base64
+const urlToBase64 = (url) => {
+  return new Promise((resolve, reject) => {
+    // 如果已经是base64格式，直接返回
+    if (url.startsWith('data:')) {
+      resolve(url)
       return
     }
-    
-    const submitResponse = await volcEditImage(params, accessKeyId, secretAccessKey, currentInviteCode.value, project.value.id)
-    
-    console.log('改图任务提交响应:', submitResponse)
-    
-    if (submitResponse.data?.remaining_power !== undefined) {
-      userComputePower.value = submitResponse.data.remaining_power
-      if (updateComputingPower) {
-        updateComputingPower(submitResponse.data.remaining_power)
+
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas')
+        canvas.width = img.width
+        canvas.height = img.height
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0)
+        const dataURL = canvas.toDataURL('image/png')
+        console.log('Base64转换成功，长度:', dataURL.length)
+        resolve(dataURL)
+      } catch (error) {
+        console.error('Base64转换失败:', error)
+        reject(error)
       }
     }
-    
-    if (!submitResponse.data?.task_id) {
-      throw new Error('任务提交失败，未返回task_id')
+    img.onerror = (error) => {
+      console.error('图片加载失败:', error)
+      reject(error)
     }
-    
-    const taskId = submitResponse.data.task_id
-    ElMessage.success(`图片修改任务已提交，任务ID: ${taskId}`)
-    
-    editedImages.value = [{
-      url: `https://picsum.photos/512/512?random=${Date.now()}`,
-      prompt: editParams.prompt,
-      taskId: taskId
-    }]
-    
-    const historyItem = {
-      id: Date.now().toString(),
-      prompt: editParams.prompt,
-      imageUrl: editedImages.value[0].url,
-      createTime: new Date().toLocaleString('zh-CN'),
-      params: {
-        hasMask: true,
-        taskId: taskId
-      }
-    }
-    editHistory.value.unshift(historyItem)
-    
-    ElMessage.success('图片修改成功')
-  } catch (error) {
-    console.error('改图失败:', error)
-    ElMessage.error(`修改失败: ${error.message}`)
-  } finally {
-    isEditing.value = false
-  }
+    img.src = url
+  })
 }
 
 const viewEditHistoryItem = (item) => {
@@ -1924,6 +2240,33 @@ const viewEditHistoryItem = (item) => {
     url: item.imageUrl,
     prompt: item.prompt
   }]
+}
+
+const loadImageForEdit = (image) => {
+  console.log('加载图片到编辑区:', image)
+
+  // 切换到编辑模块
+  activeModule.value = 'edit'
+
+  // 设置编辑参数
+  editParams.image = image.url
+  editParams.prompt = image.prompt || ''
+  editParams.mask = ''
+
+  // 清空文件列表
+  editFileList.value = []
+  maskFileList.value = []
+
+  // 清空编辑历史图片
+  editedImages.value = []
+
+  // 初始化画布
+  nextTick(() => {
+    setTimeout(() => {
+      initCanvas()
+      ElMessage.success('已加载到编辑区，请在涂抹区域绘制要修改的部分')
+    }, 300)
+  })
 }
 
 const downloadImage = (url) => {
@@ -2928,6 +3271,156 @@ onMounted(() => {
   background-color: rgba(0, 0, 0, 0.8);
 }
 
+/* 蒙版编辑功能 */
+.edit-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.edit-canvas-wrapper {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.edit-mask-canvas {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 100%;
+  max-height: 100%;
+  cursor: crosshair;
+  z-index: 2;
+}
+
+.edit-base-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.edit-controls {
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid #e8e8e8;
+}
+
+.edit-toolbar {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.edit-toolbar button {
+  padding: 8px 20px;
+  font-size: 14px;
+  color: #333;
+  background: #f5f5f5;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.edit-toolbar button:hover:not(:disabled) {
+  background: #e6e6e6;
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
+.edit-toolbar button:disabled {
+  background: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.edit-toolbar button.active {
+  background: #1890ff;
+  border-color: #1890ff;
+  color: white;
+}
+
+.edit-prompt-input {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.prompt-input {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.prompt-input:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.prompt-input::placeholder {
+  color: #bfbfbf;
+}
+
+.edit-action-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 12px 16px;
+}
+
+.edit-action-bar button {
+  padding: 8px 20px;
+  font-size: 14px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.edit-action-bar .cancel-btn {
+  background: #f5f5f5;
+  color: #666;
+  border: 1px solid #d9d9d9;
+}
+
+.edit-action-bar .cancel-btn:hover {
+  background: #e6e6e6;
+}
+
+.edit-action-bar .confirm-btn {
+  background: #1890ff;
+  color: white;
+}
+
+.edit-action-bar .confirm-btn:hover:not(:disabled) {
+  background: #40a9ff;
+  transform: translateY(-1px);
+}
+
+.edit-action-bar .confirm-btn:disabled {
+  background: #999;
+  cursor: not-allowed;
+}
+
 .image-preview-dialog {
   z-index: 9999 !important;
 }
@@ -3139,6 +3632,7 @@ onMounted(() => {
   opacity: 1;
 }
 
+/* 编辑工具栏样式 */
 @media (max-width: 768px) {
   .page-header {
     padding: 12px 16px;

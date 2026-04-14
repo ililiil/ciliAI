@@ -41,10 +41,10 @@ def convert_image_url(image_url):
     return image_url
 
 POWER_COST = {
-    'generate': 10,
+    'generate': 5,
     'extend': 5,
     'super_resolution': 8,
-    'inpaint': 6,
+    'inpaint': 5,
     'chat': 1
 }
 
@@ -1205,33 +1205,33 @@ def inpaint_image():
         }), 400
 
     params = {
-        "req_key": "jimeng_i2i_v30",
-        "binary_data_base64": [image_base64],
+        "req_key": "jimeng_image2image_dream_inpaint",
+        "binary_data_base64": [image_base64, mask_base64],
         "prompt": prompt or "修改图片指定区域",
-        "mask": mask_base64
     }
 
     try:
-        logger.info(f"Submitting inpaint task")
+        logger.info(f"Submitting inpaint task with prompt: {prompt}")
         visual_service = get_visual_service()
         submit_res = visual_service.common_json_handler("CVSync2AsyncSubmitTask", params)
-        
+
         if submit_res.get('code') != 10000:
             add_compute_power(user_id, power_cost, 'refund', '改图失败退还')
             return jsonify({'status': 'error', 'message': f"提交任务失败: {submit_res.get('message')}"}), 500
-        
+
         task_id = submit_res.get('data', {}).get('task_id')
         if not task_id:
             add_compute_power(user_id, power_cost, 'refund', '改图失败退还')
             return jsonify({'status': 'error', 'message': "未获取到任务ID"}), 500
 
+        logger.info(f"Polling inpaint results for task_id: {task_id}")
         max_retries = 30
         retry_interval = 2
-        
+
         for i in range(max_retries):
             time.sleep(retry_interval)
             query_params = {
-                "req_key": "jimeng_i2i_v30",
+                "req_key": "jimeng_image2image_dream_inpaint",
                 "task_id": task_id
             }
             query_res = visual_service.common_json_handler("CVSync2AsyncGetResult", query_params)
@@ -2762,6 +2762,115 @@ def get_admin_stats():
             'usedCodeCount': used_code_count
         }
     })
+
+@app.route('/api/admin/power-logs', methods=['GET'])
+def get_admin_power_logs():
+    try:
+        db = get_db()
+        
+        page = request.args.get('page', 1, type=int)
+        page_size = request.args.get('page_size', 20, type=int)
+        offset = (page - 1) * page_size
+        
+        user_id = request.args.get('user_id', type=int)
+        
+        if user_id:
+            logs = db.execute('''
+                SELECT cpl.*, 
+                       u.invite_code,
+                       p.title as project_title
+                FROM compute_power_logs cpl
+                LEFT JOIN users u ON cpl.user_id = u.id
+                LEFT JOIN projects p ON cpl.project_id = p.id
+                WHERE cpl.user_id = ?
+                ORDER BY cpl.created_at DESC
+                LIMIT ? OFFSET ?
+            ''', (user_id, page_size, offset)).fetchall()
+            
+            total = db.execute('SELECT COUNT(*) as count FROM compute_power_logs WHERE user_id = ?', (user_id,)).fetchone()['count']
+        else:
+            logs = db.execute('''
+                SELECT cpl.*, 
+                       u.invite_code,
+                       p.title as project_title
+                FROM compute_power_logs cpl
+                LEFT JOIN users u ON cpl.user_id = u.id
+                LEFT JOIN projects p ON cpl.project_id = p.id
+                ORDER BY cpl.created_at DESC
+                LIMIT ? OFFSET ?
+            ''', (page_size, offset)).fetchall()
+            
+            total = db.execute('SELECT COUNT(*) as count FROM compute_power_logs').fetchone()['count']
+        
+        total_power_used = db.execute('SELECT COALESCE(SUM(ABS(power_change)), 0) as total FROM compute_power_logs WHERE power_change < 0').fetchone()['total']
+        
+        return jsonify({
+            'code': 200,
+            'data': {
+                'list': [dict(log) for log in logs],
+                'total': total,
+                'page': page,
+                'page_size': page_size,
+                'total_power_used': total_power_used
+            }
+        })
+    except Exception as e:
+        logger.error(f"获取管理后台算力日志失败: {str(e)}")
+        return jsonify({'code': 500, 'msg': str(e)}), 500
+
+@app.route('/api/admin/users/<int:user_id>/power', methods=['PUT'])
+def update_admin_user_power(user_id):
+    try:
+        data = request.json
+        new_power = data.get('compute_power')
+        operation = data.get('operation', 'set')
+        description = data.get('description', '')
+        
+        if new_power is None:
+            return jsonify({'code': 400, 'msg': '缺少算力值'}), 400
+        
+        db = get_db()
+        
+        user = db.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+        if not user:
+            return jsonify({'code': 404, 'msg': '用户不存在'}), 404
+        
+        current_power = user['compute_power']
+        
+        if operation == 'set':
+            power_change = new_power - current_power
+            db.execute('UPDATE users SET compute_power = ? WHERE id = ?', (new_power, user_id))
+        elif operation == 'add':
+            power_change = new_power
+            new_power = current_power + new_power
+            db.execute('UPDATE users SET compute_power = ? WHERE id = ?', (new_power, user_id))
+        elif operation == 'deduct':
+            power_change = -abs(new_power)
+            new_power = max(0, current_power - abs(new_power))
+            db.execute('UPDATE users SET compute_power = ? WHERE id = ?', (new_power, user_id))
+        else:
+            return jsonify({'code': 400, 'msg': '无效的操作类型'}), 400
+        
+        db.execute('''
+            INSERT INTO compute_power_logs 
+            (user_id, operation_type, power_change, power_before, power_after, description)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (user_id, f'admin_{operation}', power_change, current_power, new_power, description or f'管理员操作: {operation}'))
+        
+        db.commit()
+        
+        return jsonify({
+            'code': 200,
+            'msg': '算力更新成功',
+            'data': {
+                'old_power': current_power,
+                'new_power': new_power,
+                'power_change': power_change
+            }
+        })
+    except Exception as e:
+        logger.error(f"更新用户算力失败: {str(e)}")
+        return jsonify({'code': 500, 'msg': str(e)}), 500
 
 @app.route('/api/admin/advertisements', methods=['GET'])
 def get_admin_advertisements():
