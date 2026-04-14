@@ -135,14 +135,17 @@ def init_database():
             image TEXT,
             link_url TEXT,
             status TEXT DEFAULT 'draft',
+            sort_order INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            published_at TIMESTAMP
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
 
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_generation_records_user_id ON generation_records(user_id)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_generation_records_project_id ON generation_records(project_id)')
     cursor.execute('CREATE INDEX IF NOT EXISTS idx_generation_records_type ON generation_records(type)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_advertisements_status ON advertisements(status)')
+    cursor.execute('CREATE INDEX IF NOT EXISTS idx_advertisements_sort_order ON advertisements(sort_order)')
 
     conn.commit()
 
@@ -174,11 +177,17 @@ def init_database():
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (admin_id, '示例作品1', '学生A', '/uploads/sample1.jpg', '["AI创作", "示例"]', '5', '30秒', '99', '归CiliAI所有', '这是一个示例作品', 'IP版权库', 'active'))
 
+        cursor.execute('''
+            INSERT INTO advertisements (title, image, link_url, status, sort_order, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', ('示例广告1', '', '#', 'published', 1, datetime.now(), datetime.now()))
+
         conn.commit()
         print("✓ 初始数据创建完成")
         print(f"  - 管理员账户邀请码: {invite_code} (算力: 10000)")
         print("  - 创建了5个测试邀请码")
         print("  - 创建了示例作品")
+        print("  - 创建了示例广告")
     else:
         print("✓ 数据库已有数据，跳过初始化")
 

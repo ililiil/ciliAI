@@ -357,6 +357,31 @@ def init_db():
     except:
         pass
     
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS chat_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER,
+            user_id INTEGER NOT NULL,
+            conversation_id TEXT,
+            title TEXT NOT NULL DEFAULT '新对话',
+            selected_people TEXT DEFAULT 'script',
+            message_count INTEGER DEFAULT 0,
+            create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        )
+    ''')
+    
+    try:
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_chat_sessions_user_id ON chat_sessions(user_id)')
+    except:
+        pass
+    try:
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_chat_sessions_project_id ON chat_sessions(project_id)')
+    except:
+        pass
+    
     cursor.execute('SELECT COUNT(*) as count FROM advertisements')
     ads_count = cursor.fetchone()[0]
     
@@ -1170,9 +1195,15 @@ def generate_image():
                 status = data_res.get('status')
                 
                 if status == 'done':
-                    image_urls = data_res.get('binary_data_base64', [])
-                    if not image_urls:
-                        image_urls = data_res.get('image_urls', [])
+                    image_data = data_res.get('binary_data_base64', [])
+                    if not image_data:
+                        image_data = data_res.get('image_urls', [])
+                    
+                    image_urls = []
+                    for img in image_data:
+                        if isinstance(img, str) and not img.startswith('data:'):
+                            img = f'data:image/png;base64,{img}'
+                        image_urls.append(img)
                     
                     db = get_db()
                     cursor = db.execute('''
@@ -1294,9 +1325,15 @@ def inpaint_image():
                 status = data_res.get('status')
                 
                 if status == 'done':
-                    image_urls = data_res.get('binary_data_base64', [])
-                    if not image_urls:
-                        image_urls = data_res.get('image_urls', [])
+                    image_data = data_res.get('binary_data_base64', [])
+                    if not image_data:
+                        image_data = data_res.get('image_urls', [])
+                    
+                    image_urls = []
+                    for img in image_data:
+                        if isinstance(img, str) and not img.startswith('data:'):
+                            img = f'data:image/png;base64,{img}'
+                        image_urls.append(img)
                     
                     db = get_db()
                     cursor = db.execute('''
@@ -1406,9 +1443,15 @@ def extend_image():
                 status = data_res.get('status')
                 
                 if status == 'done':
-                    image_urls = data_res.get('binary_data_base64', [])
-                    if not image_urls:
-                        image_urls = data_res.get('image_urls', [])
+                    image_data = data_res.get('binary_data_base64', [])
+                    if not image_data:
+                        image_data = data_res.get('image_urls', [])
+                    
+                    image_urls = []
+                    for img in image_data:
+                        if isinstance(img, str) and not img.startswith('data:'):
+                            img = f'data:image/png;base64,{img}'
+                        image_urls.append(img)
                     
                     db = get_db()
                     cursor = db.execute('''
@@ -1516,9 +1559,15 @@ def super_resolution():
                 status = data_res.get('status')
                 
                 if status == 'done':
-                    image_urls = data_res.get('binary_data_base64', [])
-                    if not image_urls:
-                        image_urls = data_res.get('image_urls', [])
+                    image_data = data_res.get('binary_data_base64', [])
+                    if not image_data:
+                        image_data = data_res.get('image_urls', [])
+                    
+                    image_urls = []
+                    for img in image_data:
+                        if isinstance(img, str) and not img.startswith('data:'):
+                            img = f'data:image/png;base64,{img}'
+                        image_urls.append(img)
                     
                     db = get_db()
                     cursor = db.execute('''
@@ -1595,9 +1644,16 @@ def get_records():
     
     records = db.execute(query, params).fetchall()
     
+    records_list = []
+    for r in records:
+        record_dict = dict(r)
+        if record_dict.get('image_url') and not record_dict['image_url'].startswith('data:'):
+            record_dict['image_url'] = f"data:image/png;base64,{record_dict['image_url']}"
+        records_list.append(record_dict)
+    
     return jsonify({
         'status': 'success',
-        'records': [dict(r) for r in records],
+        'records': records_list,
         'total': total,
         'page': page,
         'page_size': page_size
@@ -1611,9 +1667,13 @@ def get_record(record_id):
     if not record:
         return jsonify({'status': 'error', 'message': '记录不存在'}), 404
     
+    record_dict = dict(record)
+    if record_dict.get('image_url') and not record_dict['image_url'].startswith('data:'):
+        record_dict['image_url'] = f"data:image/png;base64,{record_dict['image_url']}"
+    
     return jsonify({
         'status': 'success',
-        'record': dict(record)
+        'record': record_dict
     })
 
 @app.route('/api/records/<int:record_id>', methods=['DELETE'])
@@ -3108,6 +3168,159 @@ def unpublish_admin_advertisement(ad_id):
         })
     except Exception as e:
         return jsonify({'code': 500, 'msg': str(e)}), 500
+
+@app.route('/api/chat/sessions', methods=['GET'])
+def get_chat_sessions():
+    invite_code = request.args.get('invite_code')
+    project_id = request.args.get('project_id', type=int)
+    
+    if not invite_code:
+        return jsonify({'status': 'error', 'message': '缺少邀请码参数'}), 400
+    
+    user_id = get_user_id_by_invite_code(invite_code)
+    if not user_id:
+        return jsonify({'status': 'success', 'sessions': [], 'total': 0})
+    
+    db = get_db()
+    query = 'SELECT * FROM chat_sessions WHERE user_id = ?'
+    params = [user_id]
+    
+    if project_id:
+        query += ' AND project_id = ?'
+        params.append(project_id)
+    
+    query += ' ORDER BY update_time DESC'
+    
+    sessions = db.execute(query, params).fetchall()
+    
+    return jsonify({
+        'status': 'success',
+        'sessions': [dict(s) for s in sessions],
+        'total': len(sessions)
+    })
+
+@app.route('/api/chat/sessions', methods=['POST'])
+def create_chat_session():
+    data = request.json
+    invite_code = data.get('invite_code')
+    project_id = data.get('project_id')
+    title = data.get('title', '新对话')
+    selected_people = data.get('selected_people', 'script')
+    
+    if not invite_code:
+        return jsonify({'status': 'error', 'message': '缺少邀请码参数'}), 400
+    
+    user_id = get_or_create_user(invite_code)
+    
+    db = get_db()
+    cursor = db.execute('''
+        INSERT INTO chat_sessions (project_id, user_id, title, selected_people)
+        VALUES (?, ?, ?, ?)
+    ''', (project_id, user_id, title, selected_people))
+    db.commit()
+    
+    return jsonify({
+        'status': 'success',
+        'session_id': cursor.lastrowid
+    })
+
+@app.route('/api/chat/sessions/<int:session_id>', methods=['PUT'])
+def update_chat_session(session_id):
+    data = request.json
+    invite_code = data.get('invite_code')
+    
+    if not invite_code:
+        return jsonify({'status': 'error', 'message': '缺少邀请码参数'}), 400
+    
+    user_id = get_user_id_by_invite_code(invite_code)
+    if not user_id:
+        return jsonify({'status': 'error', 'message': '用户不存在'}), 401
+    
+    db = get_db()
+    session = db.execute('SELECT * FROM chat_sessions WHERE id = ? AND user_id = ?', 
+                       (session_id, user_id)).fetchone()
+    
+    if not session:
+        return jsonify({'status': 'error', 'message': '会话不存在或无权访问'}), 404
+    
+    updates = []
+    values = []
+    
+    if 'title' in data:
+        updates.append('title = ?')
+        values.append(data['title'])
+    if 'selected_people' in data:
+        updates.append('selected_people = ?')
+        values.append(data['selected_people'])
+    if 'conversation_id' in data:
+        updates.append('conversation_id = ?')
+        values.append(data['conversation_id'])
+    if 'message_count' in data:
+        updates.append('message_count = ?')
+        values.append(data['message_count'])
+    
+    if updates:
+        updates.append('update_time = ?')
+        values.append(datetime.now())
+        values.append(session_id)
+        
+        db.execute(f'UPDATE chat_sessions SET {", ".join(updates)} WHERE id = ?', values)
+        db.commit()
+    
+    return jsonify({'status': 'success', 'message': '会话更新成功'})
+
+@app.route('/api/chat/sessions/<int:session_id>', methods=['DELETE'])
+def delete_chat_session(session_id):
+    invite_code = request.args.get('invite_code')
+    
+    if not invite_code:
+        return jsonify({'status': 'error', 'message': '缺少邀请码参数'}), 400
+    
+    user_id = get_user_id_by_invite_code(invite_code)
+    if not user_id:
+        return jsonify({'status': 'error', 'message': '用户不存在'}), 401
+    
+    db = get_db()
+    session = db.execute('SELECT * FROM chat_sessions WHERE id = ? AND user_id = ?', 
+                       (session_id, user_id)).fetchone()
+    
+    if not session:
+        return jsonify({'status': 'error', 'message': '会话不存在或无权访问'}), 404
+    
+    db.execute('DELETE FROM chat_sessions WHERE id = ?', (session_id,))
+    db.commit()
+    
+    return jsonify({'status': 'success', 'message': '会话已删除'})
+
+@app.route('/api/chat/sessions/<int:session_id>/messages', methods=['GET'])
+def get_session_messages(session_id):
+    invite_code = request.args.get('invite_code')
+    
+    if not invite_code:
+        return jsonify({'status': 'error', 'message': '缺少邀请码参数'}), 400
+    
+    user_id = get_user_id_by_invite_code(invite_code)
+    if not user_id:
+        return jsonify({'status': 'error', 'message': '用户不存在'}), 401
+    
+    db = get_db()
+    session = db.execute('SELECT * FROM chat_sessions WHERE id = ? AND user_id = ?', 
+                       (session_id, user_id)).fetchone()
+    
+    if not session:
+        return jsonify({'status': 'error', 'message': '会话不存在或无权访问'}), 404
+    
+    messages = db.execute('''
+        SELECT * FROM chat_messages 
+        WHERE user_id = ? AND chat_id = ?
+        ORDER BY create_time ASC
+    ''', (user_id, session['conversation_id'] if session['conversation_id'] else '')).fetchall()
+    
+    return jsonify({
+        'status': 'success',
+        'messages': [dict(m) for m in messages],
+        'session': dict(session)
+    })
 
 if __name__ == '__main__':
     if key_manager.get_key_count() == 0:
