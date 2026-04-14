@@ -107,7 +107,7 @@
           </el-button>
         </div>
         
-        <div class="modal-comments">
+        <div v-if="!isIpLibrary" class="modal-comments">
           <div class="comments-header">
             <div class="comments-title">
               <span>学员评价</span>
