@@ -139,6 +139,12 @@ const fetchUserPower = async (code) => {
   }
 }
 
+const updateComputingPower = (newPower) => {
+  computingPower.value = newPower
+}
+
+provide('updateComputingPower', updateComputingPower)
+
 watch(
   () => route.path,
   () => {

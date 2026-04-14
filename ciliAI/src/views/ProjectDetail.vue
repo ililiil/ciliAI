@@ -13,6 +13,9 @@
         </div>
       </div>
       <div class="header-right">
+        <el-button type="default" class="edit-work-btn" @click="openEditWorkDialog">
+          编辑作品
+        </el-button>
         <el-button type="primary" class="save-btn" @click="saveProject" :loading="isSaving">
           保存项目
         </el-button>
@@ -287,7 +290,7 @@
                   :key="index"
                   class="result-item"
                 >
-                  <img :src="image.url" :alt="image.prompt" />
+                  <img :src="image.url" :alt="image.prompt" @click="previewImage(image.url)" style="cursor: pointer;" />
                   <div class="result-actions">
                     <button class="action-btn" @click="downloadImage(image.url)">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -404,7 +407,7 @@
                   :key="index"
                   class="result-item"
                 >
-                  <img :src="image.url" :alt="image.prompt" />
+                  <img :src="image.url" :alt="image.prompt" @click="previewImage(image.url)" style="cursor: pointer;" />
                   <div class="result-actions">
                     <button class="action-btn" @click="downloadImage(image.url)">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -523,7 +526,7 @@
                   :key="index"
                   class="result-item"
                 >
-                  <img :src="image.url" :alt="image.prompt" />
+                  <img :src="image.url" :alt="image.prompt" @click="previewImage(image.url)" style="cursor: pointer;" />
                   <div class="result-actions">
                     <button class="action-btn" @click="downloadImage(image.url)">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -547,6 +550,34 @@
       </div>
     </div>
 
+    <!-- 已保存作品列表 -->
+    <div v-if="savedWorks.length > 0" class="saved-works-section">
+      <div class="saved-works-header">
+        <h3>已保存的作品</h3>
+        <el-button size="small" @click="clearSavedWorks">清空</el-button>
+      </div>
+      <div class="saved-works-grid">
+        <div
+          v-for="work in savedWorks"
+          :key="work.id"
+          class="saved-work-card"
+          @click="viewSavedWork(work)"
+        >
+          <div class="work-cover">
+            <img v-if="work.coverImage" :src="work.coverImage" alt="作品封面" />
+            <div v-else class="no-cover">暂无封面</div>
+          </div>
+          <div class="work-details">
+            <h4 class="work-title">{{ work.title }}</h4>
+            <p class="work-student">学员: {{ work.studentName }}</p>
+            <div class="work-tags">
+              <span v-for="tag in work.tags" :key="tag" class="tag">{{ tag }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <el-dialog
       v-model="showImagePreview"
       width="80%"
@@ -554,17 +585,145 @@
     >
       <img :src="previewImageUrl" class="preview-image" />
     </el-dialog>
+
+    <!-- 编辑作品对话框 -->
+    <el-dialog
+      v-model="showEditWorkDialog"
+      title="编辑作品"
+      width="650px"
+      class="edit-work-dialog"
+      :close-on-click-modal="false"
+      destroy-on-close
+    >
+      <el-form :model="editWorkForm" label-width="100px" label-position="right">
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="作品名称" required>
+              <el-input v-model="editWorkForm.title" placeholder="请输入作品名称" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="学员名称" required>
+              <el-input v-model="editWorkForm.studentName" placeholder="请输入学员姓名" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-form-item label="分类" required>
+          <el-select v-model="editWorkForm.category" placeholder="请选择分类" style="width: 100%">
+            <el-option label="IP版权库" value="IP版权库" />
+            <el-option label="原创作品" value="原创作品" />
+            <el-option label="合作作品" value="合作作品" />
+            <el-option label="教学案例" value="教学案例" />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="封面图片" required>
+          <div class="cover-upload-container">
+            <el-upload
+              class="work-cover-uploader"
+              action="#"
+              :auto-upload="false"
+              :on-change="handleWorkCoverUpload"
+              :file-list="workCoverFileList"
+              :show-file-list="false"
+              accept="image/*"
+              list-type="picture"
+            >
+              <template #default>
+                <div class="cover-upload-trigger" v-if="!editWorkForm.coverImage">
+                  <el-icon class="upload-icon"><Upload /></el-icon>
+                  <div class="upload-text">点击上传封面图片</div>
+                  <div class="upload-hint">支持 JPG、PNG 格式，建议尺寸 500x892，最大 5MB</div>
+                </div>
+                <div class="cover-preview" v-else>
+                  <img :src="editWorkForm.coverImage" alt="封面预览" class="cover-preview-image">
+                  <div class="cover-preview-overlay">
+                    <el-button type="danger" size="small" @click.stop="removeWorkCover">移除</el-button>
+                  </div>
+                </div>
+              </template>
+            </el-upload>
+          </div>
+        </el-form-item>
+
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="算力成本">
+              <el-input v-model="editWorkForm.computeCost" placeholder="如：1000算力/分钟" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="制作时长">
+              <el-input v-model="editWorkForm.duration" placeholder="如：420分钟" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="市场价格">
+              <el-input v-model="editWorkForm.price" placeholder="如：150-300元/分钟" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="版权信息">
+              <el-input v-model="editWorkForm.copyright" placeholder="如：归CiliAI所有" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-form-item label="标签">
+          <el-select
+            v-model="editWorkForm.tags"
+            multiple
+            filterable
+            allow-create
+            default-first-option
+            placeholder="请选择或输入标签"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="tag in availableTags"
+              :key="tag"
+              :label="tag"
+              :value="tag"
+            />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item label="作品简介">
+          <el-input
+            v-model="editWorkForm.introduction"
+            type="textarea"
+            :rows="4"
+            placeholder="请输入作品简介"
+            maxlength="500"
+            show-word-limit
+          />
+        </el-form-item>
+      </el-form>
+
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="showEditWorkDialog = false">取消</el-button>
+          <el-button type="primary" @click="handleSaveWork" :loading="isSavingWork">保存</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick, inject } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Upload } from '@element-plus/icons-vue'
 import { generateImage as volcGenerateImage, editImage as volcEditImage, extendImage as volcExtendImage } from '../utils/volcengine.js'
 
 const route = useRoute()
 const router = useRouter()
+const updateComputingPower = inject('updateComputingPower')
 
 const currentInviteCode = ref('demo-invite-code')
 
@@ -577,6 +736,66 @@ const difyApiUrl = '/dify-api/chat-messages'
 const activeModule = ref('chat')
 const isSaving = ref(false)
 const isSending = ref(false)
+
+// 算力相关
+const userComputePower = ref(0)
+const isCheckingPower = ref(false)
+
+const fetchUserPower = async () => {
+  try {
+    const inviteCode = localStorage.getItem('inviteCode') || ''
+    if (!inviteCode) return
+    
+    const response = await fetch(`/api/user/power?invite_code=${encodeURIComponent(inviteCode)}`)
+    const result = await response.json()
+    
+    if (result.status === 'success') {
+      userComputePower.value = result.compute_power
+    }
+  } catch (error) {
+    console.error('获取算力失败:', error)
+  }
+}
+
+const checkAndDeductPower = async () => {
+  const inviteCode = localStorage.getItem('inviteCode') || ''
+  if (!inviteCode) {
+    ElMessage.warning('请先登录')
+    return { success: false, message: '请先登录', remainingPower: 0 }
+  }
+  
+  isCheckingPower.value = true
+  try {
+    const response = await fetch(`/api/user/power?invite_code=${encodeURIComponent(inviteCode)}`)
+    const result = await response.json()
+    
+    if (result.status !== 'success') {
+      return { success: false, message: '获取算力失败', remainingPower: 0 }
+    }
+    
+    const currentPower = result.compute_power
+    const requiredPower = 1
+    
+    if (currentPower < requiredPower) {
+      return { 
+        success: false, 
+        message: `算力不足，当前算力 ${currentPower}，需要 ${requiredPower} 算力`,
+        remainingPower: currentPower,
+        requiredPower: requiredPower
+      }
+    }
+    
+    return { 
+      success: true, 
+      remainingPower: currentPower 
+    }
+  } catch (error) {
+    console.error('算力检查失败:', error)
+    return { success: false, message: '算力检查失败，请重试', remainingPower: 0 }
+  } finally {
+    isCheckingPower.value = false
+  }
+}
 
 // 角色选择相关
 const selectedPeople = ref('script')
@@ -617,6 +836,30 @@ const currentMessages = computed(() => {
   return chat ? chat.messages : []
 })
 
+// 已保存作品相关
+const savedWorks = computed(() => {
+  try {
+    const works = localStorage.getItem('edit_works')
+    return works ? JSON.parse(works) : []
+  } catch (error) {
+    console.error('读取已保存作品失败:', error)
+    return []
+  }
+})
+
+const viewSavedWork = (work) => {
+  editWorkForm.value = { ...work }
+  workCoverFileList.value = work.coverImage ? [{ name: 'cover.jpg', url: work.coverImage }] : []
+  showEditWorkDialog.value = true
+}
+
+const clearSavedWorks = () => {
+  if (confirm('确定要清空所有已保存的作品吗？')) {
+    localStorage.removeItem('edit_works')
+    ElMessage.success('已清空所有作品')
+  }
+}
+
 const imageParams = reactive({
   prompt: '',
   size: '1024x1024',
@@ -655,6 +898,131 @@ const editFileList = ref([])
 const maskFileList = ref([])
 const isExtending = ref(false)
 const isEditing = ref(false)
+
+// 编辑作品对话框相关
+const showEditWorkDialog = ref(false)
+const isSavingWork = ref(false)
+const workCoverFileList = ref([])
+const availableTags = ref(['AI动画', '现代科幻', '穿越', '都市', '古装', '悬疑', '爱情', '喜剧', '动作', '冒险'])
+
+const editWorkForm = ref({
+  title: '',
+  studentName: '',
+  category: '',
+  coverImage: '',
+  computeCost: '',
+  duration: '',
+  price: '',
+  copyright: '',
+  tags: [],
+  introduction: ''
+})
+
+const handleWorkCoverUpload = (file) => {
+  console.log('作品封面文件:', file)
+  
+  const isImage = file.raw.type.startsWith('image/')
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件！')
+    return
+  }
+  
+  const isLt5M = file.size / 1024 / 1024 < 5
+  if (!isLt5M) {
+    ElMessage.error('封面图片大小不能超过 5MB！')
+    return
+  }
+  
+  workCoverFileList.value = [file]
+  
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    editWorkForm.value.coverImage = e.target.result
+    console.log('作品封面已读取:', editWorkForm.value.coverImage.substring(0, 50) + '...')
+  }
+  reader.readAsDataURL(file.raw)
+}
+
+const removeWorkCover = () => {
+  editWorkForm.value.coverImage = ''
+  workCoverFileList.value = []
+}
+
+const handleSaveWork = async () => {
+  if (!editWorkForm.value.title.trim()) {
+    ElMessage.warning('请输入作品名称')
+    return
+  }
+  
+  if (!editWorkForm.value.studentName.trim()) {
+    ElMessage.warning('请输入学员名称')
+    return
+  }
+  
+  if (!editWorkForm.value.category) {
+    ElMessage.warning('请选择分类')
+    return
+  }
+  
+  if (!editWorkForm.value.coverImage) {
+    ElMessage.warning('请上传封面图片')
+    return
+  }
+  
+  isSavingWork.value = true
+  
+  try {
+    const workData = {
+      ...editWorkForm.value,
+      id: Date.now(),
+      createTime: new Date().toLocaleString('zh-CN')
+    }
+    
+    const existingWorks = JSON.parse(localStorage.getItem('edit_works') || '[]')
+    const existingIndex = existingWorks.findIndex(w => w.id === workData.id)
+    
+    if (existingIndex > -1) {
+      existingWorks[existingIndex] = workData
+    } else {
+      existingWorks.unshift(workData)
+    }
+    
+    localStorage.setItem('edit_works', JSON.stringify(existingWorks))
+    
+    console.log('作品已保存:', workData)
+    
+    showEditWorkDialog.value = false
+    ElMessage.success('作品保存成功！')
+    
+    resetEditWorkForm()
+  } catch (error) {
+    console.error('保存作品失败:', error)
+    ElMessage.error('保存失败，请重试')
+  } finally {
+    isSavingWork.value = false
+  }
+}
+
+const resetEditWorkForm = () => {
+  editWorkForm.value = {
+    title: '',
+    studentName: '',
+    category: '',
+    coverImage: '',
+    computeCost: '',
+    duration: '',
+    price: '',
+    copyright: '',
+    tags: [],
+    introduction: ''
+  }
+  workCoverFileList.value = []
+}
+
+const openEditWorkDialog = () => {
+  showEditWorkDialog.value = true
+  resetEditWorkForm()
+}
 
 const loadProjectData = async () => {
   const projectId = route.params.id
@@ -790,6 +1158,26 @@ const deleteChat = async (chatId) => {
 const sendMessage = async () => {
   if (!inputMessage.value.trim() || isSending.value) return
   
+  const inviteCode = localStorage.getItem('inviteCode') || ''
+  if (!inviteCode) {
+    ElMessage.warning('请先登录后再发送消息')
+    return
+  }
+  
+  isCheckingPower.value = true
+  const powerCheckResult = await checkAndDeductPower()
+  isCheckingPower.value = false
+  
+  if (!powerCheckResult.success) {
+    ElMessage.warning('算力不足')
+    return
+  }
+  
+  userComputePower.value = powerCheckResult.remainingPower - 1
+  if (updateComputingPower) {
+    updateComputingPower(powerCheckResult.remainingPower - 1)
+  }
+  
   const message = inputMessage.value.trim()
   inputMessage.value = ''
   
@@ -863,6 +1251,8 @@ const sendMessage = async () => {
   } catch (error) {
     console.error('发送消息失败:', error)
     
+    fetchUserPower()
+    
     if (error.message.includes('404') || error.message.includes('not_found') || error.message.includes('not exist')) {
       if (chat) {
         chat.conversationId = ''
@@ -875,6 +1265,13 @@ const sendMessage = async () => {
         chat.messages[msgIndex].content = '[会话已过期] 请重新发送消息开始新对话'
         chat.messages[msgIndex].status = 'error'
       }
+    } else if (error.message.includes('算力不足')) {
+      const msgIndex = chat.messages.findIndex(m => m.id === aiMessageId)
+      if (msgIndex > -1) {
+        chat.messages[msgIndex].content = '[算力不足] ' + error.message
+        chat.messages[msgIndex].status = 'error'
+      }
+      fetchUserPower()
     } else {
       const msgIndex = chat.messages.findIndex(m => m.id === aiMessageId)
       if (msgIndex > -1) {
@@ -899,8 +1296,11 @@ const callDifyAPI = async (query, conversationId, people, onChunk) => {
   const timeout = setTimeout(() => controller.abort(), 180000)
 
   const userId = localStorage.getItem('userId') || `user-${Date.now()}`
+  const inviteCode = localStorage.getItem('inviteCode') || ''
   
   const requestBody = {
+    invite_code: inviteCode,
+    project_id: project.value.id,
     inputs: {
       people: peopleValues[people] || '1'
     },
@@ -954,7 +1354,18 @@ const callDifyAPI = async (query, conversationId, people, onChunk) => {
     console.log('========== Dify API 响应 ==========')
     console.log('Dify API 响应状态:', response.status, response.statusText)
     console.log('响应头 Content-Type:', response.headers.get('content-type'))
+    console.log('响应头 X-Power-Cost:', response.headers.get('x-power-cost'))
+    console.log('响应头 X-Remaining-Power:', response.headers.get('x-remaining-power'))
     console.log('所有响应头:', Object.fromEntries(response.headers.entries()))
+    
+    const remainingPower = response.headers.get('x-remaining-power')
+    if (remainingPower) {
+      userComputePower.value = parseInt(remainingPower)
+      console.log('更新算力余额:', userComputePower.value)
+      if (updateComputingPower) {
+        updateComputingPower(parseInt(remainingPower))
+      }
+    }
     
     if (!response.ok) {
       const errorText = await response.text()
@@ -1144,6 +1555,13 @@ const generateImage = async () => {
     
     console.log('生图任务响应:', submitResponse)
     
+    if (submitResponse.data?.remaining_power !== undefined) {
+      userComputePower.value = submitResponse.data.remaining_power
+      if (updateComputingPower) {
+        updateComputingPower(submitResponse.data.remaining_power)
+      }
+    }
+    
     if (!submitResponse.data?.task_id) {
       throw new Error('任务提交失败，未返回task_id')
     }
@@ -1256,6 +1674,13 @@ const extendImage = async () => {
     const response = await volcExtendImage(params, accessKeyId, secretAccessKey, currentInviteCode.value, project.value.id)
     
     console.log('扩图任务响应:', response)
+    
+    if (response.data?.remaining_power !== undefined) {
+      userComputePower.value = response.data.remaining_power
+      if (updateComputingPower) {
+        updateComputingPower(response.data.remaining_power)
+      }
+    }
     
     if (!response.data?.task_id) {
       throw new Error('任务提交失败，未返回task_id')
@@ -1430,6 +1855,13 @@ const generateEditImage = async () => {
     
     console.log('改图任务提交响应:', submitResponse)
     
+    if (submitResponse.data?.remaining_power !== undefined) {
+      userComputePower.value = submitResponse.data.remaining_power
+      if (updateComputingPower) {
+        updateComputingPower(submitResponse.data.remaining_power)
+      }
+    }
+    
     if (!submitResponse.data?.task_id) {
       throw new Error('任务提交失败，未返回task_id')
     }
@@ -1495,6 +1927,7 @@ onMounted(() => {
     localStorage.setItem('userId', `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`)
   }
   loadProjectData()
+  fetchUserPower()
   
   // 添加测试方法到 window 对象，方便调试
   window.testDifyAPI = async () => {
@@ -1646,6 +2079,122 @@ onMounted(() => {
 .save-btn:hover {
   background-color: #FAA943;
   border-color: #FAA943;
+}
+
+/* 已保存作品列表样式 */
+.saved-works-section {
+  background-color: #F8F7F2;
+  border: 1px solid #BACACB;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.saved-works-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #BACACB;
+}
+
+.saved-works-header h3 {
+  margin: 0;
+  color: #425D5F;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.saved-works-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.saved-work-card {
+  background-color: #fff;
+  border: 1px solid #BACACB;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.saved-work-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(66, 93, 95, 0.2);
+  border-color: #425D5F;
+}
+
+.work-cover {
+  width: 100%;
+  aspect-ratio: 500 / 892;
+  overflow: hidden;
+  background-color: #BACACB;
+}
+
+.work-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.no-cover {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.work-details {
+  padding: 12px;
+}
+
+.work-title {
+  margin: 0 0 8px 0;
+  color: #425D5F;
+  font-size: 14px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.work-student {
+  margin: 0 0 8px 0;
+  color: #666;
+  font-size: 12px;
+}
+
+.work-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.work-tags .tag {
+  background-color: rgba(250, 169, 67, 0.2);
+  color: #425D5F;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.edit-work-btn {
+  background-color: #BACACB;
+  border-color: #BACACB;
+  color: #425D5F;
+  font-weight: 500;
+}
+
+.edit-work-btn:hover {
+  background-color: #425D5F;
+  border-color: #425D5F;
+  color: #F8F7F2;
 }
 
 .page-content {
@@ -2359,14 +2908,30 @@ onMounted(() => {
   background-color: rgba(0, 0, 0, 0.8);
 }
 
+.image-preview-dialog {
+  z-index: 9999 !important;
+}
+
 .image-preview-dialog :deep(.el-dialog) {
   background-color: #1d1d1d;
+  z-index: 9999 !important;
+  margin-top: 10vh !important;
+  .el-dialog__body {
+    z-index: 10000;
+    position: relative;
+  }
+}
+
+.image-preview-dialog :deep(.el-overlay) {
+  z-index: 9998 !important;
 }
 
 .preview-image {
   width: 100%;
   max-height: 80vh;
   object-fit: contain;
+  position: relative;
+  z-index: 10000;
 }
 
 @media (max-width: 1024px) {
@@ -2374,6 +2939,184 @@ onMounted(() => {
   .image-sidebar {
     width: 220px;
   }
+}
+
+/* 编辑作品对话框样式 */
+.edit-work-dialog {
+  --el-dialog-bg-color: #F8F7F2 !important;
+  --el-dialog-border-radius: 12px !important;
+}
+
+.edit-work-dialog .el-dialog__header {
+  border-bottom: 1px solid #BACACB;
+  padding: 20px 24px;
+  background-color: #F8F7F2;
+}
+
+.edit-work-dialog .el-dialog__title {
+  color: #425D5F;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.edit-work-dialog .el-dialog__body {
+  padding: 24px;
+  background-color: #F8F7F2;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.edit-work-dialog .el-dialog__footer {
+  border-top: 1px solid #BACACB;
+  padding: 16px 24px;
+  background-color: #F8F7F2;
+}
+
+.edit-work-dialog .el-form-item__label {
+  color: #425D5F;
+  font-weight: 500;
+}
+
+.edit-work-dialog .el-input__wrapper,
+.edit-work-dialog .el-textarea__inner {
+  background-color: #BACACB;
+  border: none;
+  box-shadow: none;
+}
+
+.edit-work-dialog .el-input__inner,
+.edit-work-dialog .el-textarea__inner {
+  color: #425D5F;
+}
+
+.edit-work-dialog .el-input__inner::placeholder,
+.edit-work-dialog .el-textarea__inner::placeholder {
+  color: #666;
+}
+
+.edit-work-dialog .el-select__wrapper {
+  background-color: #BACACB;
+  border: none;
+  box-shadow: none;
+}
+
+.edit-work-dialog .el-select__wrapper .el-select__placeholder {
+  color: #666;
+}
+
+.edit-work-dialog .dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.edit-work-dialog .dialog-footer .el-button {
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.edit-work-dialog .dialog-footer .el-button:not(.el-button--primary) {
+  background-color: #BACACB;
+  border-color: #BACACB;
+  color: #425D5F;
+}
+
+.edit-work-dialog .dialog-footer .el-button:not(.el-button--primary):hover {
+  background-color: #425D5F;
+  border-color: #425D5F;
+  color: #F8F7F2;
+}
+
+.edit-work-dialog .dialog-footer .el-button--primary {
+  background-color: #425D5F;
+  border-color: #425D5F;
+  color: #F8F7F2;
+}
+
+.edit-work-dialog .dialog-footer .el-button--primary:hover {
+  background-color: #FAA943;
+  border-color: #FAA943;
+}
+
+/* 封面上传样式 */
+.cover-upload-container {
+  width: 100%;
+}
+
+.work-cover-uploader {
+  width: 100%;
+}
+
+.cover-upload-trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 20px;
+  cursor: pointer;
+  border: 2px dashed #dcdfe6;
+  border-radius: 8px;
+  transition: all 0.3s;
+  background-color: #fff;
+}
+
+.cover-upload-trigger:hover {
+  border-color: #425D5F;
+  background-color: rgba(66, 93, 95, 0.05);
+}
+
+.cover-upload-trigger .upload-icon {
+  font-size: 48px;
+  color: #BACACB;
+  margin-bottom: 8px;
+}
+
+.cover-upload-trigger .upload-text {
+  font-size: 14px;
+  color: #425D5F;
+  font-weight: 500;
+}
+
+.cover-upload-trigger .upload-hint {
+  font-size: 12px;
+  color: #999;
+  text-align: center;
+}
+
+.cover-preview {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.cover-preview-image {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  object-fit: cover;
+  aspect-ratio: 500 / 892;
+  border: 1px solid #BACACB;
+}
+
+.cover-preview-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+  border-radius: 8px;
+}
+
+.cover-preview:hover .cover-preview-overlay {
+  opacity: 1;
 }
 
 @media (max-width: 768px) {

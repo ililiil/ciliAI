@@ -3,7 +3,12 @@
     <el-tabs v-model="activeTab" class="home-tabs">
       <el-tab-pane label="IP版权库" name="works">
         <div class="advertisements">
-          <div class="ad-item" v-for="(ad, index) in ads" :key="index">
+          <div 
+            class="ad-item" 
+            v-for="(ad, index) in ads" 
+            :key="index"
+            @click="handleAdClick(ad)"
+          >
             <img :src="ad.src" :alt="ad.alt" class="ad-image">
           </div>
         </div>
@@ -12,10 +17,10 @@
           <div v-for="work in works" :key="work.id" class="work-card ip-library-card">
             <div class="work-image" @click="openNovelDetail(work)">
               <img 
-                :src="work.image" 
+                :src="getImageUrl(work)" 
                 :alt="work.title" 
                 class="work-image-img"
-                @error="handleImageError"
+                @error="handleImageError($event, work)"
               >
               <div class="work-tags">
                 <span v-for="tag in work.tags" :key="tag" class="tag">{{ tag }}</span>
@@ -24,6 +29,7 @@
                 <span>查看详情</span>
               </div>
             </div>
+            
             <div class="work-info">
               <h3 class="work-title">{{ work.title }}</h3>
               <div class="work-stats simplified-stats">
@@ -40,36 +46,30 @@
           </div>
         </div>
       </el-tab-pane>
-      <el-tab-pane label="社区分享" name="community">
+      
+      <el-tab-pane label="社区创作" name="community">
         <div class="community-grid">
           <div v-for="work in communityWorks" :key="work.id" class="community-card">
-            <div class="community-layout">
-              <div class="community-image-section" @click="openNovelDetail(work)">
-                <img 
-                  :src="work.image" 
-                  :alt="work.title" 
-                  class="community-image"
-                  @error="handleImageError"
-                >
-                <div class="community-tags">
-                  <span v-for="tag in work.tags" :key="tag" class="tag">{{ tag }}</span>
-                </div>
-                <div class="community-overlay">
-                  <span>查看详情</span>
-                </div>
+            <div class="community-image" @click="openNovelDetail(work)">
+              <img 
+                :src="getImageUrl(work)" 
+                :alt="work.title" 
+                class="community-image-img"
+                @error="handleImageError($event, work)"
+              >
+              <div class="community-tags">
+                <span v-for="tag in work.tags" :key="tag" class="tag">{{ tag }}</span>
               </div>
-              <div class="community-info-section">
-                <div class="community-header">
-                  <div class="community-meta">
-                    <div class="meta-row">
-                      <span class="meta-label">作者名：</span>
-                      <span class="meta-value">{{ work.studentName || 'CiliAI学员' }}</span>
-                    </div>
-                    <div class="meta-row">
-                      <span class="meta-label">作品名：</span>
-                      <span class="meta-value">{{ work.title }}</span>
-                    </div>
-                  </div>
+              <div class="community-overlay">
+                <span>查看详情</span>
+              </div>
+            </div>
+            <div class="community-info">
+              <h3 class="community-title">{{ work.title }}</h3>
+              <div class="community-stats">
+                <div class="community-stat-item">
+                  <span class="community-stat-label">作者：</span>
+                  <span class="community-stat-value">{{ work.studentName || 'CiliAI学员' }}</span>
                 </div>
               </div>
             </div>
@@ -85,7 +85,7 @@
 
 <script setup>
 import { ref, inject, onMounted } from 'vue'
-import { ElTabs, ElTabPane } from 'element-plus'
+import { ElTabs, ElTabPane, ElMessage } from 'element-plus'
 import NovelDetailModal from '../components/NovelDetailModal.vue'
 
 const activeTab = ref('works')
@@ -96,45 +96,133 @@ const isLoggedIn = inject('isLoggedIn')
 const computingPower = inject('computingPower')
 const inviteCode = inject('currentInviteCode')
 
-const ads = ref([
-  { src: 'https://pubsto.fullpeace.cn/freefishpc/file/726afab63d004543b7c1069d27d89bb4.png', alt: '广告位1' },
-  { src: 'https://pubsto.fullpeace.cn/freefishpc/file/d86bf1a04eaa45bf8e5faa71f5d33308.png', alt: '广告位2' },
-  { src: 'https://pubsto.fullpeace.cn/freefishpc/file/34264806d3ef5eb00ad8877e0140d1e1.png', alt: '广告位3' }
-])
+const ads = ref([])
 
 const works = ref([])
 const communityWorks = ref([])
 
 const fetchWorks = async () => {
   try {
-    const response = await fetch('/api/works')
-    const result = await response.json()
-    if (result.code === 200) {
-      const allWorks = result.data.list.map(work => ({
-        ...work,
-        tags: work.tags ? JSON.parse(work.tags) : []
-      }))
+    const [worksResponse, featuredResponse, adsResponse] = await Promise.all([
+      fetch('/api/works'),
+      fetch('/api/works/featured'),
+      fetch('/api/advertisements?status=published')
+    ])
+    
+    const worksResult = await worksResponse.json()
+    const featuredResult = await featuredResponse.json()
+    const adsResult = await adsResponse.json()
+    
+    if (worksResult.code === 200) {
+      console.log('Home.vue - Works API response:', worksResult)
       
-      works.value = allWorks.filter(w => !w.student_name || 
-        w.student_name === 'CiliAI官方' || 
-        w.student_name === '方塘官方' || 
-        w.student_name === 'Fangtang Official')
-      communityWorks.value = allWorks.filter(w => w.student_name && 
-        w.student_name !== 'CiliAI官方' && 
-        w.student_name !== '方塘官方' && 
-        w.student_name !== 'Fangtang Official')
+      const allWorks = worksResult.data.list.map(work => {
+        const category = work.category || 'IP版权库'
+        const source = category === 'IP版权库' ? 'ip-library' : 'community'
+        
+        console.log('Home.vue - Processing work:', work.id, 'category:', category, 'source:', source)
+        
+        return {
+          ...work,
+          tags: work.tags ? JSON.parse(work.tags) : [],
+          source: source,
+          item_type: 'work'
+        }
+      })
+      
+      works.value = allWorks.filter(w => w.source === 'ip-library')
+      communityWorks.value = allWorks.filter(w => w.source === 'community')
+      
+      console.log('Home.vue - Final works.value:', works.value)
+    }
+    
+    if (adsResult.status === 'success' && adsResult.data && adsResult.data.list) {
+      ads.value = adsResult.data.list.slice(0, 3).map((item) => ({
+        src: item.image || `https://picsum.photos/800/400?random=${Math.random()}`,
+        alt: item.title || '广告',
+        link_url: item.link_url || ''
+      }))
+      console.log('Home.vue - Advertisements loaded:', ads.value)
+    } else if (featuredResult.code === 200 && featuredResult.data && featuredResult.data.list) {
+      ads.value = featuredResult.data.list.slice(0, 3).map((item, index) => ({
+        src: item.image || `https://picsum.photos/800/400?random=${index + 100}`,
+        alt: item.title || `推荐作品${index + 1}`,
+        link_url: ''
+      }))
+      console.log('Home.vue - Featured ads loaded:', ads.value)
     }
   } catch (error) {
     console.error('获取作品列表失败:', error)
+    ads.value = []
   }
 }
 
-const handleImageError = (e) => {
-  e.target.src = 'https://picsum.photos/400/600?random=' + Math.random()
+const handleImageError = (e, work) => {
+  console.error('图片加载失败 - work:', work, 'error event:', e)
+  if (work && work.id) {
+    e.target.src = `https://picsum.photos/400/600?random=${work.id}`
+  } else {
+    e.target.src = 'https://picsum.photos/400/600?random=' + Math.random()
+  }
+}
+
+const getImageUrl = (work) => {
+  console.log('getImageUrl - work:', work)
+  console.log('getImageUrl - work.image:', work?.image)
+  
+  const imageUrl = work?.image
+  
+  if (!imageUrl) {
+    console.warn('作品没有图片字段 - work:', work)
+    return `https://picsum.photos/400/600?random=${work.id || Date.now()}`
+  }
+  
+  if (Array.isArray(imageUrl)) {
+    const url = imageUrl[0] || `https://picsum.photos/400/600?random=${work.id}`
+    console.log('getImageUrl - Array image URL:', url)
+    return url
+  }
+  
+  if (typeof imageUrl === 'string') {
+    const trimmedUrl = imageUrl.trim()
+    
+    if (trimmedUrl.length < 10) {
+      console.warn('作品图片URL无效（太短）:', trimmedUrl)
+      return `https://picsum.photos/400/600?random=${work.id || Date.now()}`
+    }
+    
+    if (trimmedUrl.startsWith('data:image')) {
+      console.log('getImageUrl - Base64 image')
+      return trimmedUrl
+    }
+    
+    if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')) {
+      console.log('getImageUrl - HTTP image URL:', trimmedUrl)
+      return trimmedUrl
+    }
+    
+    console.warn('作品图片URL格式无效:', trimmedUrl)
+    return `https://picsum.photos/400/600?random=${work.id || Date.now()}`
+  }
+  
+  console.warn('作品图片字段类型无效:', typeof imageUrl)
+  return `https://picsum.photos/400/600?random=${work.id || Date.now()}`
+}
+
+const handleAdClick = (ad) => {
+  if (ad.link_url) {
+    window.open(ad.link_url, '_blank')
+  } else {
+    ElMessage.info('该广告暂无跳转链接')
+  }
 }
 
 onMounted(() => {
   fetchWorks()
+  
+  setInterval(() => {
+    fetchWorks()
+  }, 30000)
 })
 
 const openNovelDetail = (work) => {
@@ -168,7 +256,22 @@ const getCommunityComments = (workId) => {
 
 <style scoped>
 .home-container {
-  padding: 0;
+  padding: 20px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 0 10px;
+}
+
+.page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #303133;
+  margin: 0;
 }
 
 .home-tabs {
@@ -205,6 +308,13 @@ const getCommunityComments = (workId) => {
   overflow: hidden;
   background-color: #BACACB;
   border: 1px solid rgba(186, 202, 203, 0.5);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.ad-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(66, 93, 95, 0.3);
 }
 
 .ad-image {
@@ -236,7 +346,8 @@ const getCommunityComments = (workId) => {
 
 .work-image {
   position: relative;
-  height: 200px;
+  width: 100%;
+  height: 280px;
   overflow: hidden;
   cursor: pointer;
 }
@@ -256,8 +367,8 @@ const getCommunityComments = (workId) => {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
+  width: 100%;
+  height: 100%;
   background-color: rgba(66, 93, 95, 0.6);
   display: flex;
   align-items: center;
@@ -334,6 +445,121 @@ const getCommunityComments = (workId) => {
   font-weight: 600;
 }
 
+/* 社区分享卡片样式 */
+.community-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  padding: 24px;
+}
+
+.community-card {
+  background-color: #F8F7F2;
+  border: 1px solid #BACACB;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 12px rgba(66, 93, 95, 0.15);
+  display: flex;
+  flex-direction: column;
+}
+
+.community-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(66, 93, 95, 0.25);
+}
+
+.community-image {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.community-image-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.community-card:hover .community-image-img {
+  transform: scale(1.05);
+}
+
+.community-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(66, 93, 95, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  color: #F8F7F2;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.community-image:hover .community-overlay {
+  opacity: 1;
+}
+
+.community-tags {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.community-info {
+  padding: 16px;
+  background-color: #F8F7F2;
+}
+
+.community-title {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #425D5F;
+  border-bottom: 1px solid #BACACB;
+  padding-bottom: 12px;
+}
+
+.community-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.community-stat-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(186, 202, 203, 0.3);
+}
+
+.community-stat-item:last-child {
+  border-bottom: none;
+}
+
+.community-stat-label {
+  color: #425D5F;
+  font-weight: 400;
+}
+
+.community-stat-value {
+  color: #425D5F;
+  font-weight: 600;
+}
+
 /* 响应式设计 */
 @media (max-width: 768px) {
   .works-grid {
@@ -343,13 +569,29 @@ const getCommunityComments = (workId) => {
   }
   
   .work-image {
-    height: 160px;
+    width: 100%;
+    height: 240px;
+  }
+  
+  .community-image {
+    width: 100%;
+    height: 240px;
   }
 }
 
 @media (max-width: 480px) {
   .works-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .community-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 12px;
+  }
+  
+  .community-card {
+    margin-bottom: 0;
   }
 }
 
@@ -401,93 +643,19 @@ const getCommunityComments = (workId) => {
   font-size: 13px;
 }
 
-.ip-library-card .work-image {
-  height: 180px;
-}
-
 .community-grid {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 24px;
   padding: 24px;
 }
 
-.community-card {
-  background-color: #F8F7F2;
-  border: 1px solid #BACACB;
-  border-radius: 12px;
-  overflow: hidden;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 12px rgba(66, 93, 95, 0.15);
-}
-
-.community-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 6px 20px rgba(66, 93, 95, 0.25);
-}
-
-.community-layout {
-  display: flex;
-  min-height: 320px;
-}
-
-.community-image-section {
-  flex-shrink: 0;
-  width: 280px;
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-.community-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.3s ease;
-}
-
-.community-card:hover .community-image {
-  transform: scale(1.05);
-}
-
-.community-tags {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  display: flex;
-  gap: 8px;
-}
-
-.community-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(66, 93, 95, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  color: #F8F7F2;
-  font-weight: 600;
-  font-size: 16px;
-}
-
-.community-image-section:hover .community-overlay {
-  opacity: 1;
-}
-
 .community-info-section {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 20px;
-  gap: 16px;
+  padding: 16px;
+  gap: 12px;
   background-color: #F8F7F2;
-  overflow-y: auto;
-  max-height: 320px;
 }
 
 .community-info-section::-webkit-scrollbar {
@@ -719,20 +887,17 @@ const getCommunityComments = (workId) => {
 }
 
 @media (max-width: 768px) {
-  .community-layout {
-    flex-direction: column;
-    min-height: auto;
-  }
-  
-  .community-image-section {
-    width: 100%;
-    height: 200px;
+  .community-grid {
+    padding: 16px;
   }
   
   .community-info-section {
-    max-height: none;
-    padding: 16px;
-    gap: 12px;
+    padding: 12px;
+    gap: 10px;
+  }
+  
+  .community-header {
+    padding: 10px;
   }
 }
 </style>

@@ -82,8 +82,38 @@
       </div>
     </div>
 
-    <el-dialog v-model="showCreateDialog" :title="editingProject ? '编辑项目' : '新建项目'" width="500px">
+    <el-dialog v-model="showCreateDialog" :title="editingProject ? '编辑项目' : '新建项目'" width="600px">
       <el-form :model="projectForm" label-width="80px">
+        <el-form-item label="项目封面">
+          <div class="cover-upload-wrapper">
+            <el-upload
+              class="cover-uploader"
+              action="#"
+              :auto-upload="false"
+              :on-change="handleCoverUpload"
+              :file-list="coverFileList"
+              :show-file-list="false"
+              accept="image/*"
+              list-type="picture"
+            >
+              <template #default>
+                <div class="cover-upload-trigger" v-if="!projectForm.cover_image">
+                  <el-button type="primary" size="large">
+                    <el-icon><Plus /></el-icon>
+                    上传封面
+                  </el-button>
+                  <div class="cover-upload-hint">支持 JPG、PNG 格式，建议尺寸 500x892</div>
+                </div>
+                <div class="cover-preview" v-else>
+                  <img :src="projectForm.cover_image" alt="封面预览" class="cover-preview-image">
+                  <div class="cover-preview-overlay">
+                    <el-button type="danger" size="small" @click.stop="removeCover">移除</el-button>
+                  </div>
+                </div>
+              </template>
+            </el-upload>
+          </div>
+        </el-form-item>
         <el-form-item label="项目名称" required>
           <el-input v-model="projectForm.title" placeholder="请输入项目名称" maxlength="50" show-word-limit />
         </el-form-item>
@@ -211,8 +241,12 @@ const detailTab = ref('records')
 
 const projectForm = ref({
   title: '',
-  description: ''
+  description: '',
+  cover_image: '',
+  cover_file: null
 })
+
+const coverFileList = ref([])
 
 const formatDate = (dateStr) => {
   if (!dateStr) return ''
@@ -340,8 +374,11 @@ const editProject = (project) => {
   editingProject.value = project
   projectForm.value = {
     title: project.title,
-    description: project.description || ''
+    description: project.description || '',
+    cover_image: project.cover_image || '',
+    cover_file: null
   }
+  coverFileList.value = project.cover_image ? [{ name: 'cover.jpg', url: project.cover_image }] : []
   showCreateDialog.value = true
 }
 
@@ -434,8 +471,30 @@ const resetForm = () => {
   editingProject.value = null
   projectForm.value = {
     title: '',
-    description: ''
+    description: '',
+    cover_image: '',
+    cover_file: null
   }
+  coverFileList.value = []
+}
+
+const handleCoverUpload = (file) => {
+  console.log('封面文件:', file)
+  coverFileList.value = [file]
+  
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    projectForm.value.cover_image = e.target.result
+    projectForm.value.cover_file = file.raw
+    console.log('封面已读取:', projectForm.value.cover_image)
+  }
+  reader.readAsDataURL(file.raw)
+}
+
+const removeCover = () => {
+  projectForm.value.cover_image = ''
+  projectForm.value.cover_file = null
+  coverFileList.value = []
 }
 
 watch(() => props.inviteCode, (newVal) => {
@@ -789,5 +848,69 @@ defineExpose({
   .projects-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.cover-upload-wrapper {
+  width: 100%;
+}
+
+.cover-uploader {
+  width: 100%;
+}
+
+.cover-upload-trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px;
+  cursor: pointer;
+  border: 2px dashed #dcdfe6;
+  border-radius: 8px;
+  transition: all 0.3s;
+}
+
+.cover-upload-trigger:hover {
+  border-color: #425D5F;
+  background-color: rgba(66, 93, 95, 0.05);
+}
+
+.cover-upload-hint {
+  font-size: 12px;
+  color: #999;
+}
+
+.cover-preview {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.cover-preview-image {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  object-fit: cover;
+  aspect-ratio: 500 / 892;
+}
+
+.cover-preview-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+  border-radius: 8px;
+}
+
+.cover-preview:hover .cover-preview-overlay {
+  opacity: 1;
 }
 </style>

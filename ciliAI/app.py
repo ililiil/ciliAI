@@ -22,6 +22,23 @@ logger = logging.getLogger(__name__)
 
 DATABASE = 'fangtang.db'
 
+ADMIN_BASE_URL = os.getenv('ADMIN_BASE_URL', 'http://localhost:5002')
+
+def convert_image_url(image_url):
+    """转换图片URL，将管理后台上传的图片路径转换为完整URL"""
+    if not image_url or not isinstance(image_url, str):
+        return image_url
+
+    image_url = image_url.strip()
+
+    if not image_url:
+        return image_url
+
+    if image_url.startswith('/uploads/'):
+        return f"{ADMIN_BASE_URL}{image_url}"
+
+    return image_url
+
 POWER_COST = {
     'generate': 10,
     'extend': 5,
@@ -272,6 +289,101 @@ def init_db():
     except:
         pass
     
+    try:
+        cursor.execute('ALTER TABLE ip_works ADD COLUMN is_featured INTEGER DEFAULT 0')
+    except:
+        pass
+    try:
+        cursor.execute('ALTER TABLE ip_works ADD COLUMN sort_order INTEGER DEFAULT 0')
+    except:
+        pass
+    
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS orders (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            image TEXT,
+            qrcode TEXT,
+            price TEXT,
+            deadline TEXT,
+            status TEXT DEFAULT 'recruiting',
+            tags TEXT,
+            contact_count INTEGER DEFAULT 0,
+            description TEXT,
+            contact_info TEXT,
+            min_profit REAL DEFAULT 0,
+            share_ratio REAL DEFAULT 0,
+            power_subsidy REAL DEFAULT 0,
+            period INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    try:
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status)')
+    except:
+        pass
+    
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS advertisements (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            image TEXT,
+            link_url TEXT,
+            status TEXT DEFAULT 'draft',
+            sort_order INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    try:
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_advertisements_status ON advertisements(status)')
+    except:
+        pass
+    try:
+        cursor.execute('CREATE INDEX IF NOT EXISTS idx_advertisements_sort_order ON advertisements(sort_order)')
+    except:
+        pass
+    
+    cursor.execute('SELECT COUNT(*) as count FROM advertisements')
+    ads_count = cursor.fetchone()[0]
+    
+    if ads_count == 0:
+        default_ads = [
+            {
+                'title': '星际穿越者',
+                'image': '/uploads/a0895e06216741b2a800efd7f215dad3.jpeg',
+                'link_url': '',
+                'status': 'published',
+                'sort_order': 1
+            },
+            {
+                'title': '古风仙侠传',
+                'image': '/uploads/084d3791aad74c119e84bff831fdc820.jpeg',
+                'link_url': '',
+                'status': 'published',
+                'sort_order': 2
+            },
+            {
+                'title': '都市悬疑夜',
+                'image': '/uploads/2267e536c2dc436aa8ae297ec1168d36.jpeg',
+                'link_url': '',
+                'status': 'published',
+                'sort_order': 3
+            }
+        ]
+        
+        for ad in default_ads:
+            try:
+                cursor.execute('''
+                    INSERT INTO advertisements (title, image, link_url, status, sort_order, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                ''', (ad['title'], ad['image'], ad['link_url'], ad['status'], ad['sort_order'], datetime.now(), datetime.now()))
+            except Exception as e:
+                logger.error(f"Error inserting default ad: {e}")
+    
     default_codes = ["111111", "222222", "333333", "444444", "555555", 
                      "666666", "777777", "888888", "999999", "000000"]
     for code in default_codes:
@@ -280,6 +392,98 @@ def init_db():
                           (code, 1000))
         except:
             pass
+    
+    cursor.execute('SELECT COUNT(*) as count FROM ip_works')
+    ip_works_count = cursor.fetchone()[0]
+    
+    if ip_works_count == 0:
+        default_ip_works = [
+            {
+                'title': '星际穿越者',
+                'student_name': 'CiliAI官方',
+                'image': 'https://picsum.photos/400/600?random=10',
+                'tags': '["AI动画","现代科幻","穿越"]',
+                'cost': '1000算力/分钟',
+                'duration': '420分钟',
+                'price': '150-300元/分钟',
+                'copyright': '归CiliAI所有',
+                'introduction': '一段跨越星际的冒险之旅，主角意外获得穿越时空的能力，在星际间展开一段惊心动魄的冒险故事。',
+                'category': 'IP版权库'
+            },
+            {
+                'title': '古风仙侠传',
+                'student_name': 'CiliAI官方',
+                'image': 'https://picsum.photos/400/600?random=11',
+                'tags': '["AI动画","古风","仙侠"]',
+                'cost': '1200算力/分钟',
+                'duration': '600分钟',
+                'price': '180-350元/分钟',
+                'copyright': '归CiliAI所有',
+                'introduction': '仙侠世界的史诗巨作，讲述修仙者历经磨难，最终悟道成仙的壮丽历程。画面精美，特效华丽。',
+                'category': 'IP版权库'
+            },
+            {
+                'title': '都市悬疑夜',
+                'student_name': 'CiliAI官方',
+                'image': 'https://picsum.photos/400/600?random=12',
+                'tags': '["AI动画","都市","悬疑"]',
+                'cost': '1100算力/分钟',
+                'duration': '480分钟',
+                'price': '160-320元/分钟',
+                'copyright': '归CiliAI所有',
+                'introduction': '都市背景的悬疑推理剧，层层递进的剧情，扣人心弦的谜题，让人欲罢不能。',
+                'category': 'IP版权库'
+            },
+            {
+                'title': 'AI创作者作品1',
+                'student_name': 'AI爱好者小明',
+                'image': 'https://picsum.photos/400/600?random=13',
+                'tags': '["AI动画","创意","实验"]',
+                'cost': '800算力/分钟',
+                'duration': '300分钟',
+                'price': '100-200元/分钟',
+                'copyright': '归学员所有',
+                'introduction': '学员使用AI工具创作的实验性作品，展现了AI在创意领域的无限可能。',
+                'category': '社区分享'
+            },
+            {
+                'title': 'AI创作者作品2',
+                'student_name': '创意达人小红',
+                'image': 'https://picsum.photos/400/600?random=14',
+                'tags': '["AI动画","现代","情感"]',
+                'cost': '900算力/分钟',
+                'duration': '360分钟',
+                'price': '120-250元/分钟',
+                'copyright': '归学员所有',
+                'introduction': '充满情感和创意的AI动画作品，展现了技术与人文的完美结合。',
+                'category': '社区分享'
+            },
+            {
+                'title': 'AI创作者作品3',
+                'student_name': '技术宅阿杰',
+                'image': 'https://picsum.photos/400/600?random=15',
+                'tags': '["AI动画","科幻","未来"]',
+                'cost': '950算力/分钟',
+                'duration': '400分钟',
+                'price': '140-280元/分钟',
+                'copyright': '归学员所有',
+                'introduction': '融合前沿AI技术的科幻作品，带你领略未来世界的无限魅力。',
+                'category': '社区分享'
+            }
+        ]
+        
+        for idx, work in enumerate(default_ip_works):
+            try:
+                is_featured = 1 if idx < 3 else 0
+                sort_order = idx if idx < 3 else 999
+                cursor.execute('''
+                    INSERT INTO ip_works (title, student_name, image, tags, cost, duration, price, copyright, introduction, category, is_featured, sort_order)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (work['title'], work['student_name'], work['image'], work['tags'], work['cost'], 
+                     work['duration'], work['price'], work['copyright'], work['introduction'], work['category'],
+                     is_featured, sort_order))
+            except Exception as e:
+                logger.error(f"Error inserting default ip work: {e}")
     
     conn.commit()
     conn.close()
@@ -369,37 +573,154 @@ def index():
 @app.route('/dify-api/chat-messages', methods=['POST'])
 def dify_proxy():
     try:
+        body = request.get_json()
+        
+        invite_code = body.get('invite_code')
+        project_id = body.get('project_id')
+        query = body.get('query', '')
+        
+        if not invite_code:
+            return jsonify({'status': 'error', 'message': '缺少邀请码参数'}), 400
+        
+        user_id = get_user_id_by_invite_code(invite_code)
+        if not user_id:
+            return jsonify({'status': 'error', 'message': '用户不存在，请重新登录'}), 401
+        
+        power_cost = POWER_COST['chat']
+        success, remaining = deduct_compute_power(user_id, power_cost, 'chat', project_id, None, 
+                                                   f"对话: {query[:30]}...")
+        
+        if not success:
+            return jsonify({
+                'status': 'error',
+                'message': f'算力不足，当前算力 {remaining}，需要 {power_cost} 算力',
+                'power_required': power_cost,
+                'power_current': remaining
+            }), 400
+        
         dify_url = 'https://whhongyi.com.cn/v1/chat-messages'
         headers = {
             'Authorization': request.headers.get('Authorization', ''),
             'Content-Type': 'application/json'
         }
-        body = request.get_json()
-        logger.info(f"Dify proxy request: query={body.get('query', '')[:50] if body else 'N/A'}")
         
-        resp = req_lib.post(dify_url, json=body, headers=headers, stream=True, timeout=60)
+        dify_body = {
+            'inputs': body.get('inputs', {}),
+            'query': query,
+            'response_mode': body.get('response_mode', 'streaming'),
+            'user': body.get('user', f'user_{user_id}'),
+            'files': body.get('files', [])
+        }
+        
+        if body.get('conversation_id'):
+            dify_body['conversation_id'] = body['conversation_id']
+        
+        logger.info(f"Dify proxy request: query={query[:50] if query else 'N/A'}")
+        
+        resp = req_lib.post(dify_url, json=dify_body, headers=headers, stream=True, timeout=180)
         logger.info(f"Dify upstream status: {resp.status_code}")
         
         if resp.status_code != 200:
             error_text = resp.text[:500]
             logger.error(f"Dify upstream error: {error_text}")
-            return jsonify({'status': 'error', 'message': f'Dify API error: {resp.status_code}'}), resp.status_code
+            add_compute_power(user_id, power_cost, 'refund', f'Dify API失败退还: {query[:30]}...')
+            return jsonify({'status': 'error', 'message': f'Dify API error: {resp.status_code}', 'refunded': True}), resp.status_code
+        
+        user_message_id = None
+        conversation_id = body.get('conversation_id', '')
         
         def generate():
+            nonlocal user_message_id, conversation_id
+            
+            db = get_db()
+            db_created = True
+            
+            try:
+                user_msg_cursor = db.execute('''
+                    INSERT INTO chat_messages 
+                    (project_id, user_id, chat_id, role, content, power_cost)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (project_id, user_id, conversation_id, 'user', query, power_cost))
+                user_message_id = user_msg_cursor.lastrowid
+                
+                if project_id:
+                    db.execute('UPDATE projects SET chat_count = chat_count + 1, update_time = ? WHERE id = ?',
+                              (datetime.now(), project_id))
+                
+                db.commit()
+                logger.info(f"Saved user message: {user_message_id}")
+            except Exception as e:
+                logger.error(f"Failed to save user message: {str(e)}")
+                db.rollback()
+            
+            ai_response_text = ''
+            ai_message_id = None
+            
             try:
                 for chunk in resp.iter_content(chunk_size=1024):
                     if chunk:
                         yield chunk
+                        
+                        try:
+                            chunk_str = chunk.decode('utf-8')
+                            if chunk_str.startswith('data: '):
+                                data_str = chunk_str[6:].strip()
+                                if data_str and data_str != '[DONE]':
+                                    try:
+                                        data = json.loads(data_str)
+                                        if data.get('event') in ['message', 'agent_message'] and data.get('answer'):
+                                            ai_response_text += data['answer']
+                                        if data.get('conversation_id') and not conversation_id:
+                                            conversation_id = data['conversation_id']
+                                        if data.get('event') in ['message_end', 'done']:
+                                            if not ai_message_id:
+                                                try:
+                                                    ai_msg_cursor = db.execute('''
+                                                        INSERT INTO chat_messages 
+                                                        (project_id, user_id, chat_id, role, content, power_cost)
+                                                        VALUES (?, ?, ?, ?, ?, ?)
+                                                    ''', (project_id, user_id, conversation_id, 'assistant', ai_response_text, 0))
+                                                    ai_message_id = ai_msg_cursor.lastrowid
+                                                    db.commit()
+                                                    logger.info(f"Saved AI message: {ai_message_id}, length: {len(ai_response_text)}")
+                                                except Exception as e:
+                                                    logger.error(f"Failed to save AI message: {str(e)}")
+                                                    db.rollback()
+                                    except json.JSONDecodeError:
+                                        continue
+                        except UnicodeDecodeError:
+                            continue
             except Exception as e:
                 logger.error(f"Stream error: {str(e)}")
+                add_compute_power(user_id, power_cost, 'refund', f'流式响应异常退还: {query[:30]}...')
                 yield f"data: {{'event': 'error', 'message': '{str(e)}'}}\n\n"
+            finally:
+                if not ai_message_id and ai_response_text:
+                    try:
+                        ai_msg_cursor = db.execute('''
+                            INSERT INTO chat_messages 
+                            (project_id, user_id, chat_id, role, content, power_cost)
+                            VALUES (?, ?, ?, ?, ?, ?)
+                        ''', (project_id, user_id, conversation_id, 'assistant', ai_response_text, 0))
+                        ai_message_id = ai_msg_cursor.lastrowid
+                        db.commit()
+                        logger.info(f"Saved AI message on stream end: {ai_message_id}")
+                    except Exception as e:
+                        logger.error(f"Failed to save AI message: {str(e)}")
+                        db.rollback()
+                try:
+                    db.close()
+                except:
+                    pass
         
         return Response(
             stream_with_context(generate()),
             content_type='text/event-stream',
             headers={
                 'Cache-Control': 'no-cache',
-                'X-Accel-Buffering': 'no'
+                'X-Accel-Buffering': 'no',
+                'X-Power-Cost': str(power_cost),
+                'X-Remaining-Power': str(remaining)
             }
         )
     except Exception as e:
@@ -568,6 +889,7 @@ def create_project():
     invite_code = data.get('invite_code')
     title = data.get('title')
     description = data.get('description', '')
+    cover_image = data.get('cover_image', '')
     
     if not invite_code:
         return jsonify({'status': 'error', 'message': '缺少邀请码参数'}), 400
@@ -578,9 +900,9 @@ def create_project():
     
     db = get_db()
     cursor = db.execute('''
-        INSERT INTO projects (user_id, title, description)
-        VALUES (?, ?, ?)
-    ''', (user_id, title.strip(), description))
+        INSERT INTO projects (user_id, title, description, cover_image)
+        VALUES (?, ?, ?, ?)
+    ''', (user_id, title.strip(), description, cover_image))
     db.commit()
     
     return jsonify({
@@ -1308,6 +1630,43 @@ def get_stats():
         }
     })
 
+def is_valid_image_url(url):
+    """检查是否为有效的图片 URL"""
+    if not url or not isinstance(url, str):
+        return False
+    
+    url = url.strip()
+    if not url:
+        return False
+    
+    if len(url) < 10:
+        return False
+    
+    if url.startswith('data:image'):
+        return True
+    
+    valid_extensions = ('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp')
+    valid_prefixes = ('http://', 'https://', '/')
+    
+    has_valid_prefix = any(url.lower().startswith(prefix) for prefix in valid_prefixes)
+    has_valid_extension = any(url.lower().endswith(ext) for ext in valid_extensions)
+    
+    if url.startswith('data:'):
+        return True
+    
+    return has_valid_prefix and (has_valid_extension or 'picsum.photos' in url or 'whhongyi' in url or 'baidu.com' in url)
+
+DEFAULT_COVER_IMAGES = [
+    'https://picsum.photos/400/600?random=1',
+    'https://picsum.photos/400/600?random=2',
+    'https://picsum.photos/400/600?random=3',
+    'https://picsum.photos/400/600?random=4',
+    'https://picsum.photos/400/600?random=5',
+    'https://picsum.photos/400/600?random=6',
+    'https://picsum.photos/400/600?random=7',
+    'https://picsum.photos/400/600?random=8'
+]
+
 @app.route('/api/works', methods=['GET'])
 def get_public_works():
     try:
@@ -1331,11 +1690,24 @@ def get_public_works():
             ORDER BY created_at DESC
         ''').fetchall()
         
+        works_list = []
+        for idx, work in enumerate(works):
+            work_dict = dict(work)
+            image_url = work_dict.get('image', '').strip() if work_dict.get('image') else ''
+
+            if not image_url or image_url == '' or not is_valid_image_url(image_url):
+                image_url = DEFAULT_COVER_IMAGES[idx % len(DEFAULT_COVER_IMAGES)]
+            else:
+                image_url = convert_image_url(image_url)
+
+            work_dict['image'] = image_url
+            works_list.append(work_dict)
+        
         result = {
             'code': 200,
             'data': {
-                'list': [dict(work) for work in works],
-                'total': len(works)
+                'list': works_list,
+                'total': len(works_list)
             }
         }
         
@@ -1388,6 +1760,551 @@ def proxy_image():
         )
     except Exception as e:
         logger.error(f"Image proxy error: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/upload-image', methods=['POST'])
+def upload_image():
+    """上传图片接口，支持 Base64 编码或文件上传"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'status': 'error', 'message': '缺少上传数据'}), 400
+        
+        image_data = data.get('image')
+        if not image_data:
+            return jsonify({'status': 'error', 'message': '缺少图片数据'}), 400
+        
+        if image_data.startswith('data:image'):
+            return jsonify({
+                'status': 'success',
+                'url': image_data,
+                'message': '图片已接收（Base64格式）'
+            })
+        
+        if image_data.startswith('http://') or image_data.startswith('https://'):
+            return jsonify({
+                'status': 'success',
+                'url': image_data,
+                'message': '图片URL已接收'
+            })
+        
+        return jsonify({
+            'status': 'success',
+            'url': image_data,
+            'message': '图片数据已接收'
+        })
+    except Exception as e:
+        logger.error(f"Image upload error: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/works/<int:work_id>/image', methods=['PUT'])
+def update_work_image(work_id):
+    """更新作品图片"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'image' not in data:
+            return jsonify({'status': 'error', 'message': '缺少图片数据'}), 400
+        
+        image_url = data['image']
+        
+        if not is_valid_image_url(image_url):
+            return jsonify({'status': 'error', 'message': '无效的图片URL'}), 400
+        
+        conn = sqlite3.connect(DATABASE, check_same_thread=False)
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM ip_works WHERE id = ?', (work_id,))
+        work = cursor.fetchone()
+        
+        if not work:
+            conn.close()
+            return jsonify({'status': 'error', 'message': '作品不存在'}), 404
+        
+        cursor.execute('UPDATE ip_works SET image = ?, updated_at = ? WHERE id = ?', 
+                      (image_url, datetime.now(), work_id))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'message': '图片更新成功',
+            'url': image_url
+        })
+    except Exception as e:
+        logger.error(f"Update work image error: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/orders', methods=['GET'])
+def get_orders():
+    """获取所有订单"""
+    try:
+        conn = sqlite3.connect(DATABASE, check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT * FROM orders 
+            ORDER BY created_at DESC
+        ''')
+        orders = cursor.fetchall()
+        
+        orders_list = []
+        for order in orders:
+            order_dict = dict(order)
+            order_dict['id'] = order['id']
+            
+            image_url = order_dict.get('image', '').strip() if order_dict.get('image') else ''
+            if not is_valid_image_url(image_url):
+                image_url = DEFAULT_COVER_IMAGES[order['id'] % len(DEFAULT_COVER_IMAGES)]
+            order_dict['image'] = image_url
+            
+            if order_dict.get('tags') and order_dict['tags']:
+                try:
+                    order_dict['tags'] = json.loads(order_dict['tags'])
+                except:
+                    order_dict['tags'] = []
+            else:
+                order_dict['tags'] = []
+            
+            orders_list.append(order_dict)
+        
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'data': {
+                'list': orders_list,
+                'total': len(orders_list)
+            }
+        })
+    except Exception as e:
+        logger.error(f"Get orders error: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/works/featured', methods=['GET'])
+def get_featured_works():
+    """获取推荐作品，用于首页广告位"""
+    try:
+        conn = sqlite3.connect(DATABASE, check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT * FROM ip_works
+            WHERE status = 'active' AND is_featured = 1
+            ORDER BY sort_order ASC, created_at DESC
+            LIMIT 3
+        ''')
+        works = cursor.fetchall()
+        
+        if len(works) < 3:
+            cursor.execute('''
+                SELECT * FROM ip_works
+                WHERE status = 'active'
+                ORDER BY created_at DESC
+                LIMIT ?
+            ''', (3 - len(works),))
+            additional_works = cursor.fetchall()
+            works = list(works) + list(additional_works)
+        
+        works_list = []
+        for idx, work in enumerate(works):
+            work_dict = dict(work)
+            image_url = work_dict.get('image', '').strip() if work_dict.get('image') else ''
+
+            if not image_url or not is_valid_image_url(image_url):
+                image_url = DEFAULT_COVER_IMAGES[idx % len(DEFAULT_COVER_IMAGES)]
+            else:
+                image_url = convert_image_url(image_url)
+
+            work_dict['image'] = image_url
+            works_list.append(work_dict)
+        
+        conn.close()
+        
+        return jsonify({
+            'code': 200,
+            'data': {
+                'list': works_list,
+                'total': len(works_list)
+            }
+        })
+    except Exception as e:
+        logger.error(f"Get featured works error: {str(e)}")
+        return jsonify({'code': 500, 'msg': str(e)}), 500
+
+@app.route('/api/orders', methods=['POST'])
+def create_order():
+    """创建新订单"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'title' not in data:
+            return jsonify({'status': 'error', 'message': '缺少订单标题'}), 400
+        
+        title = data['title']
+        image = data.get('image', '')
+        qrcode = data.get('qrcode', '')
+        price = data.get('price', '')
+        deadline = data.get('deadline', '')
+        status = data.get('status', 'recruiting')
+        tags = data.get('tags', [])
+        description = data.get('description', '')
+        contact_info = data.get('contact_info', '')
+        min_profit = data.get('min_profit', 0)
+        share_ratio = data.get('share_ratio', 0)
+        power_subsidy = data.get('power_subsidy', 0)
+        period = data.get('period', 0)
+        
+        if isinstance(tags, list):
+            tags = json.dumps(tags, ensure_ascii=False)
+        
+        conn = sqlite3.connect(DATABASE, check_same_thread=False)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO orders (title, image, qrcode, price, deadline, status, tags, description, contact_info, min_profit, share_ratio, power_subsidy, period)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (title, image, qrcode, price, deadline, status, tags, description, contact_info, min_profit, share_ratio, power_subsidy, period))
+        
+        order_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'message': '订单创建成功',
+            'order_id': order_id
+        })
+    except Exception as e:
+        logger.error(f"Create order error: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/orders/<int:order_id>', methods=['PUT'])
+def update_order(order_id):
+    """更新订单"""
+    try:
+        data = request.get_json()
+        
+        conn = sqlite3.connect(DATABASE, check_same_thread=False)
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM orders WHERE id = ?', (order_id,))
+        order = cursor.fetchone()
+        
+        if not order:
+            conn.close()
+            return jsonify({'status': 'error', 'message': '订单不存在'}), 404
+        
+        title = data.get('title', order['title'])
+        image = data.get('image', order['image'])
+        qrcode = data.get('qrcode', order['qrcode'])
+        price = data.get('price', order['price'])
+        deadline = data.get('deadline', order['deadline'])
+        status = data.get('status', order['status'])
+        tags = data.get('tags', order['tags'])
+        description = data.get('description', order['description'])
+        contact_info = data.get('contact_info', order['contact_info'])
+        min_profit = data.get('min_profit', order['min_profit'])
+        share_ratio = data.get('share_ratio', order['share_ratio'])
+        power_subsidy = data.get('power_subsidy', order['power_subsidy'])
+        period = data.get('period', order['period'])
+        
+        if isinstance(tags, list):
+            tags = json.dumps(tags, ensure_ascii=False)
+        
+        cursor.execute('''
+            UPDATE orders SET 
+                title = ?, image = ?, qrcode = ?, price = ?, deadline = ?, 
+                status = ?, tags = ?, description = ?, contact_info = ?,
+                min_profit = ?, share_ratio = ?, power_subsidy = ?, period = ?,
+                updated_at = ?
+            WHERE id = ?
+        ''', (title, image, qrcode, price, deadline, status, tags, description, contact_info,
+              min_profit, share_ratio, power_subsidy, period, datetime.now(), order_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'message': '订单更新成功'
+        })
+    except Exception as e:
+        logger.error(f"Update order error: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/orders/<int:order_id>', methods=['DELETE'])
+def delete_order(order_id):
+    """删除订单"""
+    try:
+        conn = sqlite3.connect(DATABASE, check_same_thread=False)
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM orders WHERE id = ?', (order_id,))
+        order = cursor.fetchone()
+        
+        if not order:
+            conn.close()
+            return jsonify({'status': 'error', 'message': '订单不存在'}), 404
+        
+        cursor.execute('DELETE FROM orders WHERE id = ?', (order_id,))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'message': '订单删除成功'
+        })
+    except Exception as e:
+        logger.error(f"Delete order error: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/advertisements', methods=['GET'])
+def get_advertisements():
+    """获取所有广告位"""
+    try:
+        status = request.args.get('status', 'published')
+        
+        conn = sqlite3.connect(DATABASE, check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        if status == 'all':
+            cursor.execute('''
+                SELECT * FROM advertisements 
+                ORDER BY sort_order ASC, created_at DESC
+            ''')
+        else:
+            cursor.execute('''
+                SELECT * FROM advertisements 
+                WHERE status = ?
+                ORDER BY sort_order ASC, created_at DESC
+            ''', (status,))
+        
+        ads = cursor.fetchall()
+        ads_list = []
+        for ad in ads:
+            ad_dict = dict(ad)
+            if ad_dict.get('image'):
+                ad_dict['image'] = convert_image_url(ad_dict['image'])
+            ads_list.append(ad_dict)
+        
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'data': {
+                'list': ads_list,
+                'total': len(ads_list)
+            }
+        })
+    except Exception as e:
+        logger.error(f"Get advertisements error: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/advertisements', methods=['POST'])
+def create_advertisement():
+    """创建广告位"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'status': 'error', 'message': '缺少广告数据'}), 400
+        
+        title = data.get('title', '')
+        image = data.get('image', '')
+        link_url = data.get('link_url', '')
+        status = data.get('status', 'draft')
+        sort_order = data.get('sort_order', 0)
+        
+        conn = sqlite3.connect(DATABASE, check_same_thread=False)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO advertisements (title, image, link_url, status, sort_order, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (title, image, link_url, status, sort_order, datetime.now(), datetime.now()))
+        
+        ad_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'message': '广告位创建成功',
+            'ad_id': ad_id
+        })
+    except Exception as e:
+        logger.error(f"Create advertisement error: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/advertisements/<int:ad_id>', methods=['PUT'])
+def update_advertisement(ad_id):
+    """更新广告位"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'status': 'error', 'message': '缺少广告数据'}), 400
+        
+        conn = sqlite3.connect(DATABASE, check_same_thread=False)
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM advertisements WHERE id = ?', (ad_id,))
+        ad = cursor.fetchone()
+        
+        if not ad:
+            conn.close()
+            return jsonify({'status': 'error', 'message': '广告位不存在'}), 404
+        
+        title = data.get('title', ad['title'])
+        image = data.get('image', ad['image'])
+        link_url = data.get('link_url', ad['link_url'])
+        status = data.get('status', ad['status'])
+        sort_order = data.get('sort_order', ad['sort_order'])
+        
+        cursor.execute('''
+            UPDATE advertisements 
+            SET title = ?, image = ?, link_url = ?, status = ?, sort_order = ?, updated_at = ?
+            WHERE id = ?
+        ''', (title, image, link_url, status, sort_order, datetime.now(), ad_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'message': '广告位更新成功'
+        })
+    except Exception as e:
+        logger.error(f"Update advertisement error: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/advertisements/<int:ad_id>', methods=['DELETE'])
+def delete_advertisement(ad_id):
+    """删除广告位"""
+    try:
+        conn = sqlite3.connect(DATABASE, check_same_thread=False)
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM advertisements WHERE id = ?', (ad_id,))
+        ad = cursor.fetchone()
+        
+        if not ad:
+            conn.close()
+            return jsonify({'status': 'error', 'message': '广告位不存在'}), 404
+        
+        cursor.execute('DELETE FROM advertisements WHERE id = ?', (ad_id,))
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'message': '广告位删除成功'
+        })
+    except Exception as e:
+        logger.error(f"Delete advertisement error: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/advertisements/<int:ad_id>/publish', methods=['POST'])
+def publish_advertisement(ad_id):
+    """发布广告位"""
+    try:
+        conn = sqlite3.connect(DATABASE, check_same_thread=False)
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM advertisements WHERE id = ?', (ad_id,))
+        ad = cursor.fetchone()
+        
+        if not ad:
+            conn.close()
+            return jsonify({'status': 'error', 'message': '广告位不存在'}), 404
+        
+        cursor.execute('''
+            UPDATE advertisements 
+            SET status = 'published', updated_at = ?
+            WHERE id = ?
+        ''', (datetime.now(), ad_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'message': '广告位发布成功'
+        })
+    except Exception as e:
+        logger.error(f"Publish advertisement error: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/advertisements/<int:ad_id>/unpublish', methods=['POST'])
+def unpublish_advertisement(ad_id):
+    """下架广告位"""
+    try:
+        conn = sqlite3.connect(DATABASE, check_same_thread=False)
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM advertisements WHERE id = ?', (ad_id,))
+        ad = cursor.fetchone()
+        
+        if not ad:
+            conn.close()
+            return jsonify({'status': 'error', 'message': '广告位不存在'}), 404
+        
+        cursor.execute('''
+            UPDATE advertisements 
+            SET status = 'unpublished', updated_at = ?
+            WHERE id = ?
+        ''', (datetime.now(), ad_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'message': '广告位下架成功'
+        })
+    except Exception as e:
+        logger.error(f"Unpublish advertisement error: {str(e)}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/advertisements/reorder', methods=['POST'])
+def reorder_advertisements():
+    """批量更新广告位排序"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'orders' not in data:
+            return jsonify({'status': 'error', 'message': '缺少排序数据'}), 400
+        
+        orders = data['orders']
+        
+        conn = sqlite3.connect(DATABASE, check_same_thread=False)
+        cursor = conn.cursor()
+        
+        for order_data in orders:
+            ad_id = order_data.get('id')
+            sort_order = order_data.get('sort_order')
+            
+            if ad_id is not None and sort_order is not None:
+                cursor.execute('''
+                    UPDATE advertisements 
+                    SET sort_order = ?, updated_at = ?
+                    WHERE id = ?
+                ''', (sort_order, datetime.now(), ad_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'status': 'success',
+            'message': '排序更新成功'
+        })
+    except Exception as e:
+        logger.error(f"Reorder advertisements error: {str(e)}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
 if __name__ == '__main__':

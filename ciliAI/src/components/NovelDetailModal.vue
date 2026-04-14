@@ -22,7 +22,7 @@
             </svg>
           </button>
           <img :src="currentImage" :alt="novelWithIntro.title" class="novel-image">
-          <button class="image-nav-btn next-btn" @click="nextImage" :disabled="currentImageIndex === 4">
+          <button class="image-nav-btn next-btn" @click="nextImage" :disabled="currentImageIndex === maxImageIndex">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
               <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path>
             </svg>
@@ -30,7 +30,7 @@
         </div>
         <div class="image-indicators">
           <span 
-            v-for="(_, index) in 5" 
+            v-for="(_, index) in (maxImageIndex + 1)"
             :key="index"
             class="indicator"
             :class="{ active: index === currentImageIndex }"
@@ -40,7 +40,7 @@
       </div>
       
       <div class="novel-info-section">
-        <div class="info-item author-info">
+        <div v-if="!isIpLibrary" class="info-item author-info">
           <div class="author-grid">
             <div class="author-item">
               <span class="author-label">学员名称：</span>
@@ -58,14 +58,14 @@
           <p class="info-content">{{ novelWithIntro.introduction }}</p>
         </div>
         
-        <div class="info-item">
+        <div v-if="false" class="info-item">
           <h3 class="info-title">版权信息</h3>
           <p class="info-content">
             本作品由CiliAI制作，版权归CiliAI所有。未经授权，不得转载、复制或用于商业用途。
           </p>
         </div>
         
-        <div class="info-item">
+        <div v-if="false" class="info-item">
           <h3 class="info-title">作品详情</h3>
           <div class="detail-grid">
             <div class="detail-item">
@@ -99,7 +99,7 @@
         </div>
         
         <div class="action-buttons">
-          <el-button type="primary" class="action-button add-button" @click="addToProject" :loading="adding">
+          <el-button v-if="false" type="primary" class="action-button add-button" @click="addToProject" :loading="adding">
             加入项目
           </el-button>
           <el-button type="default" class="action-button create-button" @click="showTeacherQR">
@@ -199,9 +199,81 @@ const novelWithIntro = computed(() => ({
   introduction: props.novel.introduction || '这是一部精彩的AI短剧作品，由CiliAI精心制作。'
 }))
 
+const isIpLibrary = computed(() => {
+  return props.novel.source === 'ip-library'
+})
+
 const currentImage = computed(() => {
-  const imageId = props.novel.id || 1
+  console.log('NovelDetailModal - props.novel:', props.novel)
+  console.log('NovelDetailModal - props.novel.image:', props.novel?.image)
+  console.log('NovelDetailModal - props.novel.images:', props.novel?.images)
+  
+  if (props.novel?.image) {
+    if (Array.isArray(props.novel.image)) {
+      const imageIndex = Math.min(currentImageIndex.value, props.novel.image.length - 1)
+      const imgUrl = props.novel.image[imageIndex] || props.novel.image[0]
+      console.log('NovelDetailModal - Using array image, index:', imageIndex, 'url:', imgUrl)
+      
+      if (isValidImageUrl(imgUrl)) {
+        return imgUrl
+      }
+      return generatePlaceholder()
+    }
+    
+    console.log('NovelDetailModal - Using single image:', props.novel.image)
+    
+    if (isValidImageUrl(props.novel.image)) {
+      return props.novel.image
+    }
+    
+    console.warn('NovelDetailModal - Invalid single image URL:', props.novel.image)
+    return generatePlaceholder()
+  }
+  
+  if (props.novel?.images && Array.isArray(props.novel.images)) {
+    const imageIndex = Math.min(currentImageIndex.value, props.novel.images.length - 1)
+    const imgUrl = props.novel.images[imageIndex]
+    console.log('NovelDetailModal - Using images array, index:', imageIndex, 'url:', imgUrl)
+    
+    if (isValidImageUrl(imgUrl)) {
+      return imgUrl
+    }
+    return generatePlaceholder()
+  }
+  
+  console.log('NovelDetailModal - Using placeholder')
+  return generatePlaceholder()
+})
+
+const generatePlaceholder = () => {
+  const imageId = props.novel?.id || Date.now()
+  console.log('NovelDetailModal - Generating placeholder for id:', imageId, 'index:', currentImageIndex.value)
   return `https://picsum.photos/400/600?random=${imageId * 10 + currentImageIndex.value}`
+}
+
+const isValidImageUrl = (url) => {
+  if (!url || typeof url !== 'string') return false
+  
+  const trimmedUrl = url.trim()
+  if (trimmedUrl.length < 10) return false
+  
+  if (trimmedUrl.startsWith('data:image')) return true
+  if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')) return true
+  
+  return false
+}
+
+const maxImageIndex = computed(() => {
+  if (props.novel.image) {
+    if (Array.isArray(props.novel.image)) {
+      return Math.max(0, props.novel.image.length - 1)
+    }
+    return 0
+  }
+  if (props.novel.images && Array.isArray(props.novel.images)) {
+    return Math.max(0, props.novel.images.length - 1)
+  }
+  return 4
 })
 
 const prevImage = () => {
@@ -211,7 +283,7 @@ const prevImage = () => {
 }
 
 const nextImage = () => {
-  if (currentImageIndex.value < 4) {
+  if (currentImageIndex.value < maxImageIndex.value) {
     currentImageIndex.value++
   }
 }

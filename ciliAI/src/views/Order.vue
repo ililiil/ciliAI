@@ -4,6 +4,16 @@
     <div class="page-header">
       <h1 class="page-title">接单广场</h1>
       <button class="publish-btn" @click="showPublishModal = true" v-show="false">发布商单</button>
+      <button class="refresh-btn" @click="handleManualRefresh" :disabled="isRefreshing">
+        <svg v-if="!isRefreshing" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 2v6h-6"></path>
+          <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+          <path d="M3 22v-6h6"></path>
+          <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+        </svg>
+        <span v-if="isRefreshing">刷新中...</span>
+        <span v-else>刷新</span>
+      </button>
     </div>
 
     <!-- 标签筛选 -->
@@ -40,7 +50,7 @@
           @click="viewOrderDetail(order)"
         >
           <div class="order-image">
-            <img :src="order.image" :alt="order.title">
+            <img :src="getImageUrl(order)" :alt="order.title" @error="handleImageError($event, order)">
             <div class="order-status" :class="order.status">{{ getStatusText(order.status) }}</div>
           </div>
           <div class="order-info">
@@ -174,35 +184,67 @@
 
       <!-- 剧本上传 -->
       <el-form-item label="剧本上传">
-        <div class="upload-area">
-          <el-icon class="upload-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="15" y2="3"></line></svg></el-icon>
-          <div class="upload-text">
-            <p>点击上传剧本文件</p>
-            <p>支持 PDF、DOC、DOCX 格式</p>
-          </div>
-        </div>
+        <el-upload
+          class="script-upload"
+          action=""
+          :auto-upload="false"
+          :on-change="handleScriptUpload"
+          :file-list="scriptFileList"
+          accept=".pdf,.doc,.docx"
+        >
+          <el-button type="primary">上传剧本文件</el-button>
+          <template #tip>
+            <div class="el-upload__tip">支持 PDF、DOC、DOCX 格式</div>
+          </template>
+        </el-upload>
       </el-form-item>
 
       <!-- 封面上传 -->
-      <el-form-item label="封面上传">
-        <div class="upload-area cover-upload">
-          <el-icon class="upload-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="15" y2="3"></line></svg></el-icon>
-          <div class="upload-text">
-            <p>点击上传封面文件</p>
-            <p>支持 JPG、PNG 格式</p>
-          </div>
+      <el-form-item label="封面上传 *">
+        <div class="cover-upload-container">
+          <el-upload
+            class="cover-upload"
+            action="#"
+            :auto-upload="false"
+            :on-change="handleCoverUpload"
+            :file-list="coverFileList"
+            :show-file-list="false"
+            accept=".jpg,.jpeg,.png"
+          >
+            <template #default>
+              <div class="cover-upload-trigger" v-if="!uploadedCoverUrl">
+                <el-button type="primary" size="large">
+                  <el-icon><Upload /></el-icon>
+                  上传封面
+                </el-button>
+                <div class="cover-upload-hint">支持 JPG、PNG 格式，建议尺寸 500x892</div>
+              </div>
+              <div class="cover-preview" v-else>
+                <img :src="uploadedCoverUrl" alt="封面预览" class="cover-preview-image">
+                <div class="cover-preview-overlay">
+                  <el-button type="primary" size="small" @click.stop="removeCover">更换封面</el-button>
+                </div>
+              </div>
+            </template>
+          </el-upload>
         </div>
       </el-form-item>
 
       <!-- 联系方式 -->
       <el-form-item label="联系方式">
-        <div class="upload-area">
-          <el-icon class="upload-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" x2="12" y1="15" y2="3"></line></svg></el-icon>
-          <div class="upload-text">
-            <p>点击上传企业微信二维码</p>
-            <p>支持 JPG、PNG 格式</p>
-          </div>
-        </div>
+        <el-upload
+          class="qrcode-upload"
+          action=""
+          :auto-upload="false"
+          :on-change="handleQrcodeUpload"
+          :file-list="qrcodeFileList"
+          accept=".jpg,.jpeg,.png"
+        >
+          <el-button type="primary">上传企业微信二维码</el-button>
+          <template #tip>
+            <div class="el-upload__tip">支持 JPG、PNG 格式</div>
+          </template>
+        </el-upload>
       </el-form-item>
 
       <!-- 参与条件 -->
@@ -235,7 +277,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { Upload } from '@element-plus/icons-vue'
 
 // 标签选项
 const tabs = [
@@ -247,65 +290,136 @@ const tabs = [
 
 const activeTab = ref('all')
 
-// 订单数据 - 从 localStorage 读取以与管理后台同步
+// 订单数据 - 从后端API获取
 const orders = ref([])
-const initialOrders = [
-  {
-    id: 1,
-    title: '现代都市情感短剧制作',
-    image: 'https://img2.baidu.com/it/u=3152765891,1290125229&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=892',
-    qrcode: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=weixin://wxid_example1',
-    price: '¥5000',
-    deadline: '2024-12-31',
-    status: 'recruiting',
-    tags: ['AI真人', '现代都市'],
-    contactCount: 5
-  },
-  {
-    id: 2,
-    title: '古装历史短剧制作',
-    image: 'https://img2.baidu.com/it/u=3152765891,1290125229&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=892',
-    qrcode: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=weixin://wxid_example2',
-    price: '¥8000',
-    deadline: '2025-01-15',
-    status: 'pending',
-    tags: ['AI真人', '古装历史'],
-    contactCount: 3
-  },
-  {
-    id: 3,
-    title: '科幻题材短剧制作',
-    image: 'https://img2.baidu.com/it/u=3152765891,1290125229&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=892',
-    qrcode: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=weixin://wxid_example3',
-    price: '¥6000',
-    deadline: '2025-01-10',
-    status: 'ended',
-    tags: ['AI动画', '科幻题材'],
-    contactCount: 8
-  }
-]
 
-// 初始化订单数据
-const initOrders = () => {
-  const storedOrders = localStorage.getItem('admin_orders')
-  if (storedOrders) {
-    orders.value = JSON.parse(storedOrders)
-  } else {
-    orders.value = initialOrders
-    localStorage.setItem('admin_orders', JSON.stringify(initialOrders))
+// 轮询间隔（毫秒）
+const POLL_INTERVAL = 5000
+
+// 定时器 ID
+let pollTimer = null
+
+// 手动刷新标记
+const isRefreshing = ref(false)
+
+// 图片缓存破坏参数
+const imageCacheBuster = ref(Date.now())
+
+// 初始化订单数据 - 从后端API获取
+const initOrders = async () => {
+  try {
+    const response = await fetch('/api/orders')
+    const result = await response.json()
+    
+    if (result.status === 'success') {
+      orders.value = result.data.list
+      console.log('订单数据已从后端加载，共', result.data.list.length, '条')
+    } else {
+      console.error('获取订单数据失败:', result.message)
+      orders.value = []
+    }
+  } catch (error) {
+    console.error('获取订单数据失败:', error)
+    orders.value = []
   }
 }
 
-// 在组件挂载时初始化
-initOrders()
-
-// 根据选中标签筛选订单
-const filteredOrders = computed(() => {
-  if (activeTab.value === 'all') {
-    return orders.value
+// 刷新订单数据
+const refreshOrders = async () => {
+  if (isRefreshing.value) return
+  
+  isRefreshing.value = true
+  try {
+    const response = await fetch('/api/orders')
+    const result = await response.json()
+    
+    if (result.status === 'success') {
+      const newOrders = result.data.list
+      
+      const hasChanges = JSON.stringify(newOrders) !== JSON.stringify(orders.value)
+      
+      if (hasChanges) {
+        orders.value = newOrders
+        imageCacheBuster.value = Date.now()
+        console.log('订单数据已从后端更新，共', newOrders.length, '条')
+      }
+    } else {
+      console.error('获取订单数据失败:', result.message)
+      orders.value = []
+    }
+  } catch (error) {
+    console.error('刷新订单数据失败:', error)
+    orders.value = []
+  } finally {
+    isRefreshing.value = false
   }
-  return orders.value.filter(order => order.status === activeTab.value)
+}
+
+// 启动轮询
+const startPolling = () => {
+  if (pollTimer) {
+    clearInterval(pollTimer)
+  }
+  pollTimer = setInterval(refreshOrders, POLL_INTERVAL)
+  console.log('订单数据轮询已启动，间隔:', POLL_INTERVAL / 1000, '秒')
+}
+
+// 停止轮询
+const stopPolling = () => {
+  if (pollTimer) {
+    clearInterval(pollTimer)
+    pollTimer = null
+    console.log('订单数据轮询已停止')
+  }
+}
+
+// 获取带缓存破坏的图片 URL
+const getImageUrl = (order) => {
+  if (!order.image) {
+    console.warn('订单没有图片:', order)
+    return ''
+  }
+  
+  try {
+    const url = new URL(order.image)
+    url.searchParams.set('_cb', imageCacheBuster.value)
+    return url.toString()
+  } catch (error) {
+    console.error('图片 URL 无效:', order.image, error)
+    return order.image
+  }
+}
+
+// 手动刷新
+const handleManualRefresh = () => {
+  imageCacheBuster.value = Date.now()
+  refreshOrders()
+}
+
+// 组件挂载时初始化
+onMounted(async () => {
+  await initOrders()
+  startPolling()
 })
+
+// 组件卸载时清理
+onUnmounted(() => {
+  stopPolling()
+})
+
+// 监听 activeTab 变化，确保数据最新
+watch(activeTab, () => {
+  refreshOrders()
+})
+
+// 处理图片加载失败
+const handleImageError = (e, order) => {
+  console.warn('图片加载失败:', order.image)
+  // 如果是带缓存破坏参数的 URL，尝试使用原始 URL
+  if (e.target.src !== order.image) {
+    e.target.src = order.image
+  }
+}
 
 // 获取状态文本
 const getStatusText = (status) => {
@@ -317,18 +431,75 @@ const getStatusText = (status) => {
   return statusMap[status] || status
 }
 
+// 根据选中标签筛选订单
+const filteredOrders = computed(() => {
+  if (activeTab.value === 'all') {
+    return orders.value
+  }
+  return orders.value.filter(order => order.status === activeTab.value)
+})
+
 // 切换标签
 const handleTabChange = (tab) => {
   activeTab.value = tab
 }
 
-// 查看订单详情
+// 查看订单详情 - 用户端只显示联系信息
 const viewOrderDetail = (order) => {
   console.log('查看订单详情:', order)
+  selectedOrder.value = order
+  showContactModal.value = true
 }
 
 // 发布商单弹窗
 const showPublishModal = ref(false)
+
+// 文件上传相关
+const scriptFileList = ref([])
+const coverFileList = ref([])
+const qrcodeFileList = ref([])
+const uploadedCoverUrl = ref('')
+const uploadedQrcodeUrl = ref('')
+
+// 处理剧本上传
+const handleScriptUpload = (file) => {
+  console.log('剧本文件:', file)
+  scriptFileList.value = [file]
+}
+
+// 处理封面上传
+const handleCoverUpload = (file) => {
+  console.log('封面文件:', file)
+  coverFileList.value = [file]
+  
+  // 读取文件并转换为 URL
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    uploadedCoverUrl.value = e.target.result
+    console.log('封面已读取:', uploadedCoverUrl.value)
+  }
+  reader.readAsDataURL(file.raw)
+}
+
+// 移除封面
+const removeCover = () => {
+  uploadedCoverUrl.value = ''
+  coverFileList.value = []
+}
+
+// 处理二维码上传
+const handleQrcodeUpload = (file) => {
+  console.log('二维码文件:', file)
+  qrcodeFileList.value = [file]
+  
+  // 读取文件并转换为 URL
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    uploadedQrcodeUrl.value = e.target.result
+    console.log('二维码已读取:', uploadedQrcodeUrl.value)
+  }
+  reader.readAsDataURL(file.raw)
+}
 
 // 联系弹窗
 const showContactModal = ref(false)
@@ -352,10 +523,86 @@ const publishForm = ref({
 })
 
 // 提交审核
-const handleSubmit = () => {
+const handleSubmit = async () => {
   console.log('提交审核:', publishForm.value)
-  // 这里处理提交逻辑
-  showPublishModal.value = false
+  
+  if (!publishForm.value.title) {
+    alert('请输入商单标题')
+    return
+  }
+  
+  if (!uploadedCoverUrl.value) {
+    alert('请上传封面图片')
+    return
+  }
+  
+  const newOrder = {
+    title: publishForm.value.title,
+    image: uploadedCoverUrl.value,
+    qrcode: uploadedQrcodeUrl.value || `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=weixin://wxid_${Date.now()}`,
+    price: publishForm.value.minProfit ? `¥${publishForm.value.minProfit}` : '¥0',
+    deadline: publishForm.value.endTime ? new Date(publishForm.value.endTime).toLocaleDateString() : '待定',
+    status: 'recruiting',
+    tags: [publishForm.value.type || '其他'],
+    description: publishForm.value.description || '',
+    contact_info: publishForm.value.contactInfo || '',
+    min_profit: publishForm.value.minProfit || 0,
+    share_ratio: publishForm.value.shareRatio || 0,
+    power_subsidy: publishForm.value.powerSubsidy || 0,
+    period: publishForm.value.period || 0
+  }
+  
+  try {
+    const response = await fetch('/api/orders', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newOrder)
+    })
+    
+    const result = await response.json()
+    
+    if (result.status === 'success') {
+      newOrder.id = result.order_id
+      
+      const existingOrders = JSON.parse(localStorage.getItem('admin_orders') || '[]')
+      existingOrders.unshift(newOrder)
+      localStorage.setItem('admin_orders', JSON.stringify(existingOrders))
+      
+      console.log('订单已创建并保存到后端:', newOrder)
+      refreshOrders()
+      
+      publishForm.value = {
+        title: '',
+        type: '都市',
+        minProfit: 0,
+        shareRatio: 0,
+        powerSubsidy: 0,
+        startTime: '',
+        endTime: '',
+        period: 0,
+        auditionScript: '',
+        description: '',
+        contactInfo: '',
+        participation: 'all',
+        copyright: true
+      }
+      
+      scriptFileList.value = []
+      coverFileList.value = []
+      qrcodeFileList.value = []
+      uploadedCoverUrl.value = ''
+      uploadedQrcodeUrl.value = ''
+      
+      showPublishModal.value = false
+      
+      alert('商单发布成功！')
+    } else {
+      alert('发布失败: ' + (result.message || '未知错误'))
+    }
+  } catch (error) {
+    console.error('订单创建失败:', error)
+    alert('订单创建失败，请重试')
+  }
 }
 
 // 处理联系按钮点击
@@ -384,6 +631,32 @@ const handleContact = (order) => {
   font-weight: 600;
   color: #425D5F;
   margin: 0;
+}
+
+.refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #425D5F;
+  color: #F8F7F2;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.refresh-btn:hover:not(:disabled) {
+  background-color: #FAA943;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(250, 169, 67, 0.3);
+}
+
+.refresh-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .publish-btn {
@@ -594,6 +867,38 @@ const handleContact = (order) => {
 .contact-btn:hover {
   background-color: #425D5F;
   color: #F8F7F2;
+}
+
+/* 上传组件样式 */
+.cover-upload :deep(.el-upload-list__item) {
+  margin-top: 10px;
+  border: 1px solid #425D5F;
+  border-radius: 4px;
+  padding: 8px;
+  transition: all 0.3s ease;
+}
+
+.cover-upload :deep(.el-upload-list__item:hover) {
+  border-color: #FAA943;
+}
+
+.cover-upload :deep(.el-upload-list__item-thumbnail) {
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.script-upload :deep(.el-upload-list) {
+  margin-top: 10px;
+}
+
+.qrcode-upload :deep(.el-upload-list) {
+  margin-top: 10px;
+}
+
+.el-upload__tip {
+  color: #666;
+  font-size: 12px;
+  margin-top: 8px;
 }
 
 /* 响应式设计 */
@@ -891,6 +1196,62 @@ const handleContact = (order) => {
 
 .cover-upload {
   border-style: dotted;
+}
+
+.cover-upload-container {
+  width: 100%;
+}
+
+.cover-upload-trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px;
+  cursor: pointer;
+}
+
+.cover-upload-trigger:hover .el-button {
+  background-color: #425D5F;
+  border-color: #425D5F;
+}
+
+.cover-upload-hint {
+  font-size: 12px;
+  color: #999;
+}
+
+.cover-preview {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.cover-preview-image {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.cover-preview-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+  border-radius: 8px;
+}
+
+.cover-preview:hover .cover-preview-overlay {
+  opacity: 1;
 }
 
 /* 参与条件 */
