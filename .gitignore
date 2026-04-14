@@ -17,8 +17,4 @@ uploads/
 *.png
 *.jpg
 *.jpeg
-!.public/ads/*.png
-!.public/logo*.png
-!.uploads/*.png
-!.uploads/*.jpg
-!.uploads/*.jpeg
+*.db
