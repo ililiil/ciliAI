@@ -2307,6 +2307,567 @@ def reorder_advertisements():
         logger.error(f"Reorder advertisements error: {str(e)}")
         return jsonify({'status': 'error', 'message': str(e)}), 500
 
+# ==================== 管理后台 API ====================
+
+@app.route('/api/admin/login', methods=['POST'])
+def admin_login():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+    
+    if username == 'admin' and password == 'admin123':
+        return jsonify({
+            'code': 200,
+            'msg': '登录成功',
+            'data': {
+                'token': 'admin-token-' + str(int(datetime.now().timestamp())),
+                'username': 'admin'
+            }
+        })
+    else:
+        return jsonify({
+            'code': 401,
+            'msg': '用户名或密码错误'
+        }), 401
+
+@app.route('/api/admin/info', methods=['GET'])
+def admin_info():
+    return jsonify({
+        'code': 200,
+        'data': {
+            'username': 'admin',
+            'roles': ['admin']
+        }
+    })
+
+@app.route('/api/admin/upload', methods=['POST'])
+def admin_upload_image():
+    if 'file' not in request.files:
+        return jsonify({'code': 400, 'msg': '没有文件上传'}), 400
+    
+    file = request.files['file']
+    
+    if file.filename == '':
+        return jsonify({'code': 400, 'msg': '文件名为空'}), 400
+    
+    if file and allowed_file(file.filename):
+        ext = file.filename.rsplit('.', 1)[1].lower()
+        filename = f"{uuid.uuid4().hex}.{ext}"
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(filepath)
+        
+        image_url = f"/uploads/{filename}"
+        return jsonify({
+            'code': 200,
+            'msg': '上传成功',
+            'data': {
+                'url': image_url,
+                'filename': filename
+            }
+        })
+    else:
+        return jsonify({'code': 400, 'msg': '不支持的文件格式'}), 400
+
+@app.route('/api/admin/invite-codes', methods=['GET'])
+def get_admin_invite_codes():
+    db = get_db()
+    codes = db.execute('''
+        SELECT ic.*, 
+               (SELECT COUNT(*) FROM users WHERE invite_code = ic.code) as use_count
+        FROM invite_codes ic
+        ORDER BY ic.created_at DESC
+    ''').fetchall()
+    
+    return jsonify({
+        'code': 200,
+        'data': {
+            'list': [dict(code) for code in codes],
+            'total': len(codes)
+        }
+    })
+
+@app.route('/api/admin/invite-codes', methods=['POST'])
+def create_admin_invite_code():
+    data = request.json
+    code = data.get('code')
+    compute_power = data.get('compute_power', 1000)
+    
+    if not code:
+        code = generate_invite_code(8)
+    
+    if len(code) != 8:
+        return jsonify({'code': 400, 'msg': '邀请码必须为8位字符'}), 400
+    
+    db = get_db()
+    try:
+        db.execute('INSERT INTO invite_codes (code, compute_power) VALUES (?, ?)', 
+                   (code.upper(), compute_power))
+        db.commit()
+        return jsonify({'code': 200, 'msg': '创建成功', 'data': {'code': code.upper()}})
+    except sqlite3.IntegrityError:
+        return jsonify({'code': 400, 'msg': '邀请码已存在'}), 400
+
+@app.route('/api/admin/invite-codes/<int:id>', methods=['PUT'])
+def update_admin_invite_code(id):
+    data = request.json
+    db = get_db()
+    
+    code = db.execute('SELECT * FROM invite_codes WHERE id = ?', (id,)).fetchone()
+    if not code:
+        return jsonify({'code': 404, 'msg': '邀请码不存在'}), 404
+    
+    status = data.get('status', code['status'])
+    compute_power = data.get('compute_power', code['compute_power'])
+    
+    db.execute('UPDATE invite_codes SET status = ?, compute_power = ? WHERE id = ?',
+               (status, compute_power, id))
+    db.commit()
+    
+    return jsonify({'code': 200, 'msg': '更新成功'})
+
+@app.route('/api/admin/invite-codes/<int:id>', methods=['DELETE'])
+def delete_admin_invite_code(id):
+    db = get_db()
+    
+    code = db.execute('SELECT * FROM invite_codes WHERE id = ?', (id,)).fetchone()
+    if not code:
+        return jsonify({'code': 404, 'msg': '邀请码不存在'}), 404
+    
+    db.execute('DELETE FROM invite_codes WHERE id = ?', (id,))
+    db.commit()
+    
+    return jsonify({'code': 200, 'msg': '删除成功'})
+
+@app.route('/api/admin/invite-codes/batch', methods=['POST'])
+def batch_create_admin_invite_codes():
+    data = request.json
+    count = data.get('count', 10)
+    compute_power = data.get('compute_power', 1000)
+    
+    if count > 100:
+        return jsonify({'code': 400, 'msg': '单次最多创建100个邀请码'}), 400
+    
+    db = get_db()
+    created_codes = []
+    attempts = 0
+    max_attempts = count * 3
+    
+    while len(created_codes) < count and attempts < max_attempts:
+        code = generate_invite_code(8)
+        try:
+            db.execute('INSERT INTO invite_codes (code, compute_power) VALUES (?, ?)',
+                       (code, compute_power))
+            created_codes.append(code)
+        except sqlite3.IntegrityError:
+            pass
+        attempts += 1
+    
+    db.commit()
+    
+    return jsonify({
+        'code': 200,
+        'msg': f'成功创建 {len(created_codes)} 个8位邀请码',
+        'data': {'codes': created_codes}
+    })
+
+@app.route('/api/admin/works', methods=['GET'])
+def get_admin_works():
+    db = get_db()
+    works = db.execute('''
+        SELECT * FROM ip_works
+        ORDER BY created_at DESC
+    ''').fetchall()
+    
+    return jsonify({
+        'code': 200,
+        'data': {
+            'list': [dict(work) for work in works],
+            'total': len(works)
+        }
+    })
+
+@app.route('/api/admin/works', methods=['POST'])
+def create_admin_work():
+    data = request.json
+    
+    title = data.get('title')
+    student_name = data.get('student_name')
+    image = data.get('image')
+    tags = data.get('tags', [])
+    cost = data.get('cost', '')
+    duration = data.get('duration', '')
+    price = data.get('price', '')
+    copyright = data.get('copyright', '归CiliAI所有')
+    introduction = data.get('introduction', '')
+    category = data.get('category', 'IP版权库')
+    
+    if not title or not image:
+        return jsonify({'code': 400, 'msg': '标题和图片不能为空'}), 400
+    
+    if category not in ['IP版权库', '社区分享']:
+        category = 'IP版权库'
+    
+    db = get_db()
+    cursor = db.execute('''
+        INSERT INTO ip_works (title, student_name, image, tags, cost, duration, price, copyright, introduction, category)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (title, student_name, image, json.dumps(tags), cost, duration, price, copyright, introduction, category))
+    db.commit()
+    
+    return jsonify({
+        'code': 200,
+        'msg': '创建成功',
+        'data': {'id': cursor.lastrowid}
+    })
+
+@app.route('/api/admin/works/<int:id>', methods=['PUT'])
+def update_admin_work(id):
+    data = request.json
+    db = get_db()
+    
+    work = db.execute('SELECT * FROM ip_works WHERE id = ?', (id,)).fetchone()
+    if not work:
+        return jsonify({'code': 404, 'msg': '作品不存在'}), 404
+    
+    update_fields = []
+    update_values = []
+    
+    for field in ['title', 'student_name', 'image', 'tags', 'cost', 'duration', 'price', 'copyright', 'introduction', 'category', 'status']:
+        if field in data:
+            if field == 'category' and data[field] not in ['IP版权库', '社区分享']:
+                continue
+            update_fields.append(f'{field} = ?')
+            if field == 'tags':
+                update_values.append(json.dumps(data[field]))
+            else:
+                update_values.append(data[field])
+    
+    if update_fields:
+        update_values.append(id)
+        db.execute(f'UPDATE ip_works SET {", ".join(update_fields)} WHERE id = ?', update_values)
+        db.commit()
+    
+    return jsonify({'code': 200, 'msg': '更新成功'})
+
+@app.route('/api/admin/works/<int:id>', methods=['DELETE'])
+def delete_admin_work(id):
+    db = get_db()
+    
+    work = db.execute('SELECT * FROM ip_works WHERE id = ?', (id,)).fetchone()
+    if not work:
+        return jsonify({'code': 404, 'msg': '作品不存在'}), 404
+    
+    db.execute('DELETE FROM ip_works WHERE id = ?', (id,))
+    db.commit()
+    
+    return jsonify({'code': 200, 'msg': '删除成功'})
+
+@app.route('/api/admin/orders', methods=['GET'])
+def get_admin_orders():
+    db = get_db()
+    orders = db.execute('SELECT * FROM orders ORDER BY created_at DESC').fetchall()
+    
+    orders_list = []
+    for order in orders:
+        order_dict = dict(order)
+        order_dict['contactCount'] = order_dict.get('contact_count', 0)
+        if order_dict.get('tags') and order_dict['tags']:
+            try:
+                order_dict['tags'] = json.loads(order_dict['tags'])
+            except:
+                order_dict['tags'] = []
+        orders_list.append(order_dict)
+    
+    return jsonify({
+        'code': 200,
+        'data': {
+            'list': orders_list,
+            'total': len(orders_list)
+        }
+    })
+
+@app.route('/api/admin/orders', methods=['POST'])
+def create_admin_order():
+    data = request.json
+    
+    if not data or 'title' not in data:
+        return jsonify({'code': 400, 'msg': '缺少订单标题'}), 400
+    
+    title = data.get('title')
+    image = data.get('image', '')
+    qrcode = data.get('qrcode', '')
+    price = data.get('price', '')
+    deadline = data.get('deadline', '')
+    status = data.get('status', 'recruiting')
+    tags = data.get('tags', [])
+    contact_count = data.get('contactCount', 0)
+    
+    if isinstance(tags, list):
+        tags = json.dumps(tags, ensure_ascii=False)
+    
+    db = get_db()
+    cursor = db.execute('''
+        INSERT INTO orders (title, image, qrcode, price, deadline, status, tags, contact_count)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (title, image, qrcode, price, deadline, status, tags, contact_count))
+    db.commit()
+    
+    return jsonify({
+        'code': 200,
+        'msg': '订单创建成功',
+        'data': {'id': cursor.lastrowid}
+    })
+
+@app.route('/api/admin/orders/<int:order_id>', methods=['PUT'])
+def update_admin_order(order_id):
+    data = request.json
+    db = get_db()
+    
+    order = db.execute('SELECT * FROM orders WHERE id = ?', (order_id,)).fetchone()
+    if not order:
+        return jsonify({'code': 404, 'msg': '订单不存在'}), 404
+    
+    title = data.get('title', order['title'])
+    image = data.get('image', order['image'])
+    qrcode = data.get('qrcode', order['qrcode'])
+    price = data.get('price', order['price'])
+    deadline = data.get('deadline', order['deadline'])
+    status = data.get('status', order['status'])
+    tags = data.get('tags', order['tags'])
+    contact_count = data.get('contactCount', order.get('contact_count', 0))
+    
+    if isinstance(tags, list):
+        tags = json.dumps(tags, ensure_ascii=False)
+    
+    db.execute('''
+        UPDATE orders SET 
+            title = ?, image = ?, qrcode = ?, price = ?, deadline = ?, 
+            status = ?, tags = ?, contact_count = ?
+        WHERE id = ?
+    ''', (title, image, qrcode, price, deadline, status, tags, contact_count, order_id))
+    db.commit()
+    
+    return jsonify({'code': 200, 'msg': '订单更新成功'})
+
+@app.route('/api/admin/orders/<int:order_id>', methods=['DELETE'])
+def delete_admin_order(order_id):
+    db = get_db()
+    
+    order = db.execute('SELECT * FROM orders WHERE id = ?', (order_id,)).fetchone()
+    if not order:
+        return jsonify({'code': 404, 'msg': '订单不存在'}), 404
+    
+    db.execute('DELETE FROM orders WHERE id = ?', (order_id,))
+    db.commit()
+    
+    return jsonify({'code': 200, 'msg': '订单删除成功'})
+
+@app.route('/api/admin/users', methods=['GET'])
+def get_admin_users():
+    db = get_db()
+    users = db.execute('''
+        SELECT u.*, 
+               (SELECT COUNT(*) FROM projects WHERE user_id = u.id) as project_count,
+               (SELECT COUNT(*) FROM generation_records WHERE user_id = u.id) as record_count
+        FROM users u
+        ORDER BY u.created_at DESC
+    ''').fetchall()
+    
+    return jsonify({
+        'code': 200,
+        'data': {
+            'list': [dict(user) for user in users],
+            'total': len(users)
+        }
+    })
+
+@app.route('/api/admin/stats', methods=['GET'])
+def get_admin_stats():
+    db = get_db()
+    
+    user_count = db.execute('SELECT COUNT(*) as count FROM users').fetchone()['count']
+    project_count = db.execute('SELECT COUNT(*) as count FROM projects').fetchone()['count']
+    code_count = db.execute('SELECT COUNT(*) as count FROM invite_codes').fetchone()['count']
+    used_code_count = db.execute('SELECT COUNT(*) as count FROM invite_codes WHERE status = "used"').fetchone()['count']
+    
+    return jsonify({
+        'code': 200,
+        'data': {
+            'userCount': user_count,
+            'projectCount': project_count,
+            'codeCount': code_count,
+            'usedCodeCount': used_code_count
+        }
+    })
+
+@app.route('/api/admin/advertisements', methods=['GET'])
+def get_admin_advertisements():
+    try:
+        status = request.args.get('status', 'published')
+        
+        db = get_db()
+        
+        if status == 'all':
+            ads = db.execute('''
+                SELECT * FROM advertisements 
+                ORDER BY sort_order ASC, created_at DESC
+            ''').fetchall()
+        else:
+            ads = db.execute('''
+                SELECT * FROM advertisements 
+                WHERE status = ?
+                ORDER BY sort_order ASC, created_at DESC
+            ''', (status,)).fetchall()
+        
+        ads_list = []
+        for ad in ads:
+            ad_dict = dict(ad)
+            if ad_dict.get('image'):
+                ad_dict['image'] = convert_image_url(ad_dict['image'])
+            ads_list.append(ad_dict)
+        
+        return jsonify({
+            'code': 200,
+            'data': {
+                'list': ads_list,
+                'total': len(ads_list)
+            }
+        })
+    except Exception as e:
+        return jsonify({'code': 500, 'msg': str(e)}), 500
+
+@app.route('/api/admin/advertisements', methods=['POST'])
+def create_admin_advertisement():
+    try:
+        data = request.json
+        
+        if not data:
+            return jsonify({'code': 400, 'msg': '缺少广告数据'}), 400
+        
+        title = data.get('title', '')
+        image = data.get('image', '')
+        link_url = data.get('link_url', '')
+        status = data.get('status', 'draft')
+        sort_order = data.get('sort_order', 0)
+        
+        db = get_db()
+        cursor = db.execute('''
+            INSERT INTO advertisements (title, image, link_url, status, sort_order, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (title, image, link_url, status, sort_order, datetime.now(), datetime.now()))
+        
+        db.commit()
+        
+        return jsonify({
+            'code': 200,
+            'msg': '广告位创建成功',
+            'data': {'id': cursor.lastrowid}
+        })
+    except Exception as e:
+        return jsonify({'code': 500, 'msg': str(e)}), 500
+
+@app.route('/api/admin/advertisements/<int:ad_id>', methods=['PUT'])
+def update_admin_advertisement(ad_id):
+    try:
+        data = request.json
+        
+        if not data:
+            return jsonify({'code': 400, 'msg': '缺少广告数据'}), 400
+        
+        db = get_db()
+        
+        ad = db.execute('SELECT * FROM advertisements WHERE id = ?', (ad_id,)).fetchone()
+        if not ad:
+            return jsonify({'code': 404, 'msg': '广告位不存在'}), 404
+        
+        title = data.get('title', ad['title'])
+        image = data.get('image', ad['image'])
+        link_url = data.get('link_url', ad['link_url'])
+        status = data.get('status', ad['status'])
+        sort_order = data.get('sort_order', ad['sort_order'])
+        
+        db.execute('''
+            UPDATE advertisements 
+            SET title = ?, image = ?, link_url = ?, status = ?, sort_order = ?, updated_at = ?
+            WHERE id = ?
+        ''', (title, image, link_url, status, sort_order, datetime.now(), ad_id))
+        
+        db.commit()
+        
+        return jsonify({
+            'code': 200,
+            'msg': '广告位更新成功'
+        })
+    except Exception as e:
+        return jsonify({'code': 500, 'msg': str(e)}), 500
+
+@app.route('/api/admin/advertisements/<int:ad_id>', methods=['DELETE'])
+def delete_admin_advertisement(ad_id):
+    try:
+        db = get_db()
+        
+        ad = db.execute('SELECT * FROM advertisements WHERE id = ?', (ad_id,)).fetchone()
+        if not ad:
+            return jsonify({'code': 404, 'msg': '广告位不存在'}), 404
+        
+        db.execute('DELETE FROM advertisements WHERE id = ?', (ad_id,))
+        db.commit()
+        
+        return jsonify({
+            'code': 200,
+            'msg': '广告位删除成功'
+        })
+    except Exception as e:
+        return jsonify({'code': 500, 'msg': str(e)}), 500
+
+@app.route('/api/admin/advertisements/<int:ad_id>/publish', methods=['POST'])
+def publish_admin_advertisement(ad_id):
+    try:
+        db = get_db()
+        
+        ad = db.execute('SELECT * FROM advertisements WHERE id = ?', (ad_id,)).fetchone()
+        if not ad:
+            return jsonify({'code': 404, 'msg': '广告位不存在'}), 404
+        
+        db.execute('''
+            UPDATE advertisements 
+            SET status = 'published', updated_at = ?
+            WHERE id = ?
+        ''', (datetime.now(), ad_id))
+        
+        db.commit()
+        
+        return jsonify({
+            'code': 200,
+            'msg': '广告位发布成功'
+        })
+    except Exception as e:
+        return jsonify({'code': 500, 'msg': str(e)}), 500
+
+@app.route('/api/admin/advertisements/<int:ad_id>/unpublish', methods=['POST'])
+def unpublish_admin_advertisement(ad_id):
+    try:
+        db = get_db()
+        
+        ad = db.execute('SELECT * FROM advertisements WHERE id = ?', (ad_id,)).fetchone()
+        if not ad:
+            return jsonify({'code': 404, 'msg': '广告位不存在'}), 404
+        
+        db.execute('''
+            UPDATE advertisements 
+            SET status = 'unpublished', updated_at = ?
+            WHERE id = ?
+        ''', (datetime.now(), ad_id))
+        
+        db.commit()
+        
+        return jsonify({
+            'code': 200,
+            'msg': '广告位下架成功'
+        })
+    except Exception as e:
+        return jsonify({'code': 500, 'msg': str(e)}), 500
+
 if __name__ == '__main__':
     if not VOLC_AK or not VOLC_SK:
         print("WARNING: VOLC_AK or VOLC_SK not found in environment variables!")
