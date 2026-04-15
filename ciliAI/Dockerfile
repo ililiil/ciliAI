@@ -11,6 +11,7 @@ FROM python:3.9-slim
 WORKDIR /app
 COPY --from=frontend /app/dist ./static
 COPY app.py .
+COPY key_manager.py .
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
