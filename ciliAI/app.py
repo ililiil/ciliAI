@@ -430,19 +430,19 @@ def init_db():
         pass
     
     try:
-        cursor.execute('ALTER TABLE projects ADD COLUMN status TEXT DEFAULT "active"')
+        cursor.execute('ALTER TABLE projects ADD COLUMN status VARCHAR(50) DEFAULT "active"')
     except:
         pass
     try:
-        cursor.execute('ALTER TABLE projects ADD COLUMN image_count INTEGER DEFAULT 0')
+        cursor.execute('ALTER TABLE projects ADD COLUMN image_count INT DEFAULT 0')
     except:
         pass
     try:
-        cursor.execute('ALTER TABLE projects ADD COLUMN chat_count INTEGER DEFAULT 0')
+        cursor.execute('ALTER TABLE projects ADD COLUMN chat_count INT DEFAULT 0')
     except:
         pass
     try:
-        cursor.execute('ALTER TABLE projects ADD COLUMN total_power_used INTEGER DEFAULT 0')
+        cursor.execute('ALTER TABLE projects ADD COLUMN total_power_used INT DEFAULT 0')
     except:
         pass
     try:
@@ -450,7 +450,7 @@ def init_db():
     except:
         pass
     try:
-        cursor.execute('ALTER TABLE users ADD COLUMN total_power_used INTEGER DEFAULT 0')
+        cursor.execute('ALTER TABLE users ADD COLUMN total_power_used INT DEFAULT 0')
     except:
         pass
     try:
@@ -458,23 +458,23 @@ def init_db():
     except:
         pass
     try:
-        cursor.execute('ALTER TABLE generation_records ADD COLUMN power_cost INTEGER DEFAULT 0')
+        cursor.execute('ALTER TABLE generation_records ADD COLUMN power_cost INT DEFAULT 0')
     except:
         pass
     try:
-        cursor.execute('ALTER TABLE chat_messages ADD COLUMN power_cost INTEGER DEFAULT 0')
+        cursor.execute('ALTER TABLE chat_messages ADD COLUMN power_cost INT DEFAULT 0')
     except:
         pass
     try:
-        cursor.execute('ALTER TABLE invite_codes ADD COLUMN current_uses INTEGER DEFAULT 0')
+        cursor.execute('ALTER TABLE invite_codes ADD COLUMN current_uses INT DEFAULT 0')
     except:
         pass
     try:
-        cursor.execute('ALTER TABLE invite_codes ADD COLUMN max_uses INTEGER DEFAULT 1')
+        cursor.execute('ALTER TABLE invite_codes ADD COLUMN max_uses INT DEFAULT 1')
     except:
         pass
     try:
-        cursor.execute('ALTER TABLE users ADD COLUMN status TEXT DEFAULT "active"')
+        cursor.execute('ALTER TABLE users ADD COLUMN status VARCHAR(50) DEFAULT "active"')
     except:
         pass
     try:
@@ -487,11 +487,11 @@ def init_db():
         pass
     
     try:
-        cursor.execute('ALTER TABLE ip_works ADD COLUMN is_featured INTEGER DEFAULT 0')
+        cursor.execute('ALTER TABLE ip_works ADD COLUMN is_featured INT DEFAULT 0')
     except:
         pass
     try:
-        cursor.execute('ALTER TABLE ip_works ADD COLUMN sort_order INTEGER DEFAULT 0')
+        cursor.execute('ALTER TABLE ip_works ADD COLUMN sort_order INT DEFAULT 0')
     except:
         pass
     
@@ -723,7 +723,7 @@ def get_user_id_by_invite_code(invite_code):
 
 def create_user(invite_code, compute_power=0):
     db = get_db()
-    cursor = db.execute('INSERT INTO users (invite_code, compute_power) VALUES (%s, %s, %s)', 
+    cursor = db.execute('INSERT INTO users (invite_code, compute_power) VALUES (%s, %s)', 
                        (invite_code, compute_power))
     db.commit()
     return cursor.lastrowid
@@ -2858,7 +2858,7 @@ def create_admin_invite_code():
     
     db = get_db()
     try:
-        db.execute('INSERT INTO invite_codes (code, compute_power) VALUES (%s, %s, %s)', 
+        db.execute('INSERT INTO invite_codes (code, compute_power) VALUES (%s, %s)', 
                    (code.upper(), compute_power))
         db.commit()
         return jsonify({'code': 200, 'msg': '创建成功', 'data': {'code': code.upper()}})
@@ -2916,7 +2916,7 @@ def batch_create_admin_invite_codes():
     while len(created_codes) < count and attempts < max_attempts:
         code = generate_invite_code(code_length, prefix)
         try:
-            db.execute('INSERT INTO invite_codes (code, compute_power) VALUES (%s, %s, %s)',
+            db.execute('INSERT INTO invite_codes (code, compute_power) VALUES (%s, %s)',
                        (code, compute_power))
             created_codes.append(code)
         except sqlite3.IntegrityError:

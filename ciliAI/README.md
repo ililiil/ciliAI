@@ -732,6 +732,14 @@ MIT License
 
 ## 📝 更新日志
 
+### v0.4.5 (2026-04-15)
+- 🔥 **移除 SQLite 支持**：简化代码，仅支持 MySQL 数据库
+- 🐛 **修复 TEXT 默认值问题**：将 chat_sessions 表的 TEXT 字段改为 VARCHAR(255)
+- ✅ **统一 SQL 语法**：所有 SQL 占位符从 `?` 改为 MySQL 标准 `%s`
+- 📦 **代码清理**：删除所有 SQLite/PostgreSQL 兼容代码
+- 🚀 **简化配置**：移除 DB_TYPE 判断，直接使用 MySQL 配置
+- ⚡ **性能优化**：清理冗余导入，提高代码可维护性
+
 ### v0.4.4 (2026-04-15)
 - 🐛 **修复 MySQL 兼容性问题**：所有表的创建语句现在都支持 MySQL 和 SQLite 两种数据库
 - ✨ **添加 MySQL 完整支持**：为 projects、generation_records、chat_messages、compute_power_logs、invite_codes、ip_works、orders、advertisements、chat_sessions 表添加 MySQL 语法支持
