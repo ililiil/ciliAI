@@ -1260,6 +1260,12 @@ const sendMessage = async () => {
     console.log('✅ 消息发送成功！')
     console.log('==================================')
   } catch (error) {
+    if (error.name === 'AbortError' || error.message.includes('请求超时') || error.message.includes('abort')) {
+      console.warn('⚠️ 请求被中止（非错误，可能是重复请求或超时）:', error.message)
+      isSending.value = false
+      return
+    }
+    
     console.error('❌ 发送消息失败:', error)
     console.error('错误信息:', error.message)
     
@@ -1404,21 +1410,19 @@ const callDifyAPI = async (query, conversationId, people, onChunk) => {
     }
   } catch (error) {
     clearTimeout(timeout)
+    
+    if (error.name === 'AbortError') {
+      console.warn('⚠️ Dify API 请求被中止（非错误，可能是重复请求或超时）')
+      throw error
+    }
+    
     console.error('❌ Dify API 网络错误:', error)
     console.error('错误类型:', error.name)
     console.error('错误消息:', error.message)
     console.error('错误堆栈:', error.stack)
     
-    if (error.name === 'AbortError') {
-      throw new Error('请求超时（180秒），请重试。如果问题持续存在，请检查网络连接。')
-    }
-    
     if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
       throw new Error(`无法连接到服务器，请检查网络连接。错误详情: ${error.message}`)
-    }
-    
-    if (error.message.includes('abort')) {
-      throw new Error('请求被中止，可能是网络问题或服务器无响应，请重试。')
     }
     
     throw new Error(`网络连接失败: ${error.message}`)
