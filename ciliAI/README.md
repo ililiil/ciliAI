@@ -732,6 +732,17 @@ MIT License
 
 ## 📝 更新日志
 
+### v0.4.9 (2026-04-15)
+- 🐛 **修复 Dockerfile 警告**：统一 FROM 和 AS 关键字大小写
+- ✅ **优化构建配置**：修复 FromAsCasing 警告，提升 Docker 构建规范
+
+### v0.4.7 (2026-04-15)
+- 🐛 **修复 KeyError: 0 错误**：修复 pymysql fetchone() 结果访问错误
+- ✅ **修复问题根源**：cursor.fetchone()[0] 改为 result['count'] if result else 0
+- ✅ **全面代码检查**：添加 check_fetchone_patterns.py 检查工具
+- ✅ **本地测试验证**：Python 语法、fetchone 模式、MySQL 兼容性全部通过
+- 📄 **添加测试报告**：生成 LOCAL_TEST_REPORT.md 本地测试报告
+
 ### v0.4.6 (2026-04-15)
 - ✅ **Docker 部署配置优化**：移除 SQLite 数据库文件挂载
 - ✅ **环境变量配置更新**：添加 MySQL 配置说明和注释模板
