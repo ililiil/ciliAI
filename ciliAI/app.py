@@ -571,7 +571,8 @@ def init_db():
         pass
     
     cursor.execute('SELECT COUNT(*) as count FROM advertisements')
-    ads_count = cursor.fetchone()[0]
+    result = cursor.fetchone()
+    ads_count = result['count'] if result else 0
     
     if ads_count == 0:
         default_ads = [
@@ -617,7 +618,8 @@ def init_db():
             pass
     
     cursor.execute('SELECT COUNT(*) as count FROM ip_works')
-    ip_works_count = cursor.fetchone()[0]
+    result = cursor.fetchone()
+    ip_works_count = result['count'] if result else 0
     
     if ip_works_count == 0:
         default_ip_works = [
