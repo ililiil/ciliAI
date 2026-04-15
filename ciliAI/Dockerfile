@@ -14,7 +14,7 @@ COPY --from=frontend /app/dist ./dist
 COPY app.py .
 COPY key_manager.py .
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt --timeout 120 --retries 5
 
 EXPOSE 5001
 CMD ["python", "app.py"]

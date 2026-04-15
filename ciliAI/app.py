@@ -602,9 +602,9 @@ def init_db():
         for ad in default_ads:
             try:
                 cursor.execute('''
-                    INSERT INTO advertisements (title, image, link_url, status, sort_order, created_at, updated_at)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                ''', (ad['title'], ad['image'], ad['link_url'], ad['status'], ad['sort_order'], datetime.now(), datetime.now()))
+                    INSERT INTO advertisements (title, image, link_url, status, sort_order)
+                    VALUES (%s, %s, %s, %s, %s)
+                ''', (ad['title'], ad['image'], ad['link_url'], ad['status'], ad['sort_order']))
             except Exception as e:
                 logger.error(f"Error inserting default ad: {e}")
     
@@ -703,15 +703,15 @@ def init_db():
                 sort_order = idx if idx < 3 else 999
                 cursor.execute('''
                     INSERT INTO ip_works (title, student_name, image, tags, cost, duration, price, copyright, introduction, category, is_featured, sort_order)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ''', (work['title'], work['student_name'], work['image'], work['tags'], work['cost'], 
                      work['duration'], work['price'], work['copyright'], work['introduction'], work['category'],
                      is_featured, sort_order))
             except Exception as e:
                 logger.error(f"Error inserting default ip work: {e}")
     
-    db.commit()
-    db.close()
+    conn.commit()
+    conn.close()
 
 init_db()
 

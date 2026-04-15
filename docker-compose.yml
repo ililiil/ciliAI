@@ -1,0 +1,86 @@
+version: '3.8'
+
+services:
+  # MySQL 数据库服务
+  mysql:
+    image: mysql:8.0
+    container_name: ciliai-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: ciliai
+      MYSQL_USER: ciliai
+      MYSQL_PASSWORD: ciliai_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: always
+    networks:
+      - ciliai-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 后端API服务
+  backend:
+    build:
+      context: ./ciliAI
+      dockerfile: Dockerfile
+    container_name: ciliai-backend
+    ports:
+      - "5001:5001"
+    environment:
+      VOLC_AK: ${VOLC_AK}
+      VOLC_SK: ${VOLC_SK}
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ciliai
+      DB_USER: ciliai
+      DB_PASSWORD: ciliai_password
+      FLASK_DEBUG: True
+      FLASK_PORT: 5001
+    volumes:
+      - ./ciliAI/uploads:/app/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: always
+    networks:
+      - ciliai-network
+
+  # 用户端前端
+  frontend:
+    build:
+      context: ./ciliAI
+      dockerfile: Dockerfile.frontend
+    container_name: ciliai-frontend
+    ports:
+      - "3003:3003"
+    depends_on:
+      - backend
+    restart: always
+    networks:
+      - ciliai-network
+
+  # 管理后台
+  admin:
+    build:
+      context: ./ruoyi
+      dockerfile: Dockerfile
+    container_name: ciliai-admin
+    ports:
+      - "3002:3002"
+    depends_on:
+      - backend
+    restart: always
+    networks:
+      - ciliai-network
+
+networks:
+  ciliai-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
