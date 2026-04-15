@@ -1,4 +1,5 @@
 import os
+import io
 import time
 import json
 import logging
@@ -7,7 +8,7 @@ import hashlib
 import uuid
 from datetime import datetime
 import requests as req_lib
-from flask import Flask, request, jsonify, send_from_directory, g, Response, stream_with_context
+from flask import Flask, request, jsonify, send_from_directory, g, Response, stream_with_context, send_file
 from flask_cors import CORS
 from dotenv import load_dotenv
 from volcengine.visual.VisualService import VisualService
@@ -613,6 +614,23 @@ def index():
 @app.route('/uploads/<path:filename>')
 def serve_upload(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
+
+@app.route('/placeholder.png')
+def serve_placeholder():
+    """提供占位图片"""
+    # 返回一个简单的 SVG 占位图
+    svg = '''<svg width="400" height="225" xmlns="http://www.w3.org/2000/svg">
+        <rect width="400" height="225" fill="#cccccc"/>
+        <text x="200" y="112.5" font-family="Arial" font-size="24" fill="#999999" 
+              text-anchor="middle" dominant-baseline="middle">暂无图片</text>
+    </svg>'''
+    
+    return send_file(
+        io.BytesIO(svg.encode('utf-8')),
+        mimetype='image/svg+xml',
+        as_attachment=False,
+        download_name='placeholder.svg'
+    )
 
 @app.route('/dify-api/chat-messages', methods=['POST'])
 def dify_proxy():
@@ -2138,6 +2156,11 @@ def create_order():
         power_subsidy = data.get('power_subsidy', 0)
         period = data.get('period', 0)
         
+        invite_code = data.get('invite_code')
+        user_id = None
+        if invite_code:
+            user_id = get_or_create_user(invite_code)
+        
         if isinstance(tags, list):
             tags = json.dumps(tags, ensure_ascii=False)
         
@@ -2145,9 +2168,9 @@ def create_order():
         cursor = conn.cursor()
         
         cursor.execute('''
-            INSERT INTO orders (title, image, qrcode, price, deadline, status, tags, description, contact_info, min_profit, share_ratio, power_subsidy, period)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (title, image, qrcode, price, deadline, status, tags, description, contact_info, min_profit, share_ratio, power_subsidy, period))
+            INSERT INTO orders (user_id, title, image, qrcode, price, deadline, status, tags, description, contact_info, min_profit, share_ratio, power_subsidy, period)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (user_id, title, image, qrcode, price, deadline, status, tags, description, contact_info, min_profit, share_ratio, power_subsidy, period))
         
         order_id = cursor.lastrowid
         conn.commit()
@@ -2681,6 +2704,11 @@ def create_admin_work():
     introduction = data.get('introduction', '')
     category = data.get('category', 'IP版权库')
     
+    invite_code = data.get('invite_code')
+    user_id = None
+    if invite_code:
+        user_id = get_or_create_user(invite_code)
+    
     if not title or not image:
         return jsonify({'code': 400, 'msg': '标题和图片不能为空'}), 400
     
@@ -2689,9 +2717,9 @@ def create_admin_work():
     
     db = get_db()
     cursor = db.execute('''
-        INSERT INTO ip_works (title, student_name, image, tags, cost, duration, price, copyright, introduction, category)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (title, student_name, image, json.dumps(tags), cost, duration, price, copyright, introduction, category))
+        INSERT INTO ip_works (user_id, title, student_name, image, tags, cost, duration, price, copyright, introduction, category)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (user_id, title, student_name, image, json.dumps(tags), cost, duration, price, copyright, introduction, category))
     db.commit()
     
     return jsonify({

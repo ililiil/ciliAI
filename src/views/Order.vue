@@ -267,8 +267,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, inject } from 'vue'
 import { Upload } from '@element-plus/icons-vue'
+
+const inviteCode = inject('currentInviteCode')
 
 // 标签选项
 const tabs = [
@@ -391,9 +393,9 @@ watch(activeTab, () => {
 // 处理图片加载失败
 const handleImageError = (e, order) => {
   console.warn('图片加载失败:', order.image)
-  // 如果是带缓存破坏参数的 URL，尝试使用原始 URL
-  if (e.target.src !== order.image) {
-    e.target.src = order.image
+  // 使用占位图片，避免无限循环
+  if (e.target.src !== '/placeholder.png') {
+    e.target.src = '/placeholder.png'
   }
 }
 
@@ -513,6 +515,7 @@ const handleSubmit = async () => {
   }
   
   const newOrder = {
+    invite_code: inviteCode.value,
     title: publishForm.value.title,
     image: uploadedCoverUrl.value,
     qrcode: uploadedQrcodeUrl.value || `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=weixin://wxid_${Date.now()}`,
