@@ -4,3 +4,4 @@ python-dotenv
 volcengine
 requests
 Pillow
+pymysql
