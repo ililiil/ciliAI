@@ -732,6 +732,11 @@ MIT License
 
 ## 📝 更新日志
 
+### v0.4.4 (2026-04-15)
+- 🐛 **修复 MySQL 兼容性问题**：所有表的创建语句现在都支持 MySQL 和 SQLite 两种数据库
+- ✨ **添加 MySQL 完整支持**：为 projects、generation_records、chat_messages、compute_power_logs、invite_codes、ip_works、orders、advertisements、chat_sessions 表添加 MySQL 语法支持
+- 📝 **优化字段类型**：MySQL 使用 INT 替代 INTEGER，VARCHAR 替代 TEXT，提高数据库性能
+
 ### v0.4.3 (2026-04-15)
 - 🐛 **修复依赖缺失**：添加 pymysql 到 requirements.txt
 - ✨ **完善部署配置**：确保所有数据库驱动可用
