@@ -22,7 +22,17 @@ CORS(app)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DATABASE = 'fangtang.db'
+DB_TYPE = os.getenv('DB_TYPE', 'sqlite')
+if DB_TYPE == 'sqlite':
+    DB_PATH = os.getenv('DB_PATH', 'fangtang.db')
+    DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), DB_PATH)
+elif DB_TYPE == 'mysql':
+    DATABASE = os.getenv('DB_TYPE') + '://' + os.getenv('DB_USER', 'root') + ':' + os.getenv('DB_PASSWORD', '') + '@' + os.getenv('DB_HOST', 'localhost') + ':' + os.getenv('DB_PORT', '3306') + '/' + os.getenv('DB_NAME', 'ciliai')
+elif DB_TYPE == 'postgres':
+    DATABASE = os.getenv('DB_TYPE') + '://' + os.getenv('DB_USER', 'postgres') + ':' + os.getenv('DB_PASSWORD', '') + '@' + os.getenv('DB_HOST', 'localhost') + ':' + os.getenv('DB_PORT', '5432') + '/' + os.getenv('DB_NAME', 'ciliai')
+
+logger.info(f"数据库类型: {DB_TYPE}")
+logger.info(f"数据库路径: {DATABASE}")
 
 ADMIN_BASE_URL = os.getenv('ADMIN_BASE_URL', 'http://localhost:5002')
 
