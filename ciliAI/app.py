@@ -611,7 +611,7 @@ def init_db():
                      "66666666", "77777777", "88888888", "99999999", "00000000"]
     for code in default_codes:
         try:
-            cursor.execute('INSERT OR IGNORE INTO invite_codes (code, compute_power) VALUES (%s, %s, %s)', 
+            cursor.execute('INSERT IGNORE INTO invite_codes (code, compute_power) VALUES (%s, %s)', 
                           (code, 1000))
         except:
             pass
