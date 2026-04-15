@@ -468,8 +468,8 @@ def init_db():
             except Exception as e:
                 logger.error(f"Error inserting default ad: {e}")
     
-    default_codes = ["11111111", "22222222", "33333333", "44444444", "55555555",
-                     "66666666", "77777777", "88888888", "99999999", "00000000"]
+    default_codes = ["111111", "222222", "333333", "444444", "555555", 
+                     "666666", "777777", "888888", "999999", "000000"]
     for code in default_codes:
         try:
             cursor.execute('INSERT OR IGNORE INTO invite_codes (code, compute_power) VALUES (?, ?)', 
@@ -654,29 +654,6 @@ def get_visual_service():
     service.set_sk(key_info['sk'])
     logger.info(f"使用密钥组 {key_info['index']} (AK: {key_info['ak'][:10]}...)")
     return service
-
-def generate_invite_code(length=8, prefix=''):
-    """生成邀请码
-    
-    Args:
-        length: 总长度（包括前缀）
-        prefix: 前缀字符串
-    """
-    import random
-    import string
-    
-    chars = string.ascii_uppercase + string.digits
-    chars = chars.replace('O', '').replace('0', '').replace('I', '').replace('1', '')
-    
-    code_length = max(length - len(prefix), 4)
-    random_part = ''.join(random.choices(chars, k=code_length))
-    
-    full_code = f"{prefix}{random_part}" if prefix else random_part
-    
-    if len(full_code) < length:
-        full_code = f"{prefix}{random_part}{'A' * (length - len(prefix) - code_length)}"
-    
-    return full_code.upper()
 
 @app.route('/')
 def index():
@@ -2669,8 +2646,8 @@ def create_admin_invite_code():
     if not code:
         code = generate_invite_code(8)
     
-    if len(code) < 4 or len(code) > 20:
-        return jsonify({'code': 400, 'msg': '邀请码长度必须在4-20位之间'}), 400
+    if len(code) != 8:
+        return jsonify({'code': 400, 'msg': '邀请码必须为8位字符'}), 400
     
     db = get_db()
     try:
@@ -2717,7 +2694,6 @@ def batch_create_admin_invite_codes():
     data = request.json
     count = data.get('count', 10)
     compute_power = data.get('compute_power', 1000)
-    prefix = data.get('prefix', '').upper().strip()
     
     if count > 100:
         return jsonify({'code': 400, 'msg': '单次最多创建100个邀请码'}), 400
@@ -2727,10 +2703,8 @@ def batch_create_admin_invite_codes():
     attempts = 0
     max_attempts = count * 3
     
-    code_length = 8 + len(prefix)
-    
     while len(created_codes) < count and attempts < max_attempts:
-        code = generate_invite_code(code_length, prefix)
+        code = generate_invite_code(8)
         try:
             db.execute('INSERT INTO invite_codes (code, compute_power) VALUES (?, ?)',
                        (code, compute_power))
@@ -2743,7 +2717,7 @@ def batch_create_admin_invite_codes():
     
     return jsonify({
         'code': 200,
-        'msg': f'成功创建 {len(created_codes)} 个邀请码' + (f'（前缀：{prefix}）' if prefix else ''),
+        'msg': f'成功创建 {len(created_codes)} 个8位邀请码',
         'data': {'codes': created_codes}
     })
 
