@@ -261,7 +261,7 @@ def close_connection(exception):
 def init_db():
     import pymysql
     conn = pymysql.connect(**DATABASE)
-    cursor = conn.cursor()
+    
     
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
@@ -707,8 +707,8 @@ def init_db():
             except Exception as e:
                 logger.error(f"Error inserting default ip work: {e}")
     
-    conn.commit()
-    conn.close()
+    db.commit()
+    db.close()
 
 init_db()
 
@@ -2118,14 +2118,13 @@ DEFAULT_COVER_IMAGES = [
 @app.route('/api/works', methods=['GET'])
 def get_public_works():
     try:
-        conn = sqlite3.connect(DATABASE, check_same_thread=False)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
+        db = get_db()
+                
         
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='ip_works'")
         if not cursor.fetchone():
             logger.error("Table 'ip_works' does not exist in database")
-            conn.close()
+            db.close()
             return jsonify({
                 'code': 404,
                 'msg': 'IP works table does not exist. Please restart the application to initialize the database.',
@@ -2159,7 +2158,7 @@ def get_public_works():
             }
         }
         
-        conn.close()
+        db.close()
         return jsonify(result)
     except Exception as e:
         logger.error(f"Error fetching works: {str(e)}")
@@ -2260,20 +2259,20 @@ def update_work_image(work_id):
         if not is_valid_image_url(image_url):
             return jsonify({'status': 'error', 'message': '无效的图片URL'}), 400
         
-        conn = sqlite3.connect(DATABASE, check_same_thread=False)
-        cursor = conn.cursor()
+        db = get_db()
+        
         
         cursor.execute('SELECT * FROM ip_works WHERE id = ?', (work_id,))
         work = cursor.fetchone()
         
         if not work:
-            conn.close()
+            db.close()
             return jsonify({'status': 'error', 'message': '作品不存在'}), 404
         
         cursor.execute('UPDATE ip_works SET image = ?, updated_at = ? WHERE id = ?', 
                       (image_url, datetime.now(), work_id))
-        conn.commit()
-        conn.close()
+        db.commit()
+        db.close()
         
         return jsonify({
             'status': 'success',
@@ -2288,9 +2287,8 @@ def update_work_image(work_id):
 def get_orders():
     """获取所有订单"""
     try:
-        conn = sqlite3.connect(DATABASE, check_same_thread=False)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
+        db = get_db()
+                
         
         cursor.execute('''
             SELECT * FROM orders 
@@ -2323,7 +2321,7 @@ def get_orders():
             
             orders_list.append(order_dict)
         
-        conn.close()
+        db.close()
         
         return jsonify({
             'status': 'success',
@@ -2340,9 +2338,8 @@ def get_orders():
 def get_featured_works():
     """获取推荐作品，用于首页广告位"""
     try:
-        conn = sqlite3.connect(DATABASE, check_same_thread=False)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
+        db = get_db()
+                
         
         cursor.execute('''
             SELECT * FROM ip_works
@@ -2375,7 +2372,7 @@ def get_featured_works():
             work_dict['image'] = image_url
             works_list.append(work_dict)
         
-        conn.close()
+        db.close()
         
         return jsonify({
             'code': 200,
@@ -2419,8 +2416,8 @@ def create_order():
         if isinstance(tags, list):
             tags = json.dumps(tags, ensure_ascii=False)
         
-        conn = sqlite3.connect(DATABASE, check_same_thread=False)
-        cursor = conn.cursor()
+        db = get_db()
+        
         
         cursor.execute('''
             INSERT INTO orders (user_id, title, image, qrcode, price, deadline, status, tags, description, contact_info, min_profit, share_ratio, power_subsidy, period)
@@ -2428,8 +2425,8 @@ def create_order():
         ''', (user_id, title, image, qrcode, price, deadline, status, tags, description, contact_info, min_profit, share_ratio, power_subsidy, period))
         
         order_id = cursor.lastrowid
-        conn.commit()
-        conn.close()
+        db.commit()
+        db.close()
         
         return jsonify({
             'status': 'success',
@@ -2446,14 +2443,14 @@ def update_order(order_id):
     try:
         data = request.get_json()
         
-        conn = sqlite3.connect(DATABASE, check_same_thread=False)
-        cursor = conn.cursor()
+        db = get_db()
+        
         
         cursor.execute('SELECT * FROM orders WHERE id = ?', (order_id,))
         order = cursor.fetchone()
         
         if not order:
-            conn.close()
+            db.close()
             return jsonify({'status': 'error', 'message': '订单不存在'}), 404
         
         title = data.get('title', order['title'])
@@ -2483,8 +2480,8 @@ def update_order(order_id):
         ''', (title, image, qrcode, price, deadline, status, tags, description, contact_info,
               min_profit, share_ratio, power_subsidy, period, datetime.now(), order_id))
         
-        conn.commit()
-        conn.close()
+        db.commit()
+        db.close()
         
         return jsonify({
             'status': 'success',
@@ -2498,19 +2495,19 @@ def update_order(order_id):
 def delete_order(order_id):
     """删除订单"""
     try:
-        conn = sqlite3.connect(DATABASE, check_same_thread=False)
-        cursor = conn.cursor()
+        db = get_db()
+        
         
         cursor.execute('SELECT * FROM orders WHERE id = ?', (order_id,))
         order = cursor.fetchone()
         
         if not order:
-            conn.close()
+            db.close()
             return jsonify({'status': 'error', 'message': '订单不存在'}), 404
         
         cursor.execute('DELETE FROM orders WHERE id = ?', (order_id,))
-        conn.commit()
-        conn.close()
+        db.commit()
+        db.close()
         
         return jsonify({
             'status': 'success',
@@ -2526,9 +2523,8 @@ def get_advertisements():
     try:
         status = request.args.get('status', 'published')
         
-        conn = sqlite3.connect(DATABASE, check_same_thread=False)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
+        db = get_db()
+                
         
         if status == 'all':
             cursor.execute('''
@@ -2550,7 +2546,7 @@ def get_advertisements():
                 ad_dict['image'] = convert_image_url(ad_dict['image'])
             ads_list.append(ad_dict)
         
-        conn.close()
+        db.close()
         
         return jsonify({
             'status': 'success',
@@ -2578,8 +2574,8 @@ def create_advertisement():
         status = data.get('status', 'draft')
         sort_order = data.get('sort_order', 0)
         
-        conn = sqlite3.connect(DATABASE, check_same_thread=False)
-        cursor = conn.cursor()
+        db = get_db()
+        
         
         cursor.execute('''
             INSERT INTO advertisements (title, image, link_url, status, sort_order, created_at, updated_at)
@@ -2587,8 +2583,8 @@ def create_advertisement():
         ''', (title, image, link_url, status, sort_order, datetime.now(), datetime.now()))
         
         ad_id = cursor.lastrowid
-        conn.commit()
-        conn.close()
+        db.commit()
+        db.close()
         
         return jsonify({
             'status': 'success',
@@ -2608,14 +2604,14 @@ def update_advertisement(ad_id):
         if not data:
             return jsonify({'status': 'error', 'message': '缺少广告数据'}), 400
         
-        conn = sqlite3.connect(DATABASE, check_same_thread=False)
-        cursor = conn.cursor()
+        db = get_db()
+        
         
         cursor.execute('SELECT * FROM advertisements WHERE id = ?', (ad_id,))
         ad = cursor.fetchone()
         
         if not ad:
-            conn.close()
+            db.close()
             return jsonify({'status': 'error', 'message': '广告位不存在'}), 404
         
         title = data.get('title', ad['title'])
@@ -2630,8 +2626,8 @@ def update_advertisement(ad_id):
             WHERE id = ?
         ''', (title, image, link_url, status, sort_order, datetime.now(), ad_id))
         
-        conn.commit()
-        conn.close()
+        db.commit()
+        db.close()
         
         return jsonify({
             'status': 'success',
@@ -2645,19 +2641,19 @@ def update_advertisement(ad_id):
 def delete_advertisement(ad_id):
     """删除广告位"""
     try:
-        conn = sqlite3.connect(DATABASE, check_same_thread=False)
-        cursor = conn.cursor()
+        db = get_db()
+        
         
         cursor.execute('SELECT * FROM advertisements WHERE id = ?', (ad_id,))
         ad = cursor.fetchone()
         
         if not ad:
-            conn.close()
+            db.close()
             return jsonify({'status': 'error', 'message': '广告位不存在'}), 404
         
         cursor.execute('DELETE FROM advertisements WHERE id = ?', (ad_id,))
-        conn.commit()
-        conn.close()
+        db.commit()
+        db.close()
         
         return jsonify({
             'status': 'success',
@@ -2671,14 +2667,14 @@ def delete_advertisement(ad_id):
 def publish_advertisement(ad_id):
     """发布广告位"""
     try:
-        conn = sqlite3.connect(DATABASE, check_same_thread=False)
-        cursor = conn.cursor()
+        db = get_db()
+        
         
         cursor.execute('SELECT * FROM advertisements WHERE id = ?', (ad_id,))
         ad = cursor.fetchone()
         
         if not ad:
-            conn.close()
+            db.close()
             return jsonify({'status': 'error', 'message': '广告位不存在'}), 404
         
         cursor.execute('''
@@ -2687,8 +2683,8 @@ def publish_advertisement(ad_id):
             WHERE id = ?
         ''', (datetime.now(), ad_id))
         
-        conn.commit()
-        conn.close()
+        db.commit()
+        db.close()
         
         return jsonify({
             'status': 'success',
@@ -2702,14 +2698,14 @@ def publish_advertisement(ad_id):
 def unpublish_advertisement(ad_id):
     """下架广告位"""
     try:
-        conn = sqlite3.connect(DATABASE, check_same_thread=False)
-        cursor = conn.cursor()
+        db = get_db()
+        
         
         cursor.execute('SELECT * FROM advertisements WHERE id = ?', (ad_id,))
         ad = cursor.fetchone()
         
         if not ad:
-            conn.close()
+            db.close()
             return jsonify({'status': 'error', 'message': '广告位不存在'}), 404
         
         cursor.execute('''
@@ -2718,8 +2714,8 @@ def unpublish_advertisement(ad_id):
             WHERE id = ?
         ''', (datetime.now(), ad_id))
         
-        conn.commit()
-        conn.close()
+        db.commit()
+        db.close()
         
         return jsonify({
             'status': 'success',
@@ -2740,8 +2736,8 @@ def reorder_advertisements():
         
         orders = data['orders']
         
-        conn = sqlite3.connect(DATABASE, check_same_thread=False)
-        cursor = conn.cursor()
+        db = get_db()
+        
         
         for order_data in orders:
             ad_id = order_data.get('id')
@@ -2754,8 +2750,8 @@ def reorder_advertisements():
                     WHERE id = ?
                 ''', (sort_order, datetime.now(), ad_id))
         
-        conn.commit()
-        conn.close()
+        db.commit()
+        db.close()
         
         return jsonify({
             'status': 'success',
@@ -2862,7 +2858,7 @@ def create_admin_invite_code():
                    (code.upper(), compute_power))
         db.commit()
         return jsonify({'code': 200, 'msg': '创建成功', 'data': {'code': code.upper()}})
-    except sqlite3.IntegrityError:
+    except pymysql.IntegrityError:
         return jsonify({'code': 400, 'msg': '邀请码已存在'}), 400
 
 @app.route('/api/admin/invite-codes/<int:id>', methods=['PUT'])
@@ -2919,7 +2915,7 @@ def batch_create_admin_invite_codes():
             db.execute('INSERT INTO invite_codes (code, compute_power) VALUES (%s, %s)',
                        (code, compute_power))
             created_codes.append(code)
-        except sqlite3.IntegrityError:
+        except pymysql.IntegrityError:
             pass
         attempts += 1
     
