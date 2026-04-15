@@ -6,6 +6,7 @@ import logging
 import sqlite3
 import hashlib
 import uuid
+import base64
 from datetime import datetime
 import requests as req_lib
 from flask import Flask, request, jsonify, send_from_directory, g, Response, stream_with_context, send_file
@@ -13,6 +14,12 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 from volcengine.visual.VisualService import VisualService
 from key_manager import key_manager
+
+try:
+    from PIL import Image
+except ImportError:
+    logger.error("Pillow library is required for image processing. Please install it with: pip install Pillow")
+    Image = None
 
 load_dotenv()
 
@@ -73,6 +80,175 @@ def convert_image_url(image_url):
         return f"http://localhost:5001{image_url}"
 
     return image_url
+
+def convert_rgba_to_grayscale_mask(base64_image):
+    """
+    将RGBA格式的mask图像转换为单通道灰度图
+    
+    参数:
+        base64_image: 原始图像的base64编码（可能是PNG或带alpha通道的格式）
+    
+    返回:
+        转换后的单通道灰度图base64编码
+    
+    说明:
+        - 白色区域(255) = 待重绘区域
+        - 黑色区域(0) = 保持原样
+    """
+    if Image is None:
+        raise RuntimeError("Pillow library is not installed. Cannot process images.")
+    
+    try:
+        logger.info(f"开始转换mask，输入base64长度: {len(base64_image)}")
+        
+        # 移除base64前缀（如果有）
+        if ',' in base64_image:
+            logger.info("检测到base64带前缀，移除前缀")
+            base64_image = base64_image.split(',')[1]
+        
+        logger.info(f"解码base64，长度: {len(base64_image)}")
+        
+        # 解码base64
+        image_data = base64.b64decode(base64_image)
+        logger.info(f"解码后数据大小: {len(image_data)} bytes")
+        
+        # 用PIL打开图像
+        img = Image.open(io.BytesIO(image_data))
+        logger.info(f"图像打开成功: 尺寸={img.size}, 模式={img.mode}, 格式={img.format}")
+        
+        # 转换为RGB模式（如果是RGBA或其他模式）
+        original_mode = img.mode
+        if img.mode != 'RGB':
+            logger.info(f"转换模式从 {img.mode} 到 RGB")
+            img = img.convert('RGB')
+        
+        logger.info(f"RGB转换完成: 尺寸={img.size}, 模式={img.mode}")
+        
+        # 将RGB转换为灰度图（L模式）
+        # PIL的convert('L')会将图像转换为单通道灰度
+        # 白色像素(255,255,255) -> 灰度值255（重绘区域）
+        # 黑色像素(0,0,0) -> 灰度值0（保持区域）
+        gray_img = img.convert('L')
+        logger.info(f"灰度转换完成: 尺寸={gray_img.size}, 模式={gray_img.mode}")
+        
+        # 检查灰度图的像素值范围
+        extrema = gray_img.getextrema()
+        logger.info(f"灰度图像素值范围: 最小值={extrema[0]}, 最大值={extrema[1]}")
+        
+        # 转换回base64
+        output_buffer = io.BytesIO()
+        # 使用PNG格式保存（支持灰度图）
+        gray_img.save(output_buffer, format='PNG')
+        output_base64 = base64.b64encode(output_buffer.getvalue()).decode('utf-8')
+        
+        logger.info(f"Mask转换成功: {original_mode} -> {gray_img.mode}, 输出base64长度: {len(output_base64)}")
+        return output_base64
+        
+    except Exception as e:
+        logger.error(f"Mask转换失败: {str(e)}")
+        import traceback
+        logger.error(f"详细错误: {traceback.format_exc()}")
+        raise RuntimeError(f"Mask图像转换失败: {str(e)}")
+
+def resize_image_to_fit_api_requirements(base64_image, max_size_mb=4.0, max_dimension=4096):
+    """
+    调整图片大小和压缩以符合API要求
+    
+    参数:
+        base64_image: 图片的base64编码
+        max_size_mb: 最大文件大小（MB），默认4.0（留点余量）
+        max_dimension: 最大尺寸（宽或高），默认4096
+    
+    返回:
+        调整后的图片base64编码
+    
+    说明:
+        - API要求：最大4.7MB，最大分辨率4096x4096
+        - 使用JPEG格式以减小文件大小
+    """
+    if Image is None:
+        raise RuntimeError("Pillow library is not installed. Cannot process images.")
+    
+    try:
+        logger.info(f"开始调整图片大小，输入base64长度: {len(base64_image)}")
+        
+        # 移除base64前缀（如果有）
+        if ',' in base64_image:
+            base64_image = base64_image.split(',')[1]
+        
+        # 解码base64
+        image_data = base64.b64decode(base64_image)
+        logger.info(f"解码后数据大小: {len(image_data)} bytes ({len(image_data)/1024/1024:.2f} MB)")
+        
+        # 用PIL打开图像
+        img = Image.open(io.BytesIO(image_data))
+        logger.info(f"原始图像: 尺寸={img.size}, 模式={img.mode}, 格式={img.format}")
+        
+        original_width, original_height = img.size
+        
+        # 调整大小
+        needs_resize = False
+        if original_width > max_dimension or original_height > max_dimension:
+            logger.info(f"图像尺寸超过限制，需要缩放")
+            needs_resize = True
+            # 计算缩放比例
+            ratio = min(max_dimension / original_width, max_dimension / original_height)
+            new_width = int(original_width * ratio)
+            new_height = int(original_height * ratio)
+            img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            logger.info(f"图像已缩放: {original_width}x{original_height} -> {new_width}x{new_height}")
+        
+        # 转换为RGB（如果是RGBA或其他模式）
+        if img.mode not in ('RGB', 'JPEG'):
+            img = img.convert('RGB')
+        
+        # 压缩到目标大小
+        max_size_bytes = int(max_size_mb * 1024 * 1024)
+        
+        # 尝试不同的质量等级找到最佳压缩率
+        quality = 95
+        min_quality = 60
+        
+        output_buffer = io.BytesIO()
+        img.save(output_buffer, format='JPEG', quality=quality, optimize=True)
+        current_size = len(output_buffer.getvalue())
+        logger.info(f"初始压缩(quality={quality}): {current_size} bytes ({current_size/1024/1024:.2f} MB)")
+        
+        # 如果还是太大，逐步降低质量
+        while current_size > max_size_bytes and quality > min_quality:
+            quality -= 5
+            output_buffer = io.BytesIO()
+            img.save(output_buffer, format='JPEG', quality=quality, optimize=True)
+            current_size = len(output_buffer.getvalue())
+            logger.info(f"调整质量到 {quality}: {current_size} bytes ({current_size/1024/1024:.2f} MB)")
+        
+        # 如果JPEG还是太大，缩小图片尺寸
+        while current_size > max_size_bytes:
+            old_width, old_height = img.size
+            new_width = int(old_width * 0.8)
+            new_height = int(old_height * 0.8)
+            img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+            logger.info(f"缩小图像: {old_width}x{old_height} -> {new_width}x{new_height}")
+            
+            output_buffer = io.BytesIO()
+            img.save(output_buffer, format='JPEG', quality=quality, optimize=True)
+            current_size = len(output_buffer.getvalue())
+            logger.info(f"缩小后大小: {current_size} bytes ({current_size/1024/1024:.2f} MB)")
+            
+            # 防止无限循环
+            if new_width < 256 or new_height < 256:
+                break
+        
+        output_base64 = base64.b64encode(output_buffer.getvalue()).decode('utf-8')
+        logger.info(f"图片调整完成: 输出base64长度={len(output_base64)} ({len(output_base64)/1024/1024:.2f} MB)")
+        
+        return output_base64
+        
+    except Exception as e:
+        logger.error(f"图片调整失败: {str(e)}")
+        import traceback
+        logger.error(f"详细错误: {traceback.format_exc()}")
+        raise RuntimeError(f"图片调整失败: {str(e)}")
 
 POWER_COST = {
     'generate': 5,
@@ -1376,16 +1552,46 @@ def inpaint_image():
             'power_current': remaining
         }), 400
 
+    # 转换mask为灰度图格式，并调整原图大小以符合API要求
+    try:
+        logger.info("="*50)
+        logger.info("开始局部重绘处理")
+        logger.info(f"输入图像base64长度: {len(image_base64)} ({len(image_base64)/1024/1024:.2f} MB)")
+        logger.info(f"输入mask base64长度: {len(mask_base64)} ({len(mask_base64)/1024/1024:.2f} MB)")
+        logger.info(f"提示词: {prompt[:50] if prompt else '无'}")
+        logger.info("="*50)
+        
+        # 调整原图大小以符合API要求（最大4.7MB，最大4096x4096）
+        logger.info("开始调整原图大小...")
+        image_base64_resized = resize_image_to_fit_api_requirements(image_base64)
+        logger.info(f"原图调整完成，调整后base64长度: {len(image_base64_resized)} ({len(image_base64_resized)/1024/1024:.2f} MB)")
+        
+        # 转换mask为灰度图格式
+        logger.info("开始转换mask为灰度图...")
+        mask_base64_converted = convert_rgba_to_grayscale_mask(mask_base64)
+        logger.info(f"Mask转换完成，转换后base64长度: {len(mask_base64_converted)}")
+    except Exception as e:
+        logger.error(f"图像预处理失败: {str(e)}")
+        add_compute_power(user_id, power_cost, 'refund', '图像预处理失败退还')
+        return jsonify({'status': 'error', 'message': f'图像预处理失败: {str(e)}'}), 500
+
     params = {
         "req_key": "jimeng_image2image_dream_inpaint",
-        "binary_data_base64": [image_base64, mask_base64],
+        "binary_data_base64": [image_base64_resized, mask_base64_converted],
         "prompt": prompt or "修改图片指定区域",
     }
+    
+    logger.info(f"准备提交API请求，二进制数据数组长度: {len(params['binary_data_base64'])}")
+    logger.info(f"第一个图像base64长度: {len(params['binary_data_base64'][0])} ({len(params['binary_data_base64'][0])/1024/1024:.2f} MB)")
+    logger.info(f"第二个mask base64长度: {len(params['binary_data_base64'][1])} ({len(params['binary_data_base64'][1])/1024/1024:.2f} MB)")
 
     try:
-        logger.info(f"Submitting inpaint task with prompt: {prompt}")
+        logger.info(f"调用火山引擎API，提示词: {prompt[:50] if prompt else '无'}")
         visual_service = get_visual_service()
+        logger.info("VisualService实例创建成功，开始提交任务...")
         submit_res = visual_service.common_json_handler("CVSync2AsyncSubmitTask", params)
+        logger.info(f"API提交响应: code={submit_res.get('code')}, message={submit_res.get('message')}")
+        logger.info(f"完整响应: {submit_res}")
 
         if submit_res.get('code') != 10000:
             add_compute_power(user_id, power_cost, 'refund', '改图失败退还')
@@ -1460,7 +1666,13 @@ def inpaint_image():
         return jsonify({'status': 'error', 'message': "任务超时"}), 504
 
     except Exception as e:
-        logger.error(f"Error: {str(e)}")
+        logger.error(f"="*50)
+        logger.error(f"局部重绘API调用失败!")
+        logger.error(f"错误类型: {type(e).__name__}")
+        logger.error(f"错误信息: {str(e)}")
+        import traceback
+        logger.error(f"详细堆栈: {traceback.format_exc()}")
+        logger.error(f"="*50)
         add_compute_power(user_id, power_cost, 'refund', '改图异常退还')
         return jsonify({'status': 'error', 'message': str(e)}), 500
 

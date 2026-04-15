@@ -42,6 +42,19 @@
           <span>AI生图</span>
         </div>
 
+        <div
+          :class="['tab-item', { active: activeModule === 'edit' }]"
+          @click="activeModule = 'edit'"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+            <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+            <path d="M2 2l7.586 7.586"/>
+            <circle cx="11" cy="11" r="2"/>
+          </svg>
+          <span>AI重绘</span>
+        </div>
+
       </div>
 
       <div class="main-content">
@@ -265,11 +278,11 @@
                   :key="index"
                   class="result-item"
                 >
-                  <div v-if="editingImageIndex === index" class="edit-overlay">
-                    <div class="edit-canvas-wrapper">
+                  <div v-if="editingImageIndex === index" class="edit-overlay-fullscreen">
+                    <div class="edit-canvas-wrapper-fullscreen">
                       <canvas
                         :ref="el => { if (el) editCanvasInstance = el }"
-                        class="edit-mask-canvas"
+                        class="edit-mask-canvas-fullscreen"
                         @mousedown="startEditDrawing"
                         @mousemove="editDrawing"
                         @mouseup="stopEditDrawing"
@@ -278,10 +291,12 @@
                         @touchmove.prevent="editDrawingTouch"
                         @touchend="stopEditDrawing"
                       ></canvas>
-                      <img :src="image.url" class="edit-base-image" />
+                      <img :src="image.url" class="edit-base-image-fullscreen" />
                     </div>
-                    <div class="edit-controls">
-                      <div class="edit-toolbar">
+                    
+                    <!-- 浮动工具栏 -->
+                    <div class="edit-controls-floating">
+                      <div class="edit-toolbar-floating">
                         <button
                           :class="{ active: editingTool === 'brush' }"
                           @click="editingTool = 'brush'"
@@ -297,8 +312,20 @@
                         <button @click="clearEditMask">
                           清空
                         </button>
+                        <!-- 画笔大小调整 -->
+                        <div class="brush-size-control">
+                          <span class="brush-size-label">画笔大小:</span>
+                          <input
+                            type="range"
+                            min="20"
+                            max="200"
+                            v-model.number="brushSettings.size"
+                            class="brush-size-slider"
+                          />
+                          <span class="brush-size-value">{{ brushSettings.size }}px</span>
+                        </div>
                       </div>
-                      <div class="edit-prompt-input">
+                      <div class="edit-prompt-input-floating">
                         <input
                           v-model="editPrompt"
                           type="text"
@@ -307,7 +334,7 @@
                           @keyup.enter="applyEdit(image, index)"
                         />
                       </div>
-                      <div class="edit-action-bar">
+                      <div class="edit-action-bar-floating">
                         <button @click="cancelEdit" class="cancel-btn">
                           取消
                         </button>
@@ -345,6 +372,59 @@
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 重绘历史模块 -->
+        <div v-else-if="activeModule === 'edit'" class="image-module">
+          <div class="image-sidebar">
+            <div class="sidebar-header">
+              <h3>重绘历史</h3>
+              <button class="new-chat-btn" @click="loadEditHistory">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                刷新
+              </button>
+            </div>
+            <div class="image-history-list">
+              <div 
+                v-if="editHistory.length === 0"
+                class="empty-history"
+              >
+                <p>暂无重绘记录</p>
+                <p class="empty-hint">点击图片上的编辑按钮开始重绘</p>
+              </div>
+              <div 
+                v-for="item in editHistory" 
+                :key="item.id"
+                class="history-item"
+                @click="viewEditHistoryItem(item)"
+              >
+                <div class="history-thumbnail">
+                  <img :src="item.imageUrl" :alt="item.prompt" />
+                </div>
+                <div class="history-info">
+                  <div class="history-prompt">{{ item.prompt }}</div>
+                  <div class="history-time">{{ item.createTime }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="image-main">
+            <div class="edit-history-intro">
+              <h3 class="section-title">重绘历史</h3>
+              <div class="intro-content">
+                <p>查看您所有的重绘记录</p>
+                <ul>
+                  <li>✅ 展示重绘时的输入提示词</li>
+                  <li>✅ 点击记录可查看大图</li>
+                  <li>✅ 所有记录永久保存</li>
+                </ul>
               </div>
             </div>
           </div>
@@ -909,7 +989,7 @@ const editCanvasInstance = ref(null)
 
 // 简化的画笔设置
 const brushSettings = reactive({
-  size: 30
+  size: 80  // 增大默认画笔大小，从30改为80，更适合涂抹大区域
 })
 
 // 蒙版编辑状态
@@ -1039,6 +1119,32 @@ const loadImageHistory = async () => {
   } catch (error) {
     console.error('加载图片历史失败:', error)
     imageHistory.value = []
+  }
+}
+
+const loadEditHistory = async () => {
+  const inviteCode = localStorage.getItem('inviteCode') || ''
+  if (!inviteCode) {
+    editHistory.value = []
+    return
+  }
+  
+  try {
+    const response = await fetch(`/api/records?invite_code=${encodeURIComponent(inviteCode)}&project_id=${project.value.id}&type=inpaint`)
+    const result = await response.json()
+    
+    if (result.status === 'success') {
+      editHistory.value = result.records.map(record => ({
+        id: record.id.toString(),
+        prompt: record.prompt || '无提示词',
+        imageUrl: record.image_url || '',
+        createTime: new Date(record.create_time).toLocaleString('zh-CN'),
+        params: JSON.parse(record.params || '{}')
+      }))
+    }
+  } catch (error) {
+    console.error('加载重绘历史失败:', error)
+    editHistory.value = []
   }
 }
 
@@ -1817,7 +1923,10 @@ const startEdit = (image, index) => {
   console.log('开始编辑图片:', image, index)
   editingImageIndex.value = index
   editingImageUrl.value = image.url
-
+  
+  // 进入编辑模式时自动增大画笔大小，方便涂抹大区域
+  brushSettings.size = 80
+  
   nextTick(() => {
     setTimeout(() => {
       initEditCanvas(image.url)
@@ -2092,6 +2201,7 @@ onMounted(() => {
   }
   loadProjectData()
   fetchUserPower()
+  loadEditHistory()
   
   // 添加测试方法到 window 对象，方便调试
   window.testDifyAPI = async () => {
@@ -3107,7 +3217,230 @@ onMounted(() => {
 
 .edit-action-bar .confirm-btn:disabled {
   background: #999;
+}
+
+/* 全屏编辑模式 */
+.edit-overlay-fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  flex-direction: column;
+}
+
+.edit-canvas-wrapper-fullscreen {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 60px 20px 160px 20px;  /* 为工具栏留出空间 */
+}
+
+.edit-mask-canvas-fullscreen {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: calc(100% - 40px);
+  max-height: calc(100vh - 220px);  /* 减去工具栏高度 */
+  cursor: crosshair;
+  z-index: 2;
+}
+
+.edit-base-image-fullscreen {
+  max-width: calc(100% - 40px);
+  max-height: calc(100vh - 220px);  /* 减去工具栏高度 */
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* 浮动工具栏 */
+.edit-controls-floating {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid #e8e8e8;
+  box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.1);
+  z-index: 10000;
+}
+
+.edit-toolbar-floating {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.edit-toolbar-floating button {
+  padding: 10px 28px;
+  font-size: 15px;
+  color: #333;
+  background: #f5f5f5;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.edit-toolbar-floating button:hover:not(:disabled) {
+  background: #e6e6e6;
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
+.edit-toolbar-floating button:disabled {
+  background: #f5f5f5;
+  color: #999;
   cursor: not-allowed;
+}
+
+.edit-toolbar-floating button.active {
+  background: #1890ff;
+  border-color: #1890ff;
+  color: white;
+}
+
+/* 画笔大小控制 */
+.brush-size-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 20px;
+  padding-left: 20px;
+  border-left: 1px solid #e8e8e8;
+}
+
+.brush-size-label {
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+.brush-size-slider {
+  width: 150px;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(to right, #1890ff, #40a9ff);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.brush-size-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border: 2px solid #1890ff;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s;
+}
+
+.brush-size-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 3px 8px rgba(24, 144, 255, 0.4);
+}
+
+.brush-size-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border: 2px solid #1890ff;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.brush-size-value {
+  font-size: 14px;
+  color: #1890ff;
+  font-weight: 600;
+  min-width: 50px;
+  text-align: center;
+}
+
+.edit-prompt-input-floating {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.edit-prompt-input-floating .prompt-input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 15px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.edit-prompt-input-floating .prompt-input:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.edit-prompt-input-floating .prompt-input::placeholder {
+  color: #bfbfbf;
+}
+
+.edit-action-bar-floating {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+}
+
+.edit-action-bar-floating button {
+  padding: 10px 28px;
+  font-size: 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.edit-action-bar-floating .cancel-btn {
+  background: #f5f5f5;
+  color: #425D5F;
+  border: 1px solid #d9d9d9;
+}
+
+.edit-action-bar-floating .cancel-btn:hover {
+  background: #e6e6e6;
+}
+
+.edit-action-bar-floating .confirm-btn {
+  background: #1890ff;
+  color: white;
+}
+
+.edit-action-bar-floating .confirm-btn:hover:not(:disabled) {
+  background: #40a9ff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+}
+
+.edit-action-bar-floating .confirm-btn:disabled {
+  background: #999;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .image-preview-dialog {
@@ -3185,5 +3518,71 @@ onMounted(() => {
   .form-row {
     flex-direction: column;
   }
+}
+
+/* 重绘历史模块样式 */
+.edit-history-intro {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.edit-history-intro .section-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.edit-history-intro .intro-content {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.edit-history-intro .intro-content p {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 16px;
+}
+
+.edit-history-intro .intro-content ul {
+  list-style: none;
+  padding: 0;
+}
+
+.edit-history-intro .intro-content li {
+  font-size: 14px;
+  color: #555;
+  padding: 8px 0;
+  padding-left: 24px;
+  position: relative;
+}
+
+.edit-history-intro .intro-content li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: #1890ff;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.empty-history {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+}
+
+.empty-history p {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.empty-history .empty-hint {
+  font-size: 12px;
+  color: #bbb;
 }
 </style>
