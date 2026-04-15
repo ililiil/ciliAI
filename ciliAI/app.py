@@ -261,6 +261,7 @@ def close_connection(exception):
 def init_db():
     import pymysql
     conn = pymysql.connect(**DATABASE)
+    cursor = conn.cursor()
     
     
     cursor.execute('''
@@ -714,7 +715,7 @@ init_db()
 
 def get_user_by_invite_code(invite_code):
     db = get_db()
-    cursor = db.execute('SELECT * FROM users WHERE invite_code = ?', (invite_code,))
+    cursor = db.execute('SELECT * FROM users WHERE invite_code = %s', (invite_code,))
     return cursor.fetchone()
 
 def get_user_id_by_invite_code(invite_code):
@@ -736,7 +737,7 @@ def get_or_create_user(invite_code):
 
 def get_user_compute_power(user_id):
     db = get_db()
-    user = db.execute('SELECT compute_power FROM users WHERE id = ?', (user_id,)).fetchone()
+    user = db.execute('SELECT compute_power FROM users WHERE id = %s', (user_id,)).fetchone()
     return user['compute_power'] if user else 0
 
 def deduct_compute_power(user_id, amount, operation_type, project_id=None, record_id=None, description=None):
@@ -748,7 +749,7 @@ def deduct_compute_power(user_id, amount, operation_type, project_id=None, recor
     
     new_power = current_power - amount
     
-    db.execute('UPDATE users SET compute_power = ?, total_power_used = total_power_used + ?, last_active = ? WHERE id = ?',
+    db.execute('UPDATE users SET compute_power = %s, total_power_used = total_power_used + %s, last_active = %s WHERE id = %s',
                (new_power, amount, datetime.now(), user_id))
     
     db.execute('''
@@ -758,7 +759,7 @@ def deduct_compute_power(user_id, amount, operation_type, project_id=None, recor
     ''', (user_id, project_id, record_id, operation_type, -amount, current_power, new_power, description))
     
     if project_id:
-        db.execute('UPDATE projects SET total_power_used = total_power_used + ?, update_time = ? WHERE id = ?',
+        db.execute('UPDATE projects SET total_power_used = total_power_used + %s, update_time = %s WHERE id = %s',
                    (amount, datetime.now(), project_id))
     
     db.commit()
@@ -769,7 +770,7 @@ def add_compute_power(user_id, amount, operation_type, description=None):
     current_power = get_user_compute_power(user_id)
     new_power = current_power + amount
     
-    db.execute('UPDATE users SET compute_power = ?, last_active = ? WHERE id = ?',
+    db.execute('UPDATE users SET compute_power = %s, last_active = %s WHERE id = %s',
                (new_power, datetime.now(), user_id))
     
     db.execute('''
@@ -966,7 +967,7 @@ def dify_proxy():
                 user_message_id = user_msg_cursor.lastrowid
                 
                 if project_id:
-                    db.execute('UPDATE projects SET chat_count = chat_count + 1, update_time = ? WHERE id = ?',
+                    db.execute('UPDATE projects SET chat_count = chat_count + 1, update_time = %s WHERE id = %s',
                               (datetime.now(), project_id))
                 
                 db.commit()
@@ -1079,7 +1080,7 @@ def verify_invite_code():
         if existing_user['status'] == 'disabled':
             return jsonify({'status': 'error', 'message': '该账户已被禁用'}), 400
         
-        db.execute('UPDATE users SET last_login = ? WHERE id = ?', (datetime.now(), existing_user['id']))
+        db.execute('UPDATE users SET last_login = %s WHERE id = %s', (datetime.now(), existing_user['id']))
         db.commit()
         
         return jsonify({
@@ -1089,7 +1090,7 @@ def verify_invite_code():
             'is_new_user': False
         })
     
-    code_row = db.execute('SELECT * FROM invite_codes WHERE code = ?', (invite_code,)).fetchone()
+    code_row = db.execute('SELECT * FROM invite_codes WHERE code = %s', (invite_code,)).fetchone()
     
     if not code_row:
         return jsonify({'status': 'error', 'message': '无效的邀请码，请联系管理员获取'}), 400
@@ -1101,7 +1102,7 @@ def verify_invite_code():
     
     user_id = create_user(invite_code, compute_power)
     
-    db.execute('UPDATE invite_codes SET status = ?, used_at = ?, current_uses = current_uses + 1 WHERE code = ?',
+    db.execute('UPDATE invite_codes SET status = %s, used_at = %s, current_uses = current_uses + 1 WHERE code = %s',
                ('used', datetime.now(), invite_code))
     db.commit()
     
@@ -1125,8 +1126,8 @@ def get_user_info():
         return jsonify({'status': 'error', 'message': '用户不存在'}), 404
     
     db = get_db()
-    project_count = db.execute('SELECT COUNT(*) as count FROM projects WHERE user_id = ?', (user['id'],)).fetchone()['count']
-    image_count = db.execute('SELECT COUNT(*) as count FROM generation_records WHERE user_id = ?', (user['id'],)).fetchone()['count']
+    project_count = db.execute('SELECT COUNT(*) as count FROM projects WHERE user_id = %s', (user['id'],)).fetchone()['count']
+    image_count = db.execute('SELECT COUNT(*) as count FROM generation_records WHERE user_id = %s', (user['id'],)).fetchone()['count']
     
     return jsonify({
         'status': 'success',
@@ -1208,12 +1209,12 @@ def get_power_logs():
         SELECT cpl.*, p.title as project_title
         FROM compute_power_logs cpl
         LEFT JOIN projects p ON cpl.project_id = p.id
-        WHERE cpl.user_id = ?
+        WHERE cpl.user_id = %s
         ORDER BY cpl.created_at DESC
         LIMIT ? OFFSET ?
     ''', (user_id, page_size, offset)).fetchall()
     
-    total = db.execute('SELECT COUNT(*) as count FROM compute_power_logs WHERE user_id = ?', (user_id,)).fetchone()['count']
+    total = db.execute('SELECT COUNT(*) as count FROM compute_power_logs WHERE user_id = %s', (user_id,)).fetchone()['count']
     
     return jsonify({
         'status': 'success',
@@ -1241,7 +1242,7 @@ def get_projects():
                (SELECT COUNT(*) FROM generation_records WHERE project_id = p.id) as image_count,
                (SELECT COUNT(*) FROM chat_messages WHERE project_id = p.id) as chat_count
         FROM projects p
-        WHERE p.user_id = ? AND p.status != 'deleted'
+        WHERE p.user_id = %s AND p.status != 'deleted'
         ORDER BY p.update_time DESC
     ''', (user_id,)).fetchall()
     
@@ -1283,7 +1284,7 @@ def get_project(project_id):
     invite_code = request.args.get('invite_code')
     
     db = get_db()
-    project = db.execute('SELECT * FROM projects WHERE id = ? AND status != "deleted"', (project_id,)).fetchone()
+    project = db.execute('SELECT * FROM projects WHERE id = %s AND status != "deleted"', (project_id,)).fetchone()
     
     if not project:
         return jsonify({'status': 'error', 'message': '项目不存在'}), 404
@@ -1295,14 +1296,14 @@ def get_project(project_id):
     
     generation_records = db.execute('''
         SELECT * FROM generation_records 
-        WHERE project_id = ? 
+        WHERE project_id = %s 
         ORDER BY create_time DESC
         LIMIT 50
     ''', (project_id,)).fetchall()
     
     chat_messages = db.execute('''
         SELECT * FROM chat_messages 
-        WHERE project_id = ? 
+        WHERE project_id = %s 
         ORDER BY create_time ASC
     ''', (project_id,)).fetchall()
     
@@ -1318,7 +1319,7 @@ def update_project(project_id):
     data = request.json
     db = get_db()
     
-    project = db.execute('SELECT * FROM projects WHERE id = ? AND status != "deleted"', (project_id,)).fetchone()
+    project = db.execute('SELECT * FROM projects WHERE id = %s AND status != "deleted"', (project_id,)).fetchone()
     if not project:
         return jsonify({'status': 'error', 'message': '项目不存在'}), 404
     
@@ -1329,18 +1330,18 @@ def update_project(project_id):
         updates.append('title = ?')
         values.append(data['title'])
     if 'description' in data:
-        updates.append('description = ?')
+        updates.append('description = %s')
         values.append(data['description'])
     if 'cover_image' in data:
-        updates.append('cover_image = ?')
+        updates.append('cover_image = %s')
         values.append(data['cover_image'])
     
     if updates:
-        updates.append('update_time = ?')
+        updates.append('update_time = %s')
         values.append(datetime.now())
         values.append(project_id)
         
-        db.execute(f'UPDATE projects SET {", ".join(updates)} WHERE id = ?', values)
+        db.execute(f'UPDATE projects SET {", ".join(updates)} WHERE id = %s', values)
         db.commit()
     
     return jsonify({'status': 'success', 'message': '项目更新成功'})
@@ -1349,11 +1350,11 @@ def update_project(project_id):
 def delete_project(project_id):
     db = get_db()
     
-    project = db.execute('SELECT * FROM projects WHERE id = ?', (project_id,)).fetchone()
+    project = db.execute('SELECT * FROM projects WHERE id = %s', (project_id,)).fetchone()
     if not project:
         return jsonify({'status': 'error', 'message': '项目不存在'}), 404
     
-    db.execute('UPDATE projects SET status = "deleted" WHERE id = ?', (project_id,))
+    db.execute('UPDATE projects SET status = "deleted" WHERE id = %s', (project_id,))
     db.commit()
     
     return jsonify({'status': 'success', 'message': '项目已删除'})
@@ -1454,11 +1455,11 @@ def generate_image():
                     record_id = cursor.lastrowid
                     
                     if project_id:
-                        db.execute('UPDATE projects SET image_count = image_count + 1, update_time = ? WHERE id = ?',
+                        db.execute('UPDATE projects SET image_count = image_count + 1, update_time = %s WHERE id = %s',
                                    (datetime.now(), project_id))
                     
-                    db.execute('''UPDATE compute_power_logs SET record_id = ? WHERE id = (
-                        SELECT id FROM compute_power_logs WHERE user_id = ? AND operation_type = 'generate' 
+                    db.execute('''UPDATE compute_power_logs SET record_id = %s WHERE id = (
+                        SELECT id FROM compute_power_logs WHERE user_id = %s AND operation_type = 'generate' 
                         ORDER BY created_at DESC LIMIT 1
                     )''', (record_id, user_id))
                     db.commit()
@@ -1613,7 +1614,7 @@ def inpaint_image():
                     record_id = cursor.lastrowid
                     
                     if project_id:
-                        db.execute('UPDATE projects SET image_count = image_count + 1, update_time = ? WHERE id = ?',
+                        db.execute('UPDATE projects SET image_count = image_count + 1, update_time = %s WHERE id = %s',
                                    (datetime.now(), project_id))
                     db.commit()
                     
@@ -1738,7 +1739,7 @@ def extend_image():
                     record_id = cursor.lastrowid
                     
                     if project_id:
-                        db.execute('UPDATE projects SET image_count = image_count + 1, update_time = ? WHERE id = ?',
+                        db.execute('UPDATE projects SET image_count = image_count + 1, update_time = %s WHERE id = %s',
                                    (datetime.now(), project_id))
                     db.commit()
                     
@@ -1853,7 +1854,7 @@ def super_resolution():
                     record_id = cursor.lastrowid
                     
                     if project_id:
-                        db.execute('UPDATE projects SET image_count = image_count + 1, update_time = ? WHERE id = ?',
+                        db.execute('UPDATE projects SET image_count = image_count + 1, update_time = %s WHERE id = %s',
                                    (datetime.now(), project_id))
                     db.commit()
                     
@@ -1898,21 +1899,21 @@ def get_records():
         return jsonify({'status': 'success', 'records': [], 'total': 0})
     
     db = get_db()
-    query = 'SELECT * FROM generation_records WHERE user_id = ?'
+    query = 'SELECT * FROM generation_records WHERE user_id = %s'
     params = [user_id]
     
     if project_id:
-        query += ' AND project_id = ?'
+        query += ' AND project_id = %s'
         params.append(project_id)
     
     if record_type:
-        query += ' AND type = ?'
+        query += ' AND type = %s'
         params.append(record_type)
     
     count_query = query.replace('SELECT *', 'SELECT COUNT(*) as count')
     total = db.execute(count_query, params).fetchone()['count']
     
-    query += ' ORDER BY create_time DESC LIMIT ? OFFSET ?'
+    query += ' ORDER BY create_time DESC LIMIT %s OFFSET %s'
     params.extend([page_size, (page - 1) * page_size])
     
     records = db.execute(query, params).fetchall()
@@ -1935,7 +1936,7 @@ def get_records():
 @app.route('/api/records/<int:record_id>', methods=['GET'])
 def get_record(record_id):
     db = get_db()
-    record = db.execute('SELECT * FROM generation_records WHERE id = ?', (record_id,)).fetchone()
+    record = db.execute('SELECT * FROM generation_records WHERE id = %s', (record_id,)).fetchone()
     
     if not record:
         return jsonify({'status': 'error', 'message': '记录不存在'}), 404
@@ -1952,15 +1953,15 @@ def get_record(record_id):
 @app.route('/api/records/<int:record_id>', methods=['DELETE'])
 def delete_record(record_id):
     db = get_db()
-    record = db.execute('SELECT * FROM generation_records WHERE id = ?', (record_id,)).fetchone()
+    record = db.execute('SELECT * FROM generation_records WHERE id = %s', (record_id,)).fetchone()
     
     if not record:
         return jsonify({'status': 'error', 'message': '记录不存在'}), 404
     
     if record['project_id']:
-        db.execute('UPDATE projects SET image_count = image_count - 1 WHERE id = ?', (record['project_id'],))
+        db.execute('UPDATE projects SET image_count = image_count - 1 WHERE id = %s', (record['project_id'],))
     
-    db.execute('DELETE FROM generation_records WHERE id = ?', (record_id,))
+    db.execute('DELETE FROM generation_records WHERE id = %s', (record_id,))
     db.commit()
     
     return jsonify({'status': 'success', 'message': '记录已删除'})
@@ -1979,15 +1980,15 @@ def get_chat_messages():
         return jsonify({'status': 'success', 'messages': []})
     
     db = get_db()
-    query = 'SELECT * FROM chat_messages WHERE user_id = ?'
+    query = 'SELECT * FROM chat_messages WHERE user_id = %s'
     params = [user_id]
     
     if project_id:
-        query += ' AND project_id = ?'
+        query += ' AND project_id = %s'
         params.append(project_id)
     
     if chat_id:
-        query += ' AND chat_id = ?'
+        query += ' AND chat_id = %s'
         params.append(chat_id)
     
     query += ' ORDER BY create_time ASC'
@@ -2030,7 +2031,7 @@ def save_chat_message():
           data.get('role'), data.get('content'), power_cost))
     
     if data.get('project_id'):
-        db.execute('UPDATE projects SET chat_count = chat_count + 1, update_time = ? WHERE id = ?',
+        db.execute('UPDATE projects SET chat_count = chat_count + 1, update_time = %s WHERE id = %s',
                    (datetime.now(), data.get('project_id')))
     
     db.commit()
@@ -2055,15 +2056,15 @@ def get_stats():
     
     db = get_db()
     
-    project_count = db.execute('SELECT COUNT(*) as count FROM projects WHERE user_id = ? AND status != "deleted"', (user['id'],)).fetchone()['count']
-    image_count = db.execute('SELECT COUNT(*) as count FROM generation_records WHERE user_id = ?', (user['id'],)).fetchone()['count']
-    chat_count = db.execute('SELECT COUNT(*) as count FROM chat_messages WHERE user_id = ?', (user['id'],)).fetchone()['count']
+    project_count = db.execute('SELECT COUNT(*) as count FROM projects WHERE user_id = %s AND status != "deleted"', (user['id'],)).fetchone()['count']
+    image_count = db.execute('SELECT COUNT(*) as count FROM generation_records WHERE user_id = %s', (user['id'],)).fetchone()['count']
+    chat_count = db.execute('SELECT COUNT(*) as count FROM chat_messages WHERE user_id = %s', (user['id'],)).fetchone()['count']
     
     today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     today_power_used = db.execute('''
         SELECT COALESCE(SUM(ABS(power_change)), 0) as total 
         FROM compute_power_logs 
-        WHERE user_id = ? AND power_change < 0 AND created_at >= ?
+        WHERE user_id = %s AND power_change < 0 AND created_at >= %s
     ''', (user['id'], today_start)).fetchone()['total']
     
     return jsonify({
@@ -2262,14 +2263,14 @@ def update_work_image(work_id):
         db = get_db()
         
         
-        cursor.execute('SELECT * FROM ip_works WHERE id = ?', (work_id,))
+        cursor.execute('SELECT * FROM ip_works WHERE id = %s', (work_id,))
         work = cursor.fetchone()
         
         if not work:
             db.close()
             return jsonify({'status': 'error', 'message': '作品不存在'}), 404
         
-        cursor.execute('UPDATE ip_works SET image = ?, updated_at = ? WHERE id = ?', 
+        cursor.execute('UPDATE ip_works SET image = %s, updated_at = %s WHERE id = %s', 
                       (image_url, datetime.now(), work_id))
         db.commit()
         db.close()
@@ -2446,7 +2447,7 @@ def update_order(order_id):
         db = get_db()
         
         
-        cursor.execute('SELECT * FROM orders WHERE id = ?', (order_id,))
+        cursor.execute('SELECT * FROM orders WHERE id = %s', (order_id,))
         order = cursor.fetchone()
         
         if not order:
@@ -2476,7 +2477,7 @@ def update_order(order_id):
                 status = ?, tags = ?, description = ?, contact_info = ?,
                 min_profit = ?, share_ratio = ?, power_subsidy = ?, period = ?,
                 updated_at = ?
-            WHERE id = ?
+            WHERE id = %s
         ''', (title, image, qrcode, price, deadline, status, tags, description, contact_info,
               min_profit, share_ratio, power_subsidy, period, datetime.now(), order_id))
         
@@ -2498,14 +2499,14 @@ def delete_order(order_id):
         db = get_db()
         
         
-        cursor.execute('SELECT * FROM orders WHERE id = ?', (order_id,))
+        cursor.execute('SELECT * FROM orders WHERE id = %s', (order_id,))
         order = cursor.fetchone()
         
         if not order:
             db.close()
             return jsonify({'status': 'error', 'message': '订单不存在'}), 404
         
-        cursor.execute('DELETE FROM orders WHERE id = ?', (order_id,))
+        cursor.execute('DELETE FROM orders WHERE id = %s', (order_id,))
         db.commit()
         db.close()
         
@@ -2534,7 +2535,7 @@ def get_advertisements():
         else:
             cursor.execute('''
                 SELECT * FROM advertisements 
-                WHERE status = ?
+                WHERE status = %s
                 ORDER BY sort_order ASC, created_at DESC
             ''', (status,))
         
@@ -2607,7 +2608,7 @@ def update_advertisement(ad_id):
         db = get_db()
         
         
-        cursor.execute('SELECT * FROM advertisements WHERE id = ?', (ad_id,))
+        cursor.execute('SELECT * FROM advertisements WHERE id = %s', (ad_id,))
         ad = cursor.fetchone()
         
         if not ad:
@@ -2623,7 +2624,7 @@ def update_advertisement(ad_id):
         cursor.execute('''
             UPDATE advertisements 
             SET title = ?, image = ?, link_url = ?, status = ?, sort_order = ?, updated_at = ?
-            WHERE id = ?
+            WHERE id = %s
         ''', (title, image, link_url, status, sort_order, datetime.now(), ad_id))
         
         db.commit()
@@ -2644,14 +2645,14 @@ def delete_advertisement(ad_id):
         db = get_db()
         
         
-        cursor.execute('SELECT * FROM advertisements WHERE id = ?', (ad_id,))
+        cursor.execute('SELECT * FROM advertisements WHERE id = %s', (ad_id,))
         ad = cursor.fetchone()
         
         if not ad:
             db.close()
             return jsonify({'status': 'error', 'message': '广告位不存在'}), 404
         
-        cursor.execute('DELETE FROM advertisements WHERE id = ?', (ad_id,))
+        cursor.execute('DELETE FROM advertisements WHERE id = %s', (ad_id,))
         db.commit()
         db.close()
         
@@ -2670,7 +2671,7 @@ def publish_advertisement(ad_id):
         db = get_db()
         
         
-        cursor.execute('SELECT * FROM advertisements WHERE id = ?', (ad_id,))
+        cursor.execute('SELECT * FROM advertisements WHERE id = %s', (ad_id,))
         ad = cursor.fetchone()
         
         if not ad:
@@ -2680,7 +2681,7 @@ def publish_advertisement(ad_id):
         cursor.execute('''
             UPDATE advertisements 
             SET status = 'published', updated_at = ?
-            WHERE id = ?
+            WHERE id = %s
         ''', (datetime.now(), ad_id))
         
         db.commit()
@@ -2701,7 +2702,7 @@ def unpublish_advertisement(ad_id):
         db = get_db()
         
         
-        cursor.execute('SELECT * FROM advertisements WHERE id = ?', (ad_id,))
+        cursor.execute('SELECT * FROM advertisements WHERE id = %s', (ad_id,))
         ad = cursor.fetchone()
         
         if not ad:
@@ -2711,7 +2712,7 @@ def unpublish_advertisement(ad_id):
         cursor.execute('''
             UPDATE advertisements 
             SET status = 'unpublished', updated_at = ?
-            WHERE id = ?
+            WHERE id = %s
         ''', (datetime.now(), ad_id))
         
         db.commit()
@@ -2747,7 +2748,7 @@ def reorder_advertisements():
                 cursor.execute('''
                     UPDATE advertisements 
                     SET sort_order = ?, updated_at = ?
-                    WHERE id = ?
+                    WHERE id = %s
                 ''', (sort_order, datetime.now(), ad_id))
         
         db.commit()
@@ -2866,14 +2867,14 @@ def update_admin_invite_code(id):
     data = request.json
     db = get_db()
     
-    code = db.execute('SELECT * FROM invite_codes WHERE id = ?', (id,)).fetchone()
+    code = db.execute('SELECT * FROM invite_codes WHERE id = %s', (id,)).fetchone()
     if not code:
         return jsonify({'code': 404, 'msg': '邀请码不存在'}), 404
     
     status = data.get('status', code['status'])
     compute_power = data.get('compute_power', code['compute_power'])
     
-    db.execute('UPDATE invite_codes SET status = ?, compute_power = ? WHERE id = ?',
+    db.execute('UPDATE invite_codes SET status = %s, compute_power = %s WHERE id = %s',
                (status, compute_power, id))
     db.commit()
     
@@ -2883,11 +2884,11 @@ def update_admin_invite_code(id):
 def delete_admin_invite_code(id):
     db = get_db()
     
-    code = db.execute('SELECT * FROM invite_codes WHERE id = ?', (id,)).fetchone()
+    code = db.execute('SELECT * FROM invite_codes WHERE id = %s', (id,)).fetchone()
     if not code:
         return jsonify({'code': 404, 'msg': '邀请码不存在'}), 404
     
-    db.execute('DELETE FROM invite_codes WHERE id = ?', (id,))
+    db.execute('DELETE FROM invite_codes WHERE id = %s', (id,))
     db.commit()
     
     return jsonify({'code': 200, 'msg': '删除成功'})
@@ -2987,7 +2988,7 @@ def update_admin_work(id):
     data = request.json
     db = get_db()
     
-    work = db.execute('SELECT * FROM ip_works WHERE id = ?', (id,)).fetchone()
+    work = db.execute('SELECT * FROM ip_works WHERE id = %s', (id,)).fetchone()
     if not work:
         return jsonify({'code': 404, 'msg': '作品不存在'}), 404
     
@@ -3006,7 +3007,7 @@ def update_admin_work(id):
     
     if update_fields:
         update_values.append(id)
-        db.execute(f'UPDATE ip_works SET {", ".join(update_fields)} WHERE id = ?', update_values)
+        db.execute(f'UPDATE ip_works SET {", ".join(update_fields)} WHERE id = %s', update_values)
         db.commit()
     
     return jsonify({'code': 200, 'msg': '更新成功'})
@@ -3015,11 +3016,11 @@ def update_admin_work(id):
 def delete_admin_work(id):
     db = get_db()
     
-    work = db.execute('SELECT * FROM ip_works WHERE id = ?', (id,)).fetchone()
+    work = db.execute('SELECT * FROM ip_works WHERE id = %s', (id,)).fetchone()
     if not work:
         return jsonify({'code': 404, 'msg': '作品不存在'}), 404
     
-    db.execute('DELETE FROM ip_works WHERE id = ?', (id,))
+    db.execute('DELETE FROM ip_works WHERE id = %s', (id,))
     db.commit()
     
     return jsonify({'code': 200, 'msg': '删除成功'})
@@ -3090,7 +3091,7 @@ def update_admin_order(order_id):
         data = request.get_json(force=True)
         db = get_db()
         
-        order = db.execute('SELECT * FROM orders WHERE id = ?', (order_id,)).fetchone()
+        order = db.execute('SELECT * FROM orders WHERE id = %s', (order_id,)).fetchone()
         if not order:
             return jsonify({'code': 404, 'msg': '订单不存在'}), 404
         
@@ -3110,7 +3111,7 @@ def update_admin_order(order_id):
             UPDATE orders SET 
                 title = ?, image = ?, qrcode = ?, price = ?, deadline = ?, 
                 status = ?, tags = ?, contact_count = ?
-            WHERE id = ?
+            WHERE id = %s
         ''', (title, image, qrcode, price, deadline, status, tags, contact_count, order_id))
         db.commit()
         
@@ -3124,11 +3125,11 @@ def delete_admin_order(order_id):
     try:
         db = get_db()
         
-        order = db.execute('SELECT * FROM orders WHERE id = ?', (order_id,)).fetchone()
+        order = db.execute('SELECT * FROM orders WHERE id = %s', (order_id,)).fetchone()
         if not order:
             return jsonify({'code': 404, 'msg': '订单不存在'}), 404
         
-        db.execute('DELETE FROM orders WHERE id = ?', (order_id,))
+        db.execute('DELETE FROM orders WHERE id = %s', (order_id,))
         db.commit()
         
         return jsonify({'code': 200, 'msg': '订单删除成功'})
@@ -3193,12 +3194,12 @@ def get_admin_power_logs():
                 FROM compute_power_logs cpl
                 LEFT JOIN users u ON cpl.user_id = u.id
                 LEFT JOIN projects p ON cpl.project_id = p.id
-                WHERE cpl.user_id = ?
+                WHERE cpl.user_id = %s
                 ORDER BY cpl.created_at DESC
                 LIMIT ? OFFSET ?
             ''', (user_id, page_size, offset)).fetchall()
             
-            total = db.execute('SELECT COUNT(*) as count FROM compute_power_logs WHERE user_id = ?', (user_id,)).fetchone()['count']
+            total = db.execute('SELECT COUNT(*) as count FROM compute_power_logs WHERE user_id = %s', (user_id,)).fetchone()['count']
         else:
             logs = db.execute('''
                 SELECT cpl.*, 
@@ -3242,7 +3243,7 @@ def update_admin_user_power(user_id):
         
         db = get_db()
         
-        user = db.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
+        user = db.execute('SELECT * FROM users WHERE id = %s', (user_id,)).fetchone()
         if not user:
             return jsonify({'code': 404, 'msg': '用户不存在'}), 404
         
@@ -3250,15 +3251,15 @@ def update_admin_user_power(user_id):
         
         if operation == 'set':
             power_change = new_power - current_power
-            db.execute('UPDATE users SET compute_power = ? WHERE id = ?', (new_power, user_id))
+            db.execute('UPDATE users SET compute_power = %s WHERE id = %s', (new_power, user_id))
         elif operation == 'add':
             power_change = new_power
             new_power = current_power + new_power
-            db.execute('UPDATE users SET compute_power = ? WHERE id = ?', (new_power, user_id))
+            db.execute('UPDATE users SET compute_power = %s WHERE id = %s', (new_power, user_id))
         elif operation == 'deduct':
             power_change = -abs(new_power)
             new_power = max(0, current_power - abs(new_power))
-            db.execute('UPDATE users SET compute_power = ? WHERE id = ?', (new_power, user_id))
+            db.execute('UPDATE users SET compute_power = %s WHERE id = %s', (new_power, user_id))
         else:
             return jsonify({'code': 400, 'msg': '无效的操作类型'}), 400
         
@@ -3298,7 +3299,7 @@ def get_admin_advertisements():
         else:
             ads = db.execute('''
                 SELECT * FROM advertisements 
-                WHERE status = ?
+                WHERE status = %s
                 ORDER BY sort_order ASC, created_at DESC
             ''', (status,)).fetchall()
         
@@ -3359,7 +3360,7 @@ def update_admin_advertisement(ad_id):
         
         db = get_db()
         
-        ad = db.execute('SELECT * FROM advertisements WHERE id = ?', (ad_id,)).fetchone()
+        ad = db.execute('SELECT * FROM advertisements WHERE id = %s', (ad_id,)).fetchone()
         if not ad:
             return jsonify({'code': 404, 'msg': '广告位不存在'}), 404
         
@@ -3372,7 +3373,7 @@ def update_admin_advertisement(ad_id):
         db.execute('''
             UPDATE advertisements 
             SET title = ?, image = ?, link_url = ?, status = ?, sort_order = ?, updated_at = ?
-            WHERE id = ?
+            WHERE id = %s
         ''', (title, image, link_url, status, sort_order, datetime.now(), ad_id))
         
         db.commit()
@@ -3389,11 +3390,11 @@ def delete_admin_advertisement(ad_id):
     try:
         db = get_db()
         
-        ad = db.execute('SELECT * FROM advertisements WHERE id = ?', (ad_id,)).fetchone()
+        ad = db.execute('SELECT * FROM advertisements WHERE id = %s', (ad_id,)).fetchone()
         if not ad:
             return jsonify({'code': 404, 'msg': '广告位不存在'}), 404
         
-        db.execute('DELETE FROM advertisements WHERE id = ?', (ad_id,))
+        db.execute('DELETE FROM advertisements WHERE id = %s', (ad_id,))
         db.commit()
         
         return jsonify({
@@ -3408,14 +3409,14 @@ def publish_admin_advertisement(ad_id):
     try:
         db = get_db()
         
-        ad = db.execute('SELECT * FROM advertisements WHERE id = ?', (ad_id,)).fetchone()
+        ad = db.execute('SELECT * FROM advertisements WHERE id = %s', (ad_id,)).fetchone()
         if not ad:
             return jsonify({'code': 404, 'msg': '广告位不存在'}), 404
         
         db.execute('''
             UPDATE advertisements 
             SET status = 'published', updated_at = ?
-            WHERE id = ?
+            WHERE id = %s
         ''', (datetime.now(), ad_id))
         
         db.commit()
@@ -3432,14 +3433,14 @@ def unpublish_admin_advertisement(ad_id):
     try:
         db = get_db()
         
-        ad = db.execute('SELECT * FROM advertisements WHERE id = ?', (ad_id,)).fetchone()
+        ad = db.execute('SELECT * FROM advertisements WHERE id = %s', (ad_id,)).fetchone()
         if not ad:
             return jsonify({'code': 404, 'msg': '广告位不存在'}), 404
         
         db.execute('''
             UPDATE advertisements 
             SET status = 'unpublished', updated_at = ?
-            WHERE id = ?
+            WHERE id = %s
         ''', (datetime.now(), ad_id))
         
         db.commit()
@@ -3464,11 +3465,11 @@ def get_chat_sessions():
         return jsonify({'status': 'success', 'sessions': [], 'total': 0})
     
     db = get_db()
-    query = 'SELECT * FROM chat_sessions WHERE user_id = ?'
+    query = 'SELECT * FROM chat_sessions WHERE user_id = %s'
     params = [user_id]
     
     if project_id:
-        query += ' AND project_id = ?'
+        query += ' AND project_id = %s'
         params.append(project_id)
     
     query += ' ORDER BY update_time DESC'
@@ -3519,7 +3520,7 @@ def update_chat_session(session_id):
         return jsonify({'status': 'error', 'message': '用户不存在'}), 401
     
     db = get_db()
-    session = db.execute('SELECT * FROM chat_sessions WHERE id = ? AND user_id = ?', 
+    session = db.execute('SELECT * FROM chat_sessions WHERE id = %s AND user_id = %s', 
                        (session_id, user_id)).fetchone()
     
     if not session:
@@ -3546,7 +3547,7 @@ def update_chat_session(session_id):
         values.append(datetime.now())
         values.append(session_id)
         
-        db.execute(f'UPDATE chat_sessions SET {", ".join(updates)} WHERE id = ?', values)
+        db.execute(f'UPDATE chat_sessions SET {", ".join(updates)} WHERE id = %s', values)
         db.commit()
     
     return jsonify({'status': 'success', 'message': '会话更新成功'})
@@ -3563,13 +3564,13 @@ def delete_chat_session(session_id):
         return jsonify({'status': 'error', 'message': '用户不存在'}), 401
     
     db = get_db()
-    session = db.execute('SELECT * FROM chat_sessions WHERE id = ? AND user_id = ?', 
+    session = db.execute('SELECT * FROM chat_sessions WHERE id = %s AND user_id = %s', 
                        (session_id, user_id)).fetchone()
     
     if not session:
         return jsonify({'status': 'error', 'message': '会话不存在或无权访问'}), 404
     
-    db.execute('DELETE FROM chat_sessions WHERE id = ?', (session_id,))
+    db.execute('DELETE FROM chat_sessions WHERE id = %s', (session_id,))
     db.commit()
     
     return jsonify({'status': 'success', 'message': '会话已删除'})
@@ -3586,7 +3587,7 @@ def get_session_messages(session_id):
         return jsonify({'status': 'error', 'message': '用户不存在'}), 401
     
     db = get_db()
-    session = db.execute('SELECT * FROM chat_sessions WHERE id = ? AND user_id = ?', 
+    session = db.execute('SELECT * FROM chat_sessions WHERE id = %s AND user_id = %s', 
                        (session_id, user_id)).fetchone()
     
     if not session:
@@ -3594,7 +3595,7 @@ def get_session_messages(session_id):
     
     messages = db.execute('''
         SELECT * FROM chat_messages 
-        WHERE user_id = ? AND chat_id = ?
+        WHERE user_id = %s AND chat_id = %s
         ORDER BY create_time ASC
     ''', (user_id, session['conversation_id'] if session['conversation_id'] else '')).fetchall()
     
