@@ -23,16 +23,30 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 DB_TYPE = os.getenv('DB_TYPE', 'sqlite')
-if DB_TYPE == 'sqlite':
-    DB_PATH = os.getenv('DB_PATH', 'fangtang.db')
-    DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), DB_PATH)
-elif DB_TYPE == 'mysql':
-    DATABASE = os.getenv('DB_TYPE') + '://' + os.getenv('DB_USER', 'root') + ':' + os.getenv('DB_PASSWORD', '') + '@' + os.getenv('DB_HOST', 'localhost') + ':' + os.getenv('DB_PORT', '3306') + '/' + os.getenv('DB_NAME', 'ciliai')
+
+if DB_TYPE == 'mysql':
+    import pymysql
+    pymysql.install_as_MySQLdb()
+    DATABASE = {
+        'host': os.getenv('DB_HOST', 'localhost'),
+        'port': int(os.getenv('DB_PORT', 3306)),
+        'user': os.getenv('DB_USER', 'root'),
+        'password': os.getenv('DB_PASSWORD', ''),
+        'database': os.getenv('DB_NAME', 'ciliai'),
+        'charset': 'utf8mb4',
+        'cursorclass': pymysql.cursors.DictCursor
+    }
 elif DB_TYPE == 'postgres':
     DATABASE = os.getenv('DB_TYPE') + '://' + os.getenv('DB_USER', 'postgres') + ':' + os.getenv('DB_PASSWORD', '') + '@' + os.getenv('DB_HOST', 'localhost') + ':' + os.getenv('DB_PORT', '5432') + '/' + os.getenv('DB_NAME', 'ciliai')
+else:
+    DB_PATH = os.getenv('DB_PATH', 'fangtang.db')
+    DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), DB_PATH)
 
 logger.info(f"数据库类型: {DB_TYPE}")
-logger.info(f"数据库路径: {DATABASE}")
+if DB_TYPE == 'mysql':
+    logger.info(f"数据库: {DATABASE['host']}:{DATABASE['port']}/{DATABASE['database']}")
+else:
+    logger.info(f"数据库路径: {DATABASE}")
 
 ADMIN_BASE_URL = os.getenv('ADMIN_BASE_URL', 'http://localhost:5002')
 
@@ -71,9 +85,12 @@ POWER_COST = {
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
-        db = g._database = sqlite3.connect(DATABASE, check_same_thread=False)
-        db.row_factory = sqlite3.Row
-        db.execute('PRAGMA foreign_keys = ON')
+        if DB_TYPE == 'mysql':
+            import pymysql
+            db = g._database = pymysql.connect(**DATABASE)
+        else:
+            db = g._database = sqlite3.connect(DATABASE, check_same_thread=False)
+            db.row_factory = sqlite3.Row
     return db
 
 @app.teardown_appcontext
@@ -83,24 +100,45 @@ def close_connection(exception):
         db.close()
 
 def init_db():
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-    cursor.execute('PRAGMA foreign_keys = ON')
+    if DB_TYPE == 'mysql':
+        import pymysql
+        conn = pymysql.connect(**DATABASE)
+        cursor = conn.cursor()
+    else:
+        conn = sqlite3.connect(DATABASE)
+        cursor = conn.cursor()
+        cursor.execute('PRAGMA foreign_keys = ON')
     
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            invite_code TEXT UNIQUE NOT NULL,
-            compute_power INTEGER DEFAULT 0,
-            total_power_used INTEGER DEFAULT 0,
-            nickname TEXT,
-            avatar TEXT,
-            status TEXT DEFAULT 'active',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            last_login TIMESTAMP,
-            last_active TIMESTAMP
-        )
-    ''')
+    if DB_TYPE == 'mysql':
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                invite_code VARCHAR(255) UNIQUE NOT NULL,
+                compute_power INT DEFAULT 0,
+                total_power_used INT DEFAULT 0,
+                nickname VARCHAR(255),
+                avatar VARCHAR(500),
+                status VARCHAR(50) DEFAULT 'active',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_login TIMESTAMP NULL,
+                last_active TIMESTAMP NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+        ''')
+    else:
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                invite_code TEXT UNIQUE NOT NULL,
+                compute_power INTEGER DEFAULT 0,
+                total_power_used INTEGER DEFAULT 0,
+                nickname TEXT,
+                avatar TEXT,
+                status TEXT DEFAULT 'active',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_login TIMESTAMP,
+                last_active TIMESTAMP
+            )
+        ''')
     
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS projects (
