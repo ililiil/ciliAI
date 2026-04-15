@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CiliAI - 鍚庡彴绠＄悊绯荤粺</title>
+  <title>CiliAI - 后台管理系统</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-plus/dist/index.css">
   <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/element-plus/dist/index.full.min.js"></script>
@@ -56,21 +56,21 @@
       <div class="login-container">
         <div class="login-box">
           <div class="login-header">
-            <h1>鏂瑰AI</h1>
-            <p>鍚庡彴绠＄悊绯荤粺</p>
+            <h1>磁力AI</h1>
+            <p>后台管理系统</p>
           </div>
           <el-form :model="loginForm" label-width="0">
             <el-form-item>
-              <el-input v-model="loginForm.username" placeholder="鐢ㄦ埛鍚? size="large" prefix-icon="User"></el-input>
+              <el-input v-model="loginForm.username" placeholder="用户名" size="large" prefix-icon="User"></el-input>
             </el-form-item>
             <el-form-item>
-              <el-input v-model="loginForm.password" type="password" placeholder="瀵嗙爜" size="large" prefix-icon="Lock" show-password @keyup.enter="handleLogin"></el-input>
+              <el-input v-model="loginForm.password" type="password" placeholder="密码" size="large" prefix-icon="Lock" show-password @keyup.enter="handleLogin"></el-input>
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" size="large" class="login-btn" :loading="loading" @click="handleLogin">鐧?褰?/el-button>
+              <el-button type="primary" size="large" class="login-btn" :loading="loading" @click="handleLogin">登录</el-button>
             </el-form-item>
           </el-form>
-          <div class="login-tip">榛樿璐﹀彿锛歛dmin / admin123</div>
+          <div class="login-tip">默认账号：admin / admin123</div>
         </div>
       </div>
     </template>
@@ -80,24 +80,24 @@
         <el-aside width="220px" class="layout-aside">
           <div class="logo">
             <span class="logo-text">CiliAI</span>
-            <span class="logo-sub">鍚庡彴绠＄悊</span>
+            <span class="logo-sub">后台管理</span>
           </div>
           <el-menu :default-active="activeMenu" background-color="#1d1e1f" text-color="#bfcbd9" active-text-color="#409eff" @select="handleMenuSelect">
             <el-menu-item index="dashboard">
               <el-icon><el-icon-odometer></el-icon-odometer></el-icon>
-              <span>鎺у埗鍙?/span>
+              <span>控制台</span>
             </el-menu-item>
             <el-menu-item index="codes">
               <el-icon><el-icon-ticket></el-icon-ticket></el-icon>
-              <span>閭€璇风爜绠＄悊</span>
+              <span>邀请码管理</span>
             </el-menu-item>
             <el-menu-item index="works">
               <el-icon><el-icon-picture></el-icon-picture></el-icon>
-              <span>鍐呭绠＄悊</span>
+              <span>内容管理</span>
             </el-menu-item>
             <el-menu-item index="users">
               <el-icon><el-icon-user></el-icon-user></el-icon>
-              <span>鐢ㄦ埛绠＄悊</span>
+              <span>用户管理</span>
             </el-menu-item>
           </el-menu>
         </el-aside>
@@ -114,14 +114,14 @@
                 </span>
                 <template #dropdown>
                   <el-dropdown-menu>
-                    <el-dropdown-item command="logout">閫€鍑虹櫥褰?/el-dropdown-item>
+                    <el-dropdown-item command="logout">退出登录</el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
             </div>
           </el-header>
           <el-main class="layout-main">
-            <!-- 鎺у埗鍙?-->
+            <!-- 控制台 -->
             <template v-if="activeMenu === 'dashboard'">
               <el-row :gutter="20">
                 <el-col :span="6" v-for="(stat, index) in stats" :key="index">
@@ -139,116 +139,123 @@
               <el-row :gutter="20" style="margin-top: 20px;">
                 <el-col :span="12">
                   <el-card shadow="hover">
-                    <template #header><span>蹇嵎鎿嶄綔</span></template>
+                    <template #header><span>快捷操作</span></template>
                     <div class="quick-actions">
-                      <el-button type="primary" @click="activeMenu = 'codes'">鍒涘缓閭€璇风爜</el-button>
-                      <el-button type="success" @click="activeMenu = 'works'">涓婁紶浣滃搧</el-button>
-                      <el-button type="warning" @click="activeMenu = 'users'">鏌ョ湅鐢ㄦ埛</el-button>
+                      <el-button type="primary" @click="activeMenu = 'codes'">创建邀请码</el-button>
+                      <el-button type="success" @click="activeMenu = 'works'">上传作品</el-button>
+                      <el-button type="warning" @click="activeMenu = 'users'">查看用户</el-button>
                     </div>
                   </el-card>
                 </el-col>
                 <el-col :span="12">
                   <el-card shadow="hover">
-                    <template #header><span>绯荤粺淇℃伅</span></template>
+                    <template #header><span>系统信息</span></template>
                     <div class="system-info">
-                      <div class="info-item"><span class="info-label">绯荤粺鐗堟湰锛?/span><span class="info-value">v1.0.0</span></div>
-                      <div class="info-item"><span class="info-label">鎶€鏈鏋讹細</span><span class="info-value">Vue 3 + Element Plus</span></div>
-                      <div class="info-item"><span class="info-label">鍚庣妗嗘灦锛?/span><span class="info-value">Flask + SQLite</span></div>
-                      <div class="info-item"><span class="info-label">API鏈嶅姟锛?/span><span class="info-value">鐏北寮曟搸</span></div>
+                      <div class="info-item"><span class="info-label">系统版本：</span><span class="info-value">v1.0.0</span></div>
+                      <div class="info-item"><span class="info-label">技术框架：</span><span class="info-value">Vue 3 + Element Plus</span></div>
+                      <div class="info-item"><span class="info-label">后端框架：</span><span class="info-value">Flask + SQLite</span></div>
+                      <div class="info-item"><span class="info-label">API服务：</span><span class="info-value">火山引擎</span></div>
                     </div>
                   </el-card>
                 </el-col>
               </el-row>
             </template>
 
-            <!-- 閭€璇风爜绠＄悊 -->
+            <!-- 邀请码管理 -->
             <template v-else-if="activeMenu === 'codes'">
               <el-card shadow="never">
                 <template #header>
                   <div class="card-header">
-                    <span>閭€璇风爜鍒楄〃</span>
+                    <span>邀请码列表</span>
                     <div class="header-actions">
-                      <el-button type="primary" @click="showBatchDialog = true">鎵归噺鐢熸垚</el-button>
-                      <el-button type="success" @click="showCreateCodeDialog">鏂板缓閭€璇风爜</el-button>
+                      <el-button type="primary" @click="showBatchDialog = true">批量生成</el-button>
+                      <el-button type="success" @click="showCreateCodeDialog">新建邀请码</el-button>
                     </div>
                   </div>
                 </template>
                 <el-table :data="inviteCodes" v-loading="tableLoading" stripe>
                   <el-table-column prop="id" label="ID" width="80"></el-table-column>
-                  <el-table-column prop="code" label="閭€璇风爜" min-width="150"></el-table-column>
-                  <el-table-column prop="compute_power" label="绠楀姏鍊? width="100"></el-table-column>
-                  <el-table-column prop="status" label="鐘舵€? width="100">
+                  <el-table-column prop="code" label="邀请码" min-width="150"></el-table-column>
+                  <el-table-column prop="compute_power" label="算力值" width="100"></el-table-column>
+                  <el-table-column prop="status" label="状态" width="100">
                     <template #default="{ row }">
                       <el-tag :type="row.status === 'active' ? 'success' : row.status === 'used' ? 'info' : 'danger'">
-                        {{ row.status === 'active' ? '鏈娇鐢? : row.status === 'used' ? '宸蹭娇鐢? : '宸茬鐢? }}
+                        {{ row.status === 'active' ? '未使用' : row.status === 'used' ? '已使用' : '已禁用' }}
                       </el-tag>
                     </template>
                   </el-table-column>
-                  <el-table-column prop="use_count" label="浣跨敤娆℃暟" width="100"></el-table-column>
-                  <el-table-column prop="created_at" label="鍒涘缓鏃堕棿" width="180"></el-table-column>
-                  <el-table-column label="鎿嶄綔" width="150" fixed="right">
+                  <el-table-column prop="use_count" label="使用次数" width="100"></el-table-column>
+                  <el-table-column prop="created_at" label="创建时间" width="180"></el-table-column>
+                  <el-table-column label="操作" width="150" fixed="right">
                     <template #default="{ row }">
-                      <el-button link type="primary" @click="editCode(row)">缂栬緫</el-button>
-                      <el-button link type="danger" @click="deleteCode(row)">鍒犻櫎</el-button>
+                      <el-button link type="primary" @click="editCode(row)">编辑</el-button>
+                      <el-button link type="danger" @click="deleteCode(row)">删除</el-button>
                     </template>
                   </el-table-column>
                 </el-table>
               </el-card>
             </template>
 
-            <!-- 鍐呭绠＄悊 -->
+            <!-- 内容管理 -->
             <template v-else-if="activeMenu === 'works'">
               <el-card shadow="never">
                 <template #header>
                   <div class="card-header">
-                    <span>绀惧尯鍒嗕韩鍐呭绠＄悊</span>
-                    <el-button type="primary" @click="showCreateWorkDialog">涓婁紶浣滃搧</el-button>
+                    <span>社区分享内容管理</span>
+                    <el-button type="primary" @click="showCreateWorkDialog">上传作品</el-button>
                   </div>
                 </template>
                 <el-table :data="works" v-loading="tableLoading" stripe>
                   <el-table-column prop="id" label="ID" width="80"></el-table-column>
-                  <el-table-column label="灏侀潰" width="120">
+                  <el-table-column label="封面" width="120">
                     <template #default="{ row }">
                       <el-image :src="row.image" style="width: 80px; height: 60px;" fit="cover"></el-image>
                     </template>
                   </el-table-column>
-                  <el-table-column prop="title" label="浣滃搧鍚嶇О" min-width="150"></el-table-column>
-                  <el-table-column prop="student_name" label="瀛﹀憳鍚嶇О" width="120"></el-table-column>
-                  <el-table-column prop="cost" label="绠楀姏鎴愭湰" width="120"></el-table-column>
-                  <el-table-column prop="duration" label="鍒朵綔鏃堕暱" width="100"></el-table-column>
-                  <el-table-column prop="status" label="鐘舵€? width="80">
+                  <el-table-column prop="title" label="作品名称" min-width="150"></el-table-column>
+                  <el-table-column prop="student_name" label="学员名称" width="120"></el-table-column>
+                  <el-table-column prop="cost" label="算力成本" width="120"></el-table-column>
+                  <el-table-column prop="duration" label="制作时长" width="100"></el-table-column>
+                  <el-table-column prop="category" label="分类" width="100">
                     <template #default="{ row }">
-                      <el-tag :type="row.status === 'active' ? 'success' : 'danger'">
-                        {{ row.status === 'active' ? '宸插彂甯? : '宸蹭笅鏋? }}
+                      <el-tag :type="row.category === 'IP版权库' ? 'primary' : 'success'" size="small">
+                        {{ row.category || 'IP版权库' }}
                       </el-tag>
                     </template>
                   </el-table-column>
-                  <el-table-column label="鎿嶄綔" width="200" fixed="right">
+                  <el-table-column prop="status" label="状态" width="80">
                     <template #default="{ row }">
-                      <el-button link type="primary" @click="editWork(row)">缂栬緫</el-button>
-                      <el-button link type="warning" @click="toggleWorkStatus(row)">{{ row.status === 'active' ? '涓嬫灦' : '鍙戝竷' }}</el-button>
-                      <el-button link type="danger" @click="deleteWork(row)">鍒犻櫎</el-button>
+                      <el-tag :type="row.status === 'active' ? 'success' : 'danger'">
+                        {{ row.status === 'active' ? '已发布' : '已下架' }}
+                      </el-tag>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="操作" width="200" fixed="right">
+                    <template #default="{ row }">
+                      <el-button link type="primary" @click="editWork(row)">编辑</el-button>
+                      <el-button link type="warning" @click="toggleWorkStatus(row)">{{ row.status === 'active' ? '下架' : '发布' }}</el-button>
+                      <el-button link type="danger" @click="deleteWork(row)">删除</el-button>
                     </template>
                   </el-table-column>
                 </el-table>
               </el-card>
             </template>
 
-            <!-- 鐢ㄦ埛绠＄悊 -->
+            <!-- 用户管理 -->
             <template v-else-if="activeMenu === 'users'">
               <el-card shadow="never">
-                <template #header><span>鐢ㄦ埛绠＄悊</span></template>
+                <template #header><span>用户管理</span></template>
                 <el-table :data="users" v-loading="tableLoading" stripe>
                   <el-table-column prop="id" label="ID" width="80"></el-table-column>
-                  <el-table-column prop="invite_code" label="閭€璇风爜" min-width="150"></el-table-column>
-                  <el-table-column prop="compute_power" label="鍓╀綑绠楀姏" width="120"></el-table-column>
-                  <el-table-column prop="project_count" label="椤圭洰鏁伴噺" width="100"></el-table-column>
-                  <el-table-column prop="record_count" label="鐢熸垚璁板綍" width="100"></el-table-column>
-                  <el-table-column prop="created_at" label="娉ㄥ唽鏃堕棿" width="180"></el-table-column>
-                  <el-table-column label="鎿嶄綔" width="150" fixed="right">
+                  <el-table-column prop="invite_code" label="邀请码" min-width="150"></el-table-column>
+                  <el-table-column prop="compute_power" label="剩余算力" width="120"></el-table-column>
+                  <el-table-column prop="project_count" label="项目数量" width="100"></el-table-column>
+                  <el-table-column prop="record_count" label="生成记录" width="100"></el-table-column>
+                  <el-table-column prop="created_at" label="注册时间" width="180"></el-table-column>
+                  <el-table-column label="操作" width="150" fixed="right">
                     <template #default="{ row }">
-                      <el-button link type="primary" @click="viewUserDetail(row)">璇︽儏</el-button>
-                      <el-button link type="warning" @click="addUserPower(row)">鍏呭€肩畻鍔?/el-button>
+                      <el-button link type="primary" @click="viewUserDetail(row)">详情</el-button>
+                      <el-button link type="warning" @click="addUserPower(row)">充值算力</el-button>
                     </template>
                   </el-table-column>
                 </el-table>
@@ -259,131 +266,137 @@
       </el-container>
     </template>
 
-    <!-- 鍒涘缓閭€璇风爜瀵硅瘽妗?-->
-    <el-dialog v-model="createCodeDialogVisible" :title="editingCode ? '缂栬緫閭€璇风爜' : '鏂板缓閭€璇风爜'" width="450px">
+    <!-- 创建邀请码对话框 -->
+    <el-dialog v-model="createCodeDialogVisible" :title="editingCode ? '编辑邀请码' : '新建邀请码'" width="450px">
       <el-form :model="codeForm" label-width="80px">
-        <el-form-item label="閭€璇风爜">
-          <el-input v-model="codeForm.code" placeholder="鐣欑┖鍒欒嚜鍔ㄧ敓鎴?浣嶉個璇风爜" :disabled="!!editingCode" maxlength="8" show-word-limit></el-input>
-          <div class="el-form-item__tip" v-if="!editingCode">閭€璇风爜涓?浣嶅ぇ鍐欏瓧姣嶅拰鏁板瓧缁勫悎</div>
+        <el-form-item label="邀请码">
+          <el-input v-model="codeForm.code" placeholder="留空则自动生成随机邀请码" :disabled="!!editingCode" maxlength="8" show-word-limit></el-input>
+          <div class="el-form-item__tip" v-if="!editingCode">邀请码为8位大写字母和数字组合</div>
         </el-form-item>
-        <el-form-item label="绠楀姏鍊?>
+        <el-form-item label="算力值">
           <el-input-number v-model="codeForm.compute_power" :min="0" :max="10000"></el-input-number>
         </el-form-item>
-        <el-form-item label="鐘舵€? v-if="editingCode">
+        <el-form-item label="状态" v-if="editingCode">
           <el-select v-model="codeForm.status">
-            <el-option label="鏈娇鐢? value="active"></el-option>
-            <el-option label="宸蹭娇鐢? value="used"></el-option>
-            <el-option label="宸茬鐢? value="disabled"></el-option>
+            <el-option label="未使用" value="active"></el-option>
+            <el-option label="已使用" value="used"></el-option>
+            <el-option label="已禁用" value="disabled"></el-option>
           </el-select>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="createCodeDialogVisible = false">鍙栨秷</el-button>
-        <el-button type="primary" @click="submitCodeForm">纭畾</el-button>
+        <el-button @click="createCodeDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitCodeForm">确定</el-button>
       </template>
     </el-dialog>
 
-    <!-- 鎵归噺鐢熸垚瀵硅瘽妗?-->
-    <el-dialog v-model="showBatchDialog" title="鎵归噺鐢熸垚閭€璇风爜" width="450px">
+    <!-- 批量生成对话框 -->
+    <el-dialog v-model="showBatchDialog" title="批量生成邀请码" width="450px">
       <el-form :model="batchForm" label-width="80px">
-        <el-form-item label="鐢熸垚鏁伴噺">
+        <el-form-item label="生成数量">
           <el-input-number v-model="batchForm.count" :min="1" :max="100"></el-input-number>
         </el-form-item>
-        <el-form-item label="绠楀姏鍊?>
+        <el-form-item label="算力值">
           <el-input-number v-model="batchForm.compute_power" :min="0" :max="10000"></el-input-number>
         </el-form-item>
-        <div class="batch-tip">灏嗚嚜鍔ㄧ敓鎴愰殢鏈?浣嶉個璇风爜锛堝ぇ鍐欏瓧姣?鏁板瓧缁勫悎锛?/div>
+        <div class="batch-tip">将自动生成随机8位邀请码（大写字母和数字组合）</div>
       </el-form>
       <template #footer>
-        <el-button @click="showBatchDialog = false">鍙栨秷</el-button>
-        <el-button type="primary" @click="submitBatchForm">鐢熸垚</el-button>
+        <el-button @click="showBatchDialog = false">取消</el-button>
+        <el-button type="primary" @click="submitBatchForm">生成</el-button>
       </template>
     </el-dialog>
 
-    <!-- 鍒涘缓浣滃搧瀵硅瘽妗?-->
-    <el-dialog v-model="createWorkDialogVisible" :title="editingWork ? '缂栬緫浣滃搧' : '涓婁紶浣滃搧'" width="650px">
+    <!-- 创建作品对话框 -->
+    <el-dialog v-model="createWorkDialogVisible" :title="editingWork ? '编辑作品' : '上传作品'" width="650px">
       <el-form :model="workForm" label-width="100px">
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="浣滃搧鍚嶇О">
-              <el-input v-model="workForm.title" placeholder="璇疯緭鍏ヤ綔鍝佸悕绉?></el-input>
+            <el-form-item label="作品名称">
+              <el-input v-model="workForm.title" placeholder="请输入作品名称"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="瀛﹀憳鍚嶇О">
-              <el-input v-model="workForm.student_name" placeholder="璇疯緭鍏ュ鍛樺悕绉?></el-input>
+            <el-form-item label="学员名称">
+              <el-input v-model="workForm.student_name" placeholder="请输入学员姓名"></el-input>
             </el-form-item>
           </el-col>
         </el-row>
-        <el-form-item label="灏侀潰鍥剧墖">
-          <el-input v-model="workForm.image" placeholder="璇疯緭鍏ュ浘鐗嘦RL"></el-input>
-        </el-form-item>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="绠楀姏鎴愭湰">
-              <el-input v-model="workForm.cost" placeholder="濡傦細绾?000绠楀姏/鍒嗛挓"></el-input>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="鍒朵綔鏃堕暱">
-              <el-input v-model="workForm.duration" placeholder="濡傦細420鍒嗛挓"></el-input>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="甯傚満鍞环">
-              <el-input v-model="workForm.price" placeholder="濡傦細150-300鍏?鍒嗛挓"></el-input>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="鐗堟潈淇℃伅">
-              <el-input v-model="workForm.copyright" placeholder="濡傦細褰扖iliAI鎵€鏈?></el-input>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-form-item label="鏍囩">
-          <el-select v-model="workForm.tags" multiple placeholder="璇烽€夋嫨鏍囩" style="width: 100%;">
-            <el-option label="AI鍔ㄧ敾" value="AI鍔ㄧ敾"></el-option>
-            <el-option label="AI鐪熶汉" value="AI鐪熶汉"></el-option>
-            <el-option label="浠欎緺" value="浠欎緺"></el-option>
-            <el-option label="骞翠唬" value="骞翠唬"></el-option>
-            <el-option label="鐜颁唬瑷€鎯? value="鐜颁唬瑷€鎯?></el-option>
+        <el-form-item label="分类">
+          <el-select v-model="workForm.category" placeholder="请选择分类" style="width: 100%;">
+            <el-option label="IP版权库" value="IP版权库"></el-option>
+            <el-option label="社区分享" value="社区分享"></el-option>
           </el-select>
         </el-form-item>
-        <el-form-item label="浣滃搧绠€浠?>
-          <el-input v-model="workForm.introduction" type="textarea" :rows="4" placeholder="璇疯緭鍏ヤ綔鍝佺畝浠?></el-input>
+        <el-form-item label="封面图片">
+          <el-input v-model="workForm.image" placeholder="请输入图片URL"></el-input>
+        </el-form-item>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="算力成本">
+              <el-input v-model="workForm.cost" placeholder="如：1000算力/分钟"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="制作时长">
+              <el-input v-model="workForm.duration" placeholder="如：420分钟"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="市场价格">
+              <el-input v-model="workForm.price" placeholder="如：150-300元/分钟"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="版权信息">
+              <el-input v-model="workForm.copyright" placeholder="如：归CiliAI所有"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="标签">
+          <el-select v-model="workForm.tags" multiple placeholder="请选择标签" style="width: 100%;">
+            <el-option label="AI动画" value="AI动画"></el-option>
+            <el-option label="AI真人" value="AI真人"></el-option>
+            <el-option label="古风" value="古风"></el-option>
+            <el-option label="穿越" value="穿越"></el-option>
+            <el-option label="现代科幻" value="现代科幻"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="作品简介">
+          <el-input v-model="workForm.introduction" type="textarea" :rows="4" placeholder="请输入作品简介"></el-input>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="createWorkDialogVisible = false">鍙栨秷</el-button>
-        <el-button type="primary" @click="submitWorkForm">纭畾</el-button>
+        <el-button @click="createWorkDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitWorkForm">确定</el-button>
       </template>
     </el-dialog>
 
-    <!-- 鐢ㄦ埛璇︽儏瀵硅瘽妗?-->
-    <el-dialog v-model="userDetailDialogVisible" title="鐢ㄦ埛璇︽儏" width="600px">
+    <!-- 用户详情对话框 -->
+    <el-dialog v-model="userDetailDialogVisible" title="用户详情" width="600px">
       <el-descriptions :column="2" border>
-        <el-descriptions-item label="鐢ㄦ埛ID">{{ currentUser.id }}</el-descriptions-item>
-        <el-descriptions-item label="閭€璇风爜">{{ currentUser.invite_code }}</el-descriptions-item>
-        <el-descriptions-item label="鍓╀綑绠楀姏">{{ currentUser.compute_power }}</el-descriptions-item>
-        <el-descriptions-item label="椤圭洰鏁伴噺">{{ currentUser.project_count }}</el-descriptions-item>
-        <el-descriptions-item label="鐢熸垚璁板綍">{{ currentUser.record_count }}</el-descriptions-item>
-        <el-descriptions-item label="娉ㄥ唽鏃堕棿">{{ currentUser.created_at }}</el-descriptions-item>
+        <el-descriptions-item label="用户ID">{{ currentUser.id }}</el-descriptions-item>
+        <el-descriptions-item label="邀请码">{{ currentUser.invite_code }}</el-descriptions-item>
+        <el-descriptions-item label="剩余算力">{{ currentUser.compute_power }}</el-descriptions-item>
+        <el-descriptions-item label="项目数量">{{ currentUser.project_count }}</el-descriptions-item>
+        <el-descriptions-item label="生成记录">{{ currentUser.record_count }}</el-descriptions-item>
+        <el-descriptions-item label="注册时间">{{ currentUser.created_at }}</el-descriptions-item>
       </el-descriptions>
     </el-dialog>
 
-    <!-- 鍏呭€肩畻鍔涘璇濇 -->
-    <el-dialog v-model="powerDialogVisible" title="鍏呭€肩畻鍔? width="400px">
+    <!-- 充值算力对话框 -->
+    <el-dialog v-model="powerDialogVisible" title="充值算力" width="400px">
       <el-form :model="powerForm" label-width="80px">
-        <el-form-item label="褰撳墠绠楀姏"><span>{{ currentUser.compute_power }}</span></el-form-item>
-        <el-form-item label="鍏呭€兼暟閲?>
+        <el-form-item label="当前算力"><span>{{ currentUser.compute_power }}</span></el-form-item>
+        <el-form-item label="充值数量">
           <el-input-number v-model="powerForm.amount" :min="1" :max="10000"></el-input-number>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="powerDialogVisible = false">鍙栨秷</el-button>
-        <el-button type="primary" @click="confirmAddPower">纭畾</el-button>
+        <el-button @click="powerDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="confirmAddPower">确定</el-button>
       </template>
     </el-dialog>
   </div>
@@ -399,43 +412,43 @@
         const tableLoading = ref(false)
         const username = ref('admin')
         const activeMenu = ref('dashboard')
-        
+
         const loginForm = reactive({ username: '', password: '' })
-        
+
         const stats = ref([
-          { type: 'user', icon: '馃懁', value: 0, label: '鐢ㄦ埛鎬绘暟' },
-          { type: 'project', icon: '馃搧', value: 0, label: '椤圭洰鎬绘暟' },
-          { type: 'code', icon: '馃帿', value: 0, label: '閭€璇风爜鎬绘暟' },
-          { type: 'used', icon: '鉁?, value: 0, label: '宸蹭娇鐢ㄩ個璇风爜' }
+          { type: 'user', icon: '用户', value: 0, label: '用户总数' },
+          { type: 'project', icon: '项目', value: 0, label: '项目总数' },
+          { type: 'code', icon: '邀请', value: 0, label: '邀请码总数' },
+          { type: 'used', icon: '已用', value: 0, label: '已使用邀请码' }
         ])
 
         const inviteCodes = ref([])
         const works = ref([])
         const users = ref([])
-        
+
         const createCodeDialogVisible = ref(false)
         const showBatchDialog = ref(false)
         const createWorkDialogVisible = ref(false)
         const userDetailDialogVisible = ref(false)
         const powerDialogVisible = ref(false)
-        
+
         const editingCode = ref(null)
         const editingWork = ref(null)
         const currentUser = ref({})
-        
+
         const codeForm = reactive({ code: '', compute_power: 1000, status: 'active' })
         const batchForm = reactive({ count: 10, compute_power: 1000 })
-        const workForm = reactive({ title: '', student_name: '', image: '', cost: '', duration: '', price: '', copyright: '褰扖iliAI鎵€鏈?, tags: [], introduction: '' })
+        const workForm = reactive({ title: '', student_name: '', image: '', cost: '', duration: '', price: '', copyright: '归CiliAI所有', tags: [], introduction: '', category: 'IP版权库' })
         const powerForm = reactive({ amount: 100 })
 
         const pageTitle = computed(() => {
-          const titles = { dashboard: '鎺у埗鍙?, codes: '閭€璇风爜绠＄悊', works: '鍐呭绠＄悊', users: '鐢ㄦ埛绠＄悊' }
+          const titles = { dashboard: '控制台', codes: '邀请码管理', works: '内容管理', users: '用户管理' }
           return titles[activeMenu.value] || ''
         })
 
         const handleLogin = async () => {
           if (!loginForm.username || !loginForm.password) {
-            ElMessage.warning('璇疯緭鍏ョ敤鎴峰悕鍜屽瘑鐮?)
+            ElMessage.warning('请输入用户名和密码')
             return
           }
           loading.value = true
@@ -445,13 +458,13 @@
               localStorage.setItem('admin_token', res.data.data.token)
               username.value = res.data.data.username
               isLoggedIn.value = true
-              ElMessage.success('鐧诲綍鎴愬姛')
+              ElMessage.success('登录成功')
               fetchStats()
             } else {
-              ElMessage.error(res.data.msg || '鐧诲綍澶辫触')
+              ElMessage.error(res.data.msg || '登录失败')
             }
           } catch (error) {
-            ElMessage.error('鐧诲綍澶辫触锛岃閲嶈瘯')
+            ElMessage.error('登录失败，请重试')
           } finally {
             loading.value = false
           }
@@ -459,10 +472,10 @@
 
         const handleCommand = (command) => {
           if (command === 'logout') {
-            ElMessageBox.confirm('纭畾瑕侀€€鍑虹櫥褰曞悧锛?, '鎻愮ず', { type: 'warning' }).then(() => {
+            ElMessageBox.confirm('确定要退出登录吗？', '提示', { type: 'warning' }).then(() => {
               localStorage.removeItem('admin_token')
               isLoggedIn.value = false
-              ElMessage.success('宸查€€鍑虹櫥褰?)
+              ElMessage.success('已退出登录')
             }).catch(() => {})
           }
         }
@@ -491,7 +504,7 @@
           try {
             const res = await axios.get('/api/admin/invite-codes')
             if (res.data.code === 200) inviteCodes.value = res.data.data.list
-          } catch (error) { ElMessage.error('鑾峰彇閭€璇风爜鍒楄〃澶辫触') }
+          } catch (error) { ElMessage.error('获取邀请码列表失败') }
           finally { tableLoading.value = false }
         }
 
@@ -500,7 +513,7 @@
           try {
             const res = await axios.get('/api/admin/works')
             if (res.data.code === 200) works.value = res.data.data.list
-          } catch (error) { ElMessage.error('鑾峰彇浣滃搧鍒楄〃澶辫触') }
+          } catch (error) { ElMessage.error('获取作品列表失败') }
           finally { tableLoading.value = false }
         }
 
@@ -509,7 +522,7 @@
           try {
             const res = await axios.get('/api/admin/users')
             if (res.data.code === 200) users.value = res.data.data.list
-          } catch (error) { ElMessage.error('鑾峰彇鐢ㄦ埛鍒楄〃澶辫触') }
+          } catch (error) { ElMessage.error('获取用户列表失败') }
           finally { tableLoading.value = false }
         }
 
@@ -531,11 +544,11 @@
 
         const deleteCode = async (row) => {
           try {
-            await ElMessageBox.confirm('纭畾瑕佸垹闄よ閭€璇风爜鍚楋紵', '鎻愮ず', { type: 'warning' })
+            await ElMessageBox.confirm('确定要删除该邀请码吗？', '提示', { type: 'warning' })
             const res = await axios.delete(`/api/admin/invite-codes/${row.id}`)
-            if (res.data.code === 200) { ElMessage.success('鍒犻櫎鎴愬姛'); fetchInviteCodes() }
-            else ElMessage.error(res.data.msg || '鍒犻櫎澶辫触')
-          } catch (error) { if (error !== 'cancel') ElMessage.error('鍒犻櫎澶辫触') }
+            if (res.data.code === 200) { ElMessage.success('删除成功'); fetchInviteCodes() }
+            else ElMessage.error(res.data.msg || '删除失败')
+          } catch (error) { if (error !== 'cancel') ElMessage.error('删除失败') }
         }
 
         const submitCodeForm = async () => {
@@ -543,28 +556,28 @@
             let res
             if (editingCode.value) res = await axios.put(`/api/admin/invite-codes/${editingCode.value.id}`, codeForm)
             else res = await axios.post('/api/admin/invite-codes', codeForm)
-            if (res.data.code === 200) { ElMessage.success(editingCode.value ? '鏇存柊鎴愬姛' : '鍒涘缓鎴愬姛'); createCodeDialogVisible.value = false; fetchInviteCodes() }
-            else ElMessage.error(res.data.msg || '鎿嶄綔澶辫触')
-          } catch (error) { ElMessage.error('鎿嶄綔澶辫触') }
+            if (res.data.code === 200) { ElMessage.success(editingCode.value ? '更新成功' : '创建成功'); createCodeDialogVisible.value = false; fetchInviteCodes() }
+            else ElMessage.error(res.data.msg || '操作失败')
+          } catch (error) { ElMessage.error('操作失败') }
         }
 
         const submitBatchForm = async () => {
           try {
             const res = await axios.post('/api/admin/invite-codes/batch', batchForm)
             if (res.data.code === 200) { ElMessage.success(res.data.msg); showBatchDialog.value = false; fetchInviteCodes() }
-            else ElMessage.error(res.data.msg || '鎵归噺鐢熸垚澶辫触')
-          } catch (error) { ElMessage.error('鎵归噺鐢熸垚澶辫触') }
+            else ElMessage.error(res.data.msg || '批量生成失败')
+          } catch (error) { ElMessage.error('批量生成失败') }
         }
 
         const showCreateWorkDialog = () => {
           editingWork.value = null
-          Object.assign(workForm, { title: '', student_name: '', image: '', cost: '', duration: '', price: '', copyright: '褰扖iliAI鎵€鏈?, tags: [], introduction: '' })
+          Object.assign(workForm, { title: '', student_name: '', image: '', cost: '', duration: '', price: '', copyright: '归CiliAI所有', tags: [], introduction: '', category: 'IP版权库' })
           createWorkDialogVisible.value = true
         }
 
         const editWork = (row) => {
           editingWork.value = row
-          Object.assign(workForm, { title: row.title, student_name: row.student_name, image: row.image, cost: row.cost, duration: row.duration, price: row.price, copyright: row.copyright, tags: row.tags ? JSON.parse(row.tags) : [], introduction: row.introduction })
+          Object.assign(workForm, { title: row.title, student_name: row.student_name, image: row.image, cost: row.cost, duration: row.duration, price: row.price, copyright: row.copyright, tags: row.tags ? JSON.parse(row.tags) : [], introduction: row.introduction, category: row.category })
           createWorkDialogVisible.value = true
         }
 
@@ -572,18 +585,18 @@
           const newStatus = row.status === 'active' ? 'inactive' : 'active'
           try {
             const res = await axios.put(`/api/admin/works/${row.id}`, { status: newStatus })
-            if (res.data.code === 200) { ElMessage.success(newStatus === 'active' ? '鍙戝竷鎴愬姛' : '涓嬫灦鎴愬姛'); fetchWorks() }
-            else ElMessage.error(res.data.msg || '鎿嶄綔澶辫触')
-          } catch (error) { ElMessage.error('鎿嶄綔澶辫触') }
+            if (res.data.code === 200) { ElMessage.success(newStatus === 'active' ? '发布成功' : '下架成功'); fetchWorks() }
+            else ElMessage.error(res.data.msg || '操作失败')
+          } catch (error) { ElMessage.error('操作失败') }
         }
 
         const deleteWork = async (row) => {
           try {
-            await ElMessageBox.confirm('纭畾瑕佸垹闄よ浣滃搧鍚楋紵', '鎻愮ず', { type: 'warning' })
+            await ElMessageBox.confirm('确定要删除该作品吗？', '提示', { type: 'warning' })
             const res = await axios.delete(`/api/admin/works/${row.id}`)
-            if (res.data.code === 200) { ElMessage.success('鍒犻櫎鎴愬姛'); fetchWorks() }
-            else ElMessage.error(res.data.msg || '鍒犻櫎澶辫触')
-          } catch (error) { if (error !== 'cancel') ElMessage.error('鍒犻櫎澶辫触') }
+            if (res.data.code === 200) { ElMessage.success('删除成功'); fetchWorks() }
+            else ElMessage.error(res.data.msg || '删除失败')
+          } catch (error) { if (error !== 'cancel') ElMessage.error('删除失败') }
         }
 
         const submitWorkForm = async () => {
@@ -591,14 +604,14 @@
             let res
             if (editingWork.value) res = await axios.put(`/api/admin/works/${editingWork.value.id}`, workForm)
             else res = await axios.post('/api/admin/works', workForm)
-            if (res.data.code === 200) { ElMessage.success(editingWork.value ? '鏇存柊鎴愬姛' : '鍒涘缓鎴愬姛'); createWorkDialogVisible.value = false; fetchWorks() }
-            else ElMessage.error(res.data.msg || '鎿嶄綔澶辫触')
-          } catch (error) { ElMessage.error('鎿嶄綔澶辫触') }
+            if (res.data.code === 200) { ElMessage.success(editingWork.value ? '更新成功' : '创建成功'); createWorkDialogVisible.value = false; fetchWorks() }
+            else ElMessage.error(res.data.msg || '操作失败')
+          } catch (error) { ElMessage.error('操作失败') }
         }
 
         const viewUserDetail = (row) => { currentUser.value = row; userDetailDialogVisible.value = true }
         const addUserPower = (row) => { currentUser.value = row; powerForm.amount = 100; powerDialogVisible.value = true }
-        const confirmAddPower = () => { ElMessage.success(`宸蹭负鐢ㄦ埛鍏呭€?${powerForm.amount} 绠楀姏`); powerDialogVisible.value = false; fetchUsers() }
+        const confirmAddPower = () => { ElMessage.success(`已为用户充值${powerForm.amount} 算力`); powerDialogVisible.value = false; fetchUsers() }
 
         onMounted(() => {
           const token = localStorage.getItem('admin_token')
@@ -625,4 +638,3 @@
   </script>
 </body>
 </html>
-

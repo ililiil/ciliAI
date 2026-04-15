@@ -1,0 +1,1075 @@
+app:
+  description: ''
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  icon_type: emoji
+  mode: advanced-chat
+  name: 磁力AI生图
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: sawyer-shi/seedream_aigc:0.0.1@cb3174212b2e32038019fdbbba3c970f68116533ec294a30e6ebdb5af23a4662
+    version: null
+kind: app
+version: 0.6.0
+workflow:
+  conversation_variables:
+  - description: ''
+    id: 49aa9cbc-5d8d-4f18-96db-a699eec48569
+    name: test
+    selector:
+    - conversation
+    - test
+    value: []
+    value_type: array[object]
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - remote_url
+      - local_file
+      enabled: true
+      fileUploadConfig:
+        attachment_image_file_size_limit: 2
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        file_upload_limit: 20
+        image_file_batch_limit: 10
+        image_file_size_limit: 10
+        single_chunk_attachment_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: false
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: tool
+        targetType: answer
+      id: 1775125383128-source-1775125618432-target
+      selected: false
+      source: '1775125383128'
+      sourceHandle: source
+      target: '1775125618432'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: tool
+        targetType: answer
+      id: 1775124237863-source-answer-target
+      selected: false
+      source: '1775124237863'
+      sourceHandle: source
+      target: answer
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: start
+        targetType: if-else
+      id: 1775101936143-source-1776052572786-target
+      source: '1775101936143'
+      sourceHandle: source
+      target: '1776052572786'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: tool
+      id: 1776052572786-true-1775124237863-target
+      source: '1776052572786'
+      sourceHandle: 'true'
+      target: '1775124237863'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: tool
+      id: 1776052572786-1f610124-c714-4b24-a34c-fa09bb3d4d79-1775125383128-target
+      selected: false
+      source: '1776052572786'
+      sourceHandle: 1f610124-c714-4b24-a34c-fa09bb3d4d79
+      target: '1775125383128'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: tool
+        targetType: answer
+      id: 17760526110800-source-17760526110811-target
+      selected: false
+      source: '17760526110800'
+      sourceHandle: source
+      target: '17760526110811'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: tool
+      id: 1776052572786-41e5f577-8428-49f2-ba33-4517a78600f0-17760526110800-target
+      source: '1776052572786'
+      sourceHandle: 41e5f577-8428-49f2-ba33-4517a78600f0
+      target: '17760526110800'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        selected: false
+        title: 用户输入
+        type: start
+        variables:
+        - hint: ''
+          label: type
+          options:
+          - 生图
+          - 扩图
+          - 改图
+          placeholder: ''
+          required: true
+          type: select
+          variable: type
+      height: 108
+      id: '1775101936143'
+      position:
+        x: -803.0747753272117
+        y: 91.43684791768806
+      positionAbsolute:
+        x: -803.0747753272117
+        y: 91.43684791768806
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        answer: '{{#1775124237863.files#}}'
+        selected: false
+        title: 直接回复
+        type: answer
+        variables: []
+      height: 102
+      id: answer
+      position:
+        x: 372.04272304341816
+        y: 139.57752050618166
+      positionAbsolute:
+        x: 372.04272304341816
+        y: 139.57752050618166
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        is_team_authorization: true
+        paramSchemas:
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: Text description of the image you want to generate
+            ja_JP: Text description of the image you want to generate
+            pt_BR: Text description of the image you want to generate
+            zh_Hans: 您想要生成的图像的文本描述
+          label:
+            en_US: Prompt
+            ja_JP: Prompt
+            pt_BR: Prompt
+            zh_Hans: 提示词
+          llm_description: Text description of the image to generate
+          max: null
+          min: null
+          name: prompt
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: 2048x2048
+          form: form
+          human_description:
+            en_US: Size of the generated image
+            ja_JP: Size of the generated image
+            pt_BR: Size of the generated image
+            zh_Hans: 生成图像的尺寸
+          label:
+            en_US: Image Size
+            ja_JP: Image Size
+            pt_BR: Image Size
+            zh_Hans: 图像尺寸
+          llm_description: Size of the generated image
+          max: null
+          min: null
+          name: size
+          options:
+          - icon: ''
+            label:
+              en_US: 1:1 (2048x2048)
+              ja_JP: 1:1 (2048x2048)
+              pt_BR: 1:1 (2048x2048)
+              zh_Hans: 1:1 (2048x2048)
+            value: 2048x2048
+          - icon: ''
+            label:
+              en_US: 4:3 (2304x1728)
+              ja_JP: 4:3 (2304x1728)
+              pt_BR: 4:3 (2304x1728)
+              zh_Hans: 4:3 (2304x1728)
+            value: 2304x1728
+          - icon: ''
+            label:
+              en_US: 3:4 (1728x2304)
+              ja_JP: 3:4 (1728x2304)
+              pt_BR: 3:4 (1728x2304)
+              zh_Hans: 3:4 (1728x2304)
+            value: 1728x2304
+          - icon: ''
+            label:
+              en_US: 16:9 (2560x1440)
+              ja_JP: 16:9 (2560x1440)
+              pt_BR: 16:9 (2560x1440)
+              zh_Hans: 16:9 (2560x1440)
+            value: 2560x1440
+          - icon: ''
+            label:
+              en_US: 9:16 (1440x2560)
+              ja_JP: 9:16 (1440x2560)
+              pt_BR: 9:16 (1440x2560)
+              zh_Hans: 9:16 (1440x2560)
+            value: 1440x2560
+          - icon: ''
+            label:
+              en_US: 3:2 (2496x1664)
+              ja_JP: 3:2 (2496x1664)
+              pt_BR: 3:2 (2496x1664)
+              zh_Hans: 3:2 (2496x1664)
+            value: 2496x1664
+          - icon: ''
+            label:
+              en_US: 2:3 (1664x2496)
+              ja_JP: 2:3 (1664x2496)
+              pt_BR: 2:3 (1664x2496)
+              zh_Hans: 2:3 (1664x2496)
+            value: 1664x2496
+          - icon: ''
+            label:
+              en_US: 21:9 (3024x1296)
+              ja_JP: 21:9 (3024x1296)
+              pt_BR: 21:9 (3024x1296)
+              zh_Hans: 21:9 (3024x1296)
+            value: 3024x1296
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        - auto_generate: null
+          default: 'true'
+          form: form
+          human_description:
+            en_US: Whether to add 'AI Generated' watermark to the image
+            ja_JP: Whether to add 'AI Generated' watermark to the image
+            pt_BR: Whether to add 'AI Generated' watermark to the image
+            zh_Hans: 是否在图像上添加'AI生成'水印
+          label:
+            en_US: Watermark
+            ja_JP: Watermark
+            pt_BR: Watermark
+            zh_Hans: 水印
+          llm_description: Whether to add 'AI Generated' watermark to the image
+          max: null
+          min: null
+          name: watermark
+          options:
+          - icon: ''
+            label:
+              en_US: Enabled
+              ja_JP: Enabled
+              pt_BR: Enabled
+              zh_Hans: 启用
+            value: 'true'
+          - icon: ''
+            label:
+              en_US: Disabled
+              ja_JP: Disabled
+              pt_BR: Disabled
+              zh_Hans: 禁用
+            value: 'false'
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        - auto_generate: null
+          default: doubao-seedream-4-5-251128
+          form: form
+          human_description:
+            en_US: Choose the Seedream model version to use
+            ja_JP: Choose the Seedream model version to use
+            pt_BR: Choose the Seedream model version to use
+            zh_Hans: 选择要使用的Seedream模型版本
+          label:
+            en_US: Model Version
+            ja_JP: Model Version
+            pt_BR: Model Version
+            zh_Hans: 模型版本
+          llm_description: Choose the Seedream model version to use
+          max: null
+          min: null
+          name: model
+          options:
+          - icon: ''
+            label:
+              en_US: Seedream4.0
+              ja_JP: Seedream4.0
+              pt_BR: Seedream4.0
+              zh_Hans: Seedream4.0
+            value: doubao-seedream-4-0-250828
+          - icon: ''
+            label:
+              en_US: Seedream4.5
+              ja_JP: Seedream4.5
+              pt_BR: Seedream4.5
+              zh_Hans: Seedream4.5
+            value: doubao-seedream-4-5-251128
+          - icon: ''
+            label:
+              en_US: Seedream5.0 Lite
+              ja_JP: Seedream5.0 Lite
+              pt_BR: Seedream5.0 Lite
+              zh_Hans: Seedream5.0 Lite
+            value: doubao-seedream-5-0-260128
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        params:
+          model: ''
+          prompt: ''
+          size: ''
+          watermark: ''
+        plugin_id: sawyer-shi/seedream_aigc
+        plugin_unique_identifier: sawyer-shi/seedream_aigc:0.0.1@cb3174212b2e32038019fdbbba3c970f68116533ec294a30e6ebdb5af23a4662
+        provider_icon: https://whhongyi.com.cn/console/api/workspaces/current/plugin/icon?tenant_id=4df97457-0a24-49bb-8d34-536e742605b4&filename=9638639a259e524d8a12d8fa29d692c7b226cc88124ff4fb1eb2d31d0c9f88d3.svg
+        provider_id: sawyer-shi/seedream_aigc/seedream_aigc
+        provider_name: sawyer-shi/seedream_aigc/seedream_aigc
+        provider_type: builtin
+        selected: false
+        title: Seedream-文生图
+        tool_configurations:
+          model:
+            type: constant
+            value: doubao-seedream-5-0-260128
+          size:
+            type: constant
+            value: 2048x2048
+          watermark:
+            type: constant
+            value: 'false'
+        tool_description: 使用Seedream模型根据文本描述生成图像
+        tool_label: Seedream-文生图
+        tool_name: text2image
+        tool_node_version: '2'
+        tool_parameters:
+          prompt:
+            type: mixed
+            value: '{{#sys.query#}}'
+        type: tool
+      height: 139
+      id: '1775124237863'
+      position:
+        x: 45.53147706333618
+        y: 139.57752050618166
+      positionAbsolute:
+        x: 45.53147706333618
+        y: 139.57752050618166
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        is_team_authorization: true
+        paramSchemas:
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: Text description of the image you want to generate
+            ja_JP: Text description of the image you want to generate
+            pt_BR: Text description of the image you want to generate
+            zh_Hans: 您想要生成的图像的文本描述
+          label:
+            en_US: Prompt
+            ja_JP: Prompt
+            pt_BR: Prompt
+            zh_Hans: 提示词
+          llm_description: Text description of the image to generate
+          max: null
+          min: null
+          name: prompt
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: Reference image file for generation (jpeg, png, webp, bmp, tiff,
+              gif; <=10MB)
+            ja_JP: Reference image file for generation (jpeg, png, webp, bmp, tiff,
+              gif; <=10MB)
+            pt_BR: Reference image file for generation (jpeg, png, webp, bmp, tiff,
+              gif; <=10MB)
+            zh_Hans: 用于生成的参考图片文件（jpeg、png、webp、bmp、tiff、gif；<=10MB）
+          label:
+            en_US: Reference Image File
+            ja_JP: Reference Image File
+            pt_BR: Reference Image File
+            zh_Hans: 参考图片文件
+          llm_description: Reference image file to use for generation
+          max: null
+          min: null
+          name: input_image_file
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: file
+        - auto_generate: null
+          default: 2048x2048
+          form: form
+          human_description:
+            en_US: Size of the generated image
+            ja_JP: Size of the generated image
+            pt_BR: Size of the generated image
+            zh_Hans: 生成图像的尺寸
+          label:
+            en_US: Image Size
+            ja_JP: Image Size
+            pt_BR: Image Size
+            zh_Hans: 图像尺寸
+          llm_description: Size of the generated image
+          max: null
+          min: null
+          name: size
+          options:
+          - icon: ''
+            label:
+              en_US: 1:1 (2048x2048)
+              ja_JP: 1:1 (2048x2048)
+              pt_BR: 1:1 (2048x2048)
+              zh_Hans: 1:1 (2048x2048)
+            value: 2048x2048
+          - icon: ''
+            label:
+              en_US: 4:3 (2304x1728)
+              ja_JP: 4:3 (2304x1728)
+              pt_BR: 4:3 (2304x1728)
+              zh_Hans: 4:3 (2304x1728)
+            value: 2304x1728
+          - icon: ''
+            label:
+              en_US: 3:4 (1728x2304)
+              ja_JP: 3:4 (1728x2304)
+              pt_BR: 3:4 (1728x2304)
+              zh_Hans: 3:4 (1728x2304)
+            value: 1728x2304
+          - icon: ''
+            label:
+              en_US: 16:9 (2560x1440)
+              ja_JP: 16:9 (2560x1440)
+              pt_BR: 16:9 (2560x1440)
+              zh_Hans: 16:9 (2560x1440)
+            value: 2560x1440
+          - icon: ''
+            label:
+              en_US: 9:16 (1440x2560)
+              ja_JP: 9:16 (1440x2560)
+              pt_BR: 9:16 (1440x2560)
+              zh_Hans: 9:16 (1440x2560)
+            value: 1440x2560
+          - icon: ''
+            label:
+              en_US: 3:2 (2496x1664)
+              ja_JP: 3:2 (2496x1664)
+              pt_BR: 3:2 (2496x1664)
+              zh_Hans: 3:2 (2496x1664)
+            value: 2496x1664
+          - icon: ''
+            label:
+              en_US: 2:3 (1664x2496)
+              ja_JP: 2:3 (1664x2496)
+              pt_BR: 2:3 (1664x2496)
+              zh_Hans: 2:3 (1664x2496)
+            value: 1664x2496
+          - icon: ''
+            label:
+              en_US: 21:9 (3024x1296)
+              ja_JP: 21:9 (3024x1296)
+              pt_BR: 21:9 (3024x1296)
+              zh_Hans: 21:9 (3024x1296)
+            value: 3024x1296
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        - auto_generate: null
+          default: 'true'
+          form: form
+          human_description:
+            en_US: Whether to add 'AI Generated' watermark to the image
+            ja_JP: Whether to add 'AI Generated' watermark to the image
+            pt_BR: Whether to add 'AI Generated' watermark to the image
+            zh_Hans: 是否在图像上添加'AI生成'水印
+          label:
+            en_US: Watermark
+            ja_JP: Watermark
+            pt_BR: Watermark
+            zh_Hans: 水印
+          llm_description: Whether to add 'AI Generated' watermark to the image
+          max: null
+          min: null
+          name: watermark
+          options:
+          - icon: ''
+            label:
+              en_US: Enabled
+              ja_JP: Enabled
+              pt_BR: Enabled
+              zh_Hans: 启用
+            value: 'true'
+          - icon: ''
+            label:
+              en_US: Disabled
+              ja_JP: Disabled
+              pt_BR: Disabled
+              zh_Hans: 禁用
+            value: 'false'
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        - auto_generate: null
+          default: doubao-seedream-4-5-251128
+          form: form
+          human_description:
+            en_US: Choose the Seedream model version to use
+            ja_JP: Choose the Seedream model version to use
+            pt_BR: Choose the Seedream model version to use
+            zh_Hans: 选择要使用的Seedream模型版本
+          label:
+            en_US: Model Version
+            ja_JP: Model Version
+            pt_BR: Model Version
+            zh_Hans: 模型版本
+          llm_description: Choose the Seedream model version to use
+          max: null
+          min: null
+          name: model
+          options:
+          - icon: ''
+            label:
+              en_US: Seedream4.0
+              ja_JP: Seedream4.0
+              pt_BR: Seedream4.0
+              zh_Hans: Seedream4.0
+            value: doubao-seedream-4-0-250828
+          - icon: ''
+            label:
+              en_US: Seedream4.5
+              ja_JP: Seedream4.5
+              pt_BR: Seedream4.5
+              zh_Hans: Seedream4.5
+            value: doubao-seedream-4-5-251128
+          - icon: ''
+            label:
+              en_US: Seedream5.0 Lite
+              ja_JP: Seedream5.0 Lite
+              pt_BR: Seedream5.0 Lite
+              zh_Hans: Seedream5.0 Lite
+            value: doubao-seedream-5-0-260128
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        params:
+          input_image_file: ''
+          model: ''
+          prompt: ''
+          size: ''
+          watermark: ''
+        plugin_id: sawyer-shi/seedream_aigc
+        plugin_unique_identifier: sawyer-shi/seedream_aigc:0.0.1@cb3174212b2e32038019fdbbba3c970f68116533ec294a30e6ebdb5af23a4662
+        provider_icon: https://whhongyi.com.cn/console/api/workspaces/current/plugin/icon?tenant_id=4df97457-0a24-49bb-8d34-536e742605b4&filename=9638639a259e524d8a12d8fa29d692c7b226cc88124ff4fb1eb2d31d0c9f88d3.svg
+        provider_id: sawyer-shi/seedream_aigc/seedream_aigc
+        provider_name: sawyer-shi/seedream_aigc/seedream_aigc
+        provider_type: builtin
+        selected: false
+        title: Seedream-改图
+        tool_configurations:
+          model:
+            type: constant
+            value: doubao-seedream-4-5-251128
+          size:
+            type: constant
+            value: 2048x2048
+          watermark:
+            type: constant
+            value: 'true'
+        tool_description: 使用Seedream模型根据文本描述和参考图像生成图像
+        tool_label: Seedream-图生图
+        tool_name: imagefile2image
+        tool_node_version: '2'
+        tool_parameters:
+          input_image_file:
+            type: variable
+            value:
+            - sys
+            - files
+          prompt:
+            type: mixed
+            value: '{{#sys.query#}}'
+        type: tool
+      height: 139
+      id: '1775125383128'
+      position:
+        x: 45.53147706333618
+        y: 583.8650137530656
+      positionAbsolute:
+        x: 45.53147706333618
+        y: 583.8650137530656
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        answer: '{{#1775125383128.text#}}'
+        selected: false
+        title: 直接回复 2
+        type: answer
+        variables: []
+      height: 102
+      id: '1775125618432'
+      position:
+        x: 372.04272304341816
+        y: 583.8650137530656
+      positionAbsolute:
+        x: 372.04272304341816
+        y: 583.8650137530656
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        cases:
+        - case_id: 'true'
+          conditions:
+          - comparison_operator: contains
+            id: d438b729-bc22-48d4-a9fb-90460caa0629
+            value: 生图
+            varType: string
+            variable_selector:
+            - '1775101936143'
+            - type
+          id: 'true'
+          logical_operator: and
+        - case_id: 41e5f577-8428-49f2-ba33-4517a78600f0
+          conditions:
+          - comparison_operator: contains
+            id: 694440cc-37c2-4ee0-a4f1-e9e1666f476c
+            value: 扩图
+            varType: string
+            variable_selector:
+            - '1775101936143'
+            - type
+          logical_operator: and
+        - case_id: 1f610124-c714-4b24-a34c-fa09bb3d4d79
+          conditions:
+          - comparison_operator: contains
+            id: 80ba7fbc-25e7-47ed-a073-06766e90619f
+            value: 改图
+            varType: string
+            variable_selector:
+            - '1775101936143'
+            - type
+          logical_operator: and
+        selected: false
+        title: 条件分支
+        type: if-else
+      height: 219
+      id: '1776052572786'
+      position:
+        x: -495.7290093462815
+        y: 112.43684791768806
+      positionAbsolute:
+        x: -495.7290093462815
+        y: 112.43684791768806
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        isInIteration: false
+        isInLoop: false
+        is_team_authorization: true
+        paramSchemas:
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: Text description of the image you want to generate
+            ja_JP: Text description of the image you want to generate
+            pt_BR: Text description of the image you want to generate
+            zh_Hans: 您想要生成的图像的文本描述
+          label:
+            en_US: Prompt
+            ja_JP: Prompt
+            pt_BR: Prompt
+            zh_Hans: 提示词
+          llm_description: Text description of the image to generate
+          max: null
+          min: null
+          name: prompt
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: string
+        - auto_generate: null
+          default: null
+          form: llm
+          human_description:
+            en_US: Reference image file for generation (jpeg, png, webp, bmp, tiff,
+              gif; <=10MB)
+            ja_JP: Reference image file for generation (jpeg, png, webp, bmp, tiff,
+              gif; <=10MB)
+            pt_BR: Reference image file for generation (jpeg, png, webp, bmp, tiff,
+              gif; <=10MB)
+            zh_Hans: 用于生成的参考图片文件（jpeg、png、webp、bmp、tiff、gif；<=10MB）
+          label:
+            en_US: Reference Image File
+            ja_JP: Reference Image File
+            pt_BR: Reference Image File
+            zh_Hans: 参考图片文件
+          llm_description: Reference image file to use for generation
+          max: null
+          min: null
+          name: input_image_file
+          options: []
+          placeholder: null
+          precision: null
+          required: true
+          scope: null
+          template: null
+          type: file
+        - auto_generate: null
+          default: 2048x2048
+          form: form
+          human_description:
+            en_US: Size of the generated image
+            ja_JP: Size of the generated image
+            pt_BR: Size of the generated image
+            zh_Hans: 生成图像的尺寸
+          label:
+            en_US: Image Size
+            ja_JP: Image Size
+            pt_BR: Image Size
+            zh_Hans: 图像尺寸
+          llm_description: Size of the generated image
+          max: null
+          min: null
+          name: size
+          options:
+          - icon: ''
+            label:
+              en_US: 1:1 (2048x2048)
+              ja_JP: 1:1 (2048x2048)
+              pt_BR: 1:1 (2048x2048)
+              zh_Hans: 1:1 (2048x2048)
+            value: 2048x2048
+          - icon: ''
+            label:
+              en_US: 4:3 (2304x1728)
+              ja_JP: 4:3 (2304x1728)
+              pt_BR: 4:3 (2304x1728)
+              zh_Hans: 4:3 (2304x1728)
+            value: 2304x1728
+          - icon: ''
+            label:
+              en_US: 3:4 (1728x2304)
+              ja_JP: 3:4 (1728x2304)
+              pt_BR: 3:4 (1728x2304)
+              zh_Hans: 3:4 (1728x2304)
+            value: 1728x2304
+          - icon: ''
+            label:
+              en_US: 16:9 (2560x1440)
+              ja_JP: 16:9 (2560x1440)
+              pt_BR: 16:9 (2560x1440)
+              zh_Hans: 16:9 (2560x1440)
+            value: 2560x1440
+          - icon: ''
+            label:
+              en_US: 9:16 (1440x2560)
+              ja_JP: 9:16 (1440x2560)
+              pt_BR: 9:16 (1440x2560)
+              zh_Hans: 9:16 (1440x2560)
+            value: 1440x2560
+          - icon: ''
+            label:
+              en_US: 3:2 (2496x1664)
+              ja_JP: 3:2 (2496x1664)
+              pt_BR: 3:2 (2496x1664)
+              zh_Hans: 3:2 (2496x1664)
+            value: 2496x1664
+          - icon: ''
+            label:
+              en_US: 2:3 (1664x2496)
+              ja_JP: 2:3 (1664x2496)
+              pt_BR: 2:3 (1664x2496)
+              zh_Hans: 2:3 (1664x2496)
+            value: 1664x2496
+          - icon: ''
+            label:
+              en_US: 21:9 (3024x1296)
+              ja_JP: 21:9 (3024x1296)
+              pt_BR: 21:9 (3024x1296)
+              zh_Hans: 21:9 (3024x1296)
+            value: 3024x1296
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        - auto_generate: null
+          default: 'true'
+          form: form
+          human_description:
+            en_US: Whether to add 'AI Generated' watermark to the image
+            ja_JP: Whether to add 'AI Generated' watermark to the image
+            pt_BR: Whether to add 'AI Generated' watermark to the image
+            zh_Hans: 是否在图像上添加'AI生成'水印
+          label:
+            en_US: Watermark
+            ja_JP: Watermark
+            pt_BR: Watermark
+            zh_Hans: 水印
+          llm_description: Whether to add 'AI Generated' watermark to the image
+          max: null
+          min: null
+          name: watermark
+          options:
+          - icon: ''
+            label:
+              en_US: Enabled
+              ja_JP: Enabled
+              pt_BR: Enabled
+              zh_Hans: 启用
+            value: 'true'
+          - icon: ''
+            label:
+              en_US: Disabled
+              ja_JP: Disabled
+              pt_BR: Disabled
+              zh_Hans: 禁用
+            value: 'false'
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        - auto_generate: null
+          default: doubao-seedream-4-5-251128
+          form: form
+          human_description:
+            en_US: Choose the Seedream model version to use
+            ja_JP: Choose the Seedream model version to use
+            pt_BR: Choose the Seedream model version to use
+            zh_Hans: 选择要使用的Seedream模型版本
+          label:
+            en_US: Model Version
+            ja_JP: Model Version
+            pt_BR: Model Version
+            zh_Hans: 模型版本
+          llm_description: Choose the Seedream model version to use
+          max: null
+          min: null
+          name: model
+          options:
+          - icon: ''
+            label:
+              en_US: Seedream4.0
+              ja_JP: Seedream4.0
+              pt_BR: Seedream4.0
+              zh_Hans: Seedream4.0
+            value: doubao-seedream-4-0-250828
+          - icon: ''
+            label:
+              en_US: Seedream4.5
+              ja_JP: Seedream4.5
+              pt_BR: Seedream4.5
+              zh_Hans: Seedream4.5
+            value: doubao-seedream-4-5-251128
+          - icon: ''
+            label:
+              en_US: Seedream5.0 Lite
+              ja_JP: Seedream5.0 Lite
+              pt_BR: Seedream5.0 Lite
+              zh_Hans: Seedream5.0 Lite
+            value: doubao-seedream-5-0-260128
+          placeholder: null
+          precision: null
+          required: false
+          scope: null
+          template: null
+          type: select
+        params:
+          input_image_file: ''
+          model: ''
+          prompt: ''
+          size: ''
+          watermark: ''
+        plugin_id: sawyer-shi/seedream_aigc
+        plugin_unique_identifier: sawyer-shi/seedream_aigc:0.0.1@cb3174212b2e32038019fdbbba3c970f68116533ec294a30e6ebdb5af23a4662
+        provider_icon: https://whhongyi.com.cn/console/api/workspaces/current/plugin/icon?tenant_id=4df97457-0a24-49bb-8d34-536e742605b4&filename=9638639a259e524d8a12d8fa29d692c7b226cc88124ff4fb1eb2d31d0c9f88d3.svg
+        provider_id: sawyer-shi/seedream_aigc/seedream_aigc
+        provider_name: sawyer-shi/seedream_aigc/seedream_aigc
+        provider_type: builtin
+        selected: false
+        title: Seedream-扩图
+        tool_configurations:
+          model:
+            type: constant
+            value: doubao-seedream-5-0-260128
+          size:
+            type: constant
+            value: 2048x2048
+          watermark:
+            type: constant
+            value: 'true'
+        tool_description: 使用Seedream模型根据文本描述和参考图像生成图像
+        tool_label: Seedream-图生图
+        tool_name: imagefile2image
+        tool_node_version: '2'
+        tool_parameters:
+          input_image_file:
+            type: variable
+            value:
+            - sys
+            - files
+          prompt:
+            type: mixed
+            value: 将当前图片扩展为更大尺寸
+        type: tool
+      height: 139
+      id: '17760526110800'
+      position:
+        x: 45.53147706333618
+        y: 350.8413820148647
+      positionAbsolute:
+        x: 45.53147706333618
+        y: 350.8413820148647
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        answer: '{{#17760526110800.text#}}'
+        isInIteration: false
+        isInLoop: false
+        selected: false
+        title: 直接回复 2 (1)
+        type: answer
+        variables: []
+      height: 102
+      id: '17760526110811'
+      position:
+        x: 372.04272304341816
+        y: 350.8413820148647
+      positionAbsolute:
+        x: 372.04272304341816
+        y: 350.8413820148647
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    viewport:
+      x: 184.31838643335527
+      y: 89.82061730004867
+      zoom: 0.5611917937863028
+  rag_pipeline_variables: []

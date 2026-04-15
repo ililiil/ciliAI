@@ -165,7 +165,7 @@ const createDialogVisible = ref(false)
 const editingWork = ref(null)
 const formRef = ref(null)
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5002'
+const baseURL = import.meta.env.VITE_API_BASE_URL || ''
 const uploadHeaders = {
   'Authorization': localStorage.getItem('admin_token') || ''
 }

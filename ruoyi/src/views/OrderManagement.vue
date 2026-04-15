@@ -181,7 +181,7 @@ const uploadHeaders = {
   'Authorization': localStorage.getItem('admin_token') || ''
 }
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5002'
+const baseURL = import.meta.env.VITE_API_BASE_URL || ''
 
 const filteredOrders = computed(() => {
   if (activeTab.value === 'all') {
@@ -270,62 +270,22 @@ const rules = {
 const fetchOrders = async () => {
   loading.value = true
   try {
-    const storedOrders = localStorage.getItem('admin_orders')
-    if (storedOrders) {
-      orders.value = JSON.parse(storedOrders)
+    const baseURL = import.meta.env.VITE_API_BASE_URL || ''
+    const response = await fetch(`${baseURL}/api/admin/orders`)
+    const result = await response.json()
+    
+    if (result.code === 200) {
+      orders.value = result.data.list
     } else {
-      orders.value = getInitialOrders()
-      saveOrders()
+      console.error('获取订单列表失败', result.msg)
+      orders.value = []
     }
   } catch (error) {
     console.error('获取订单列表失败', error)
-    orders.value = getInitialOrders()
-    saveOrders()
+    orders.value = []
   } finally {
     loading.value = false
   }
-}
-
-const getInitialOrders = () => {
-  return [
-    {
-      id: 1,
-      title: '现代都市情感短剧制作',
-      image: 'https://img2.baidu.com/it/u=3152765891,1290125229&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=892',
-      qrcode: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=weixin://wxid_example1',
-      price: '¥5000',
-      deadline: '2024-12-31',
-      status: 'recruiting',
-      tags: ['AI真人', '现代都市'],
-      contactCount: 5
-    },
-    {
-      id: 2,
-      title: '古装历史短剧制作',
-      image: 'https://img2.baidu.com/it/u=3152765891,1290125229&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=892',
-      qrcode: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=weixin://wxid_example2',
-      price: '¥8000',
-      deadline: '2025-01-15',
-      status: 'pending',
-      tags: ['AI真人', '古装历史'],
-      contactCount: 3
-    },
-    {
-      id: 3,
-      title: '科幻题材短剧制作',
-      image: 'https://img2.baidu.com/it/u=3152765891,1290125229&fm=253&fmt=auto&app=138&f=JPEG?w=500&h=892',
-      qrcode: 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=weixin://wxid_example3',
-      price: '¥6000',
-      deadline: '2025-01-10',
-      status: 'ended',
-      tags: ['AI动画', '科幻题材'],
-      contactCount: 8
-    }
-  ]
-}
-
-const saveOrders = () => {
-  localStorage.setItem('admin_orders', JSON.stringify(orders.value))
 }
 
 const showCreateDialog = () => {
@@ -369,9 +329,19 @@ const toggleStatus = async (row) => {
       { type: 'warning' }
     )
 
-    row.status = newStatus
-    saveOrders()
-    ElMessage.success('状态更新成功')
+    const baseURL = import.meta.env.VITE_API_BASE_URL || ''
+    const response = await fetch(`${baseURL}/api/admin/orders/${row.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: newStatus })
+    })
+    
+    if (response.ok) {
+      row.status = newStatus
+      ElMessage.success('状态更新成功')
+    } else {
+      throw new Error('更新失败')
+    }
   } catch (error) {
     if (error !== 'cancel') {
       ElMessage.error('状态更新失败')
@@ -380,10 +350,23 @@ const toggleStatus = async (row) => {
 }
 
 const deleteOrder = async (row) => {
-  const index = orders.value.findIndex(item => item.id === row.id)
-  if (index > -1) {
-    orders.value.splice(index, 1)
-    saveOrders()
+  try {
+    const baseURL = import.meta.env.VITE_API_BASE_URL || ''
+    const response = await fetch(`${baseURL}/api/admin/orders/${row.id}`, {
+      method: 'DELETE'
+    })
+    
+    if (response.ok) {
+      const index = orders.value.findIndex(item => item.id === row.id)
+      if (index > -1) {
+        orders.value.splice(index, 1)
+      }
+    } else {
+      throw new Error('删除失败')
+    }
+  } catch (error) {
+    console.error('删除订单失败', error)
+    throw error
   }
 }
 
@@ -406,35 +389,51 @@ const submitForm = async () => {
   if (!valid) return
 
   try {
+    const baseURL = import.meta.env.VITE_API_BASE_URL || ''
+    const orderData = {
+      title: form.title,
+      image: form.image,
+      price: form.price,
+      deadline: form.deadline,
+      status: form.status,
+      tags: form.tags,
+      qrcode: form.qrcode,
+      contactCount: form.contactCount
+    }
+    
     if (editingOrder.value) {
-      Object.assign(editingOrder.value, {
-        title: form.title,
-        image: form.image,
-        price: form.price,
-        deadline: form.deadline,
-        status: form.status,
-        tags: form.tags,
-        qrcode: form.qrcode,
-        contactCount: form.contactCount
+      const response = await fetch(`${baseURL}/api/admin/orders/${editingOrder.value.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
       })
-      ElMessage.success('订单更新成功')
-    } else {
-      const newOrder = {
-        id: Date.now(),
-        title: form.title,
-        image: form.image,
-        price: form.price,
-        deadline: form.deadline,
-        status: form.status,
-        tags: form.tags,
-        qrcode: form.qrcode,
-        contactCount: form.contactCount
+      
+      if (response.ok) {
+        Object.assign(editingOrder.value, orderData)
+        ElMessage.success('订单更新成功')
+      } else {
+        throw new Error('更新失败')
       }
-      orders.value.push(newOrder)
-      ElMessage.success('订单添加成功')
+    } else {
+      const response = await fetch(`${baseURL}/api/admin/orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderData)
+      })
+      
+      if (response.ok) {
+        const result = await response.json()
+        const newOrder = {
+          id: result.data.id,
+          ...orderData
+        }
+        orders.value.unshift(newOrder)
+        ElMessage.success('订单添加成功')
+      } else {
+        throw new Error('创建失败')
+      }
     }
 
-    saveOrders()
     createDialogVisible.value = false
   } catch (error) {
     ElMessage.error('操作失败')

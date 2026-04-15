@@ -33,6 +33,10 @@
             <el-icon><Document /></el-icon>
             <span>接单管理</span>
           </el-menu-item>
+          <el-menu-item index="/advertisement">
+            <el-icon><Files /></el-icon>
+            <span>广告位管理</span>
+          </el-menu-item>
         </el-sub-menu>
         <el-menu-item index="/users">
           <el-icon><User /></el-icon>
@@ -70,7 +74,7 @@
 import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Picture, Document, Collection, Odometer, Ticket, User, UserFilled } from '@element-plus/icons-vue'
+import { Picture, Document, Collection, Odometer, Ticket, User, UserFilled, Files } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()

@@ -37,6 +37,12 @@ const routes = [
         meta: { title: '接单管理', icon: 'Document' }
       },
       {
+        path: 'advertisement',
+        name: 'Advertisement',
+        component: () => import('../views/Advertisement.vue'),
+        meta: { title: '广告位管理', icon: 'Files' }
+      },
+      {
         path: 'users',
         name: 'Users',
         component: () => import('../views/Users.vue'),

@@ -975,36 +975,71 @@ const loadProjectData = async () => {
     }
   }
   
-  chatList.value = [
-    {
-      id: Date.now().toString(),
-      title: '新对话',
-      updateTime: new Date().toLocaleString('zh-CN'),
-      conversationId: '',
-      messages: []
-    }
-  ]
-  
-  if (chatList.value.length > 0) {
-    currentChatId.value = chatList.value[0].id
+  await loadHistoryData()
+}
+
+const loadHistoryData = async () => {
+  await loadChatSessions()
+  await loadImageHistory()
+}
+
+const loadChatSessions = async () => {
+  const inviteCode = localStorage.getItem('inviteCode') || ''
+  if (!inviteCode) {
+    chatList.value = []
+    return
   }
   
-  imageHistory.value = [
-    {
-      id: '1',
-      prompt: '一个未来城市的夜景，霓虹灯光闪烁',
-      imageUrl: 'https://picsum.photos/400/300?random=100',
-      createTime: '2025-03-31 13:00',
-      params: { size: '1024x1024', steps: 30, cfgScale: 7 }
-    },
-    {
-      id: '2',
-      prompt: '海边的日落，金色光芒洒落',
-      imageUrl: 'https://picsum.photos/400/300?random=101',
-      createTime: '2025-03-31 11:30',
-      params: { size: '1024x1024', steps: 25, cfgScale: 8 }
+  try {
+    const response = await fetch(`/api/chat/sessions?invite_code=${encodeURIComponent(inviteCode)}&project_id=${project.value.id}`)
+    const result = await response.json()
+    
+    if (result.status === 'success') {
+      chatList.value = result.sessions.map(session => ({
+        id: session.id.toString(),
+        title: session.title,
+        conversationId: session.conversation_id || '',
+        selectedPeople: session.selected_people || 'script',
+        updateTime: new Date(session.update_time).toLocaleString('zh-CN'),
+        messages: []
+      }))
+      
+      if (chatList.value.length > 0) {
+        await selectChat(chatList.value[0].id)
+      } else {
+        await createNewChat()
+      }
     }
-  ]
+  } catch (error) {
+    console.error('加载聊天会话失败:', error)
+    chatList.value = []
+  }
+}
+
+const loadImageHistory = async () => {
+  const inviteCode = localStorage.getItem('inviteCode') || ''
+  if (!inviteCode) {
+    imageHistory.value = []
+    return
+  }
+  
+  try {
+    const response = await fetch(`/api/records?invite_code=${encodeURIComponent(inviteCode)}&project_id=${project.value.id}&type=generate`)
+    const result = await response.json()
+    
+    if (result.status === 'success') {
+      imageHistory.value = result.records.map(record => ({
+        id: record.id.toString(),
+        prompt: record.prompt || '',
+        imageUrl: record.image_url || '',
+        createTime: new Date(record.create_time).toLocaleString('zh-CN'),
+        params: JSON.parse(record.params || '{}')
+      }))
+    }
+  } catch (error) {
+    console.error('加载图片历史失败:', error)
+    imageHistory.value = []
+  }
 }
 
 const goBack = () => {
@@ -1023,14 +1058,41 @@ const saveProject = async () => {
   }
 }
 
-const createNewChat = () => {
+const createNewChat = async () => {
+  const inviteCode = localStorage.getItem('inviteCode') || ''
+  
   const newChat = {
     id: Date.now().toString(),
     title: '新对话',
     updateTime: new Date().toLocaleString('zh-CN'),
     messages: [],
-    conversationId: ''
+    conversationId: '',
+    selectedPeople: selectedPeople.value
   }
+  
+  try {
+    if (inviteCode && project.value.id) {
+      const response = await fetch('/api/chat/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          invite_code: inviteCode,
+          project_id: project.value.id,
+          title: '新对话',
+          selected_people: selectedPeople.value
+        })
+      })
+      
+      const result = await response.json()
+      if (result.status === 'success') {
+        newChat.id = result.session_id.toString()
+        console.log('✅ 会话已保存到后端，session_id:', result.session_id)
+      }
+    }
+  } catch (error) {
+    console.error('保存会话失败:', error)
+  }
+  
   chatList.value.unshift(newChat)
   currentChatId.value = newChat.id
   inputMessage.value = ''
@@ -1050,15 +1112,31 @@ const deleteChat = async (chatId) => {
       cancelButtonText: '取消',
       type: 'warning'
     })
+    
     const chat = chatList.value.find(c => c.id === chatId)
     if (chat && chat.conversationId) {
       localStorage.removeItem('currentConversationId')
     }
+    
+    try {
+      const inviteCode = localStorage.getItem('inviteCode') || ''
+      await fetch(`/api/chat/sessions/${chatId}?invite_code=${encodeURIComponent(inviteCode)}`, {
+        method: 'DELETE'
+      })
+      console.log('✅ 会话已从后端删除')
+    } catch (error) {
+      console.error('删除后端会话失败:', error)
+    }
+    
     const index = chatList.value.findIndex(c => c.id === chatId)
     if (index > -1) {
       chatList.value.splice(index, 1)
       if (currentChatId.value === chatId) {
-        currentChatId.value = chatList.value.length > 0 ? chatList.value[0].id : ''
+        if (chatList.value.length > 0) {
+          await selectChat(chatList.value[0].id)
+        } else {
+          await createNewChat()
+        }
         localStorage.removeItem('currentConversationId')
       }
     }
@@ -1156,6 +1234,22 @@ const sendMessage = async () => {
       chat.conversationId = conversationId
       localStorage.setItem('currentConversationId', conversationId)
       console.log('✅ 最终会话ID已保存:', conversationId)
+      
+      try {
+        const inviteCode = localStorage.getItem('inviteCode') || ''
+        await fetch(`/api/chat/sessions/${chat.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            invite_code: inviteCode,
+            title: message.slice(0, 20) + (message.length > 20 ? '...' : ''),
+            conversation_id: conversationId
+          })
+        })
+        console.log('✅ 会话信息已更新到后端')
+      } catch (error) {
+        console.error('更新会话信息失败:', error)
+      }
     }
     
     const msgIndex = chat.messages.findIndex(m => m.id === aiMessageId)
@@ -1561,6 +1655,8 @@ const generateImage = async () => {
       }
     }
     imageHistory.value.unshift(historyItem)
+    
+    await loadImageHistory()
     
     ElMessage.success('图片生成成功')
   } catch (error) {

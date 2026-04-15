@@ -1,0 +1,450 @@
+app:
+  description: ''
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  icon_type: emoji
+  mode: advanced-chat
+  name: 磁力AI对话
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/tongyi:0.1.35@7dd9436c26b97b3147840f7c48d50392395eeab282372dc2cec56c47f1a1844e
+    version: null
+kind: app
+version: 0.6.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        attachment_image_file_size_limit: 2
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        file_upload_limit: 20
+        image_file_batch_limit: 10
+        image_file_size_limit: 10
+        single_chunk_attachment_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        sourceType: llm
+        targetType: answer
+      id: llm-answer
+      source: llm
+      sourceHandle: source
+      target: answer
+      targetHandle: target
+      type: custom
+    - data:
+        isInIteration: false
+        isInLoop: false
+        sourceType: start
+        targetType: if-else
+      id: 1776059724557-source-1776059790364-target
+      source: '1776059724557'
+      sourceHandle: source
+      target: '1776059790364'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: 1776059790364-true-llm-target
+      source: '1776059790364'
+      sourceHandle: 'true'
+      target: llm
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: 1776059790364-e3489c3b-e9d0-4179-8ad1-972b46576412-17760598064950-target
+      source: '1776059790364'
+      sourceHandle: e3489c3b-e9d0-4179-8ad1-972b46576412
+      target: '17760598064950'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: if-else
+        targetType: llm
+      id: 1776059790364-a54daa67-2ae0-42ce-84ce-211475822367-17760598068640-target
+      source: '1776059790364'
+      sourceHandle: a54daa67-2ae0-42ce-84ce-211475822367
+      target: '17760598068640'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: answer
+      id: 17760598064950-source-17760598079200-target
+      source: '17760598064950'
+      sourceHandle: source
+      target: '17760598079200'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: answer
+      id: 17760598068640-source-17760598084830-target
+      source: '17760598068640'
+      sourceHandle: source
+      target: '17760598084830'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        selected: true
+        title: 用户输入
+        type: start
+        variables:
+        - hint: ''
+          label: people
+          options:
+          - '1'
+          - '2'
+          - '3'
+          placeholder: ''
+          required: true
+          type: select
+          variable: people
+      height: 108
+      id: '1776059724557'
+      position:
+        x: 0
+        y: 133
+      positionAbsolute:
+        x: 0
+        y: 133
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        memory:
+          query_prompt_template: '{{#sys.query#}}
+
+
+            {{#sys.files#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: false
+            size: 10
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: deepseek-v3
+          provider: langgenius/tongyi/tongyi
+        prompt_template:
+        - id: c22f403e-6fa8-4083-b02f-a028dabd5d3b
+          role: system
+          text: '你是一个专业的剧本设计助手，目标是帮助用户完成剧本创作。请按照以下步骤进行操作：
+
+            1. 首先，与用户进行交流，了解他们的需求，包括剧本类型、主题、风格、角色设定和情节大纲等关键要素。
+
+            2. 然后，根据用户提供的信息，提供针对性的支持和建议，比如情节发展建议、角色塑造技巧或对白优化。
+
+            3. 在讨论过程中，不断协助用户完善剧本，解决他们遇到的问题。
+
+            4. 最终，给出一个完整的剧本设计结果，确保符合用户的要求并具有创意。
+
+            请确保输出内容清晰、结构合理，并且不包含任何XML标签。'
+        selected: false
+        title: 角色1
+        type: llm
+        vision:
+          enabled: false
+      height: 87
+      id: llm
+      position:
+        x: 704
+        y: 7
+      positionAbsolute:
+        x: 704
+        y: 7
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        answer: '{{#llm.text#}}'
+        selected: false
+        title: 直接回复
+        type: answer
+        variables: []
+      height: 102
+      id: answer
+      position:
+        x: 1046
+        y: 0
+      positionAbsolute:
+        x: 1046
+        y: 0
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        cases:
+        - case_id: 'true'
+          conditions:
+          - comparison_operator: contains
+            id: 294836a1-6753-4e04-90da-60f6a3b2734e
+            value: '1'
+            varType: string
+            variable_selector:
+            - '1776059724557'
+            - people
+          id: 'true'
+          logical_operator: and
+        - case_id: e3489c3b-e9d0-4179-8ad1-972b46576412
+          conditions:
+          - comparison_operator: contains
+            id: 7cbae137-5bf9-48a8-a540-f2ccb5a535d2
+            value: '2'
+            varType: string
+            variable_selector:
+            - '1776059724557'
+            - people
+          logical_operator: and
+        - case_id: a54daa67-2ae0-42ce-84ce-211475822367
+          conditions:
+          - comparison_operator: contains
+            id: 37873afb-3acd-4a02-9ed0-2bdc7414f6eb
+            value: '3'
+            varType: string
+            variable_selector:
+            - '1776059724557'
+            - people
+          logical_operator: and
+        selected: false
+        title: 条件分支
+        type: if-else
+      height: 219
+      id: '1776059790364'
+      position:
+        x: 342
+        y: 77
+      positionAbsolute:
+        x: 342
+        y: 77
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        isInIteration: false
+        isInLoop: false
+        memory:
+          query_prompt_template: '{{#sys.query#}}
+
+
+            {{#sys.files#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: false
+            size: 10
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: deepseek-v3
+          provider: langgenius/tongyi/tongyi
+        prompt_template:
+        - id: c22f403e-6fa8-4083-b02f-a028dabd5d3b
+          role: system
+          text: '你是一个专业的剧本设计助手，目标是帮助用户完成剧本创作。请按照以下步骤进行操作：
+
+            1. 首先，与用户进行交流，了解他们的需求，包括剧本类型、主题、风格、角色设定和情节大纲等关键要素。
+
+            2. 然后，根据用户提供的信息，提供针对性的支持和建议，比如情节发展建议、角色塑造技巧或对白优化。
+
+            3. 在讨论过程中，不断协助用户完善剧本，解决他们遇到的问题。
+
+            4. 最终，给出一个完整的剧本设计结果，确保符合用户的要求并具有创意。
+
+            请确保输出内容清晰、结构合理，并且不包含任何XML标签。'
+        selected: false
+        title: 角色2
+        type: llm
+        vision:
+          enabled: false
+      height: 87
+      id: '17760598064950'
+      position:
+        x: 704
+        y: 189
+      positionAbsolute:
+        x: 704
+        y: 189
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        isInIteration: false
+        isInLoop: false
+        memory:
+          query_prompt_template: '{{#sys.query#}}
+
+
+            {{#sys.files#}}'
+          role_prefix:
+            assistant: ''
+            user: ''
+          window:
+            enabled: false
+            size: 10
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: deepseek-v3
+          provider: langgenius/tongyi/tongyi
+        prompt_template:
+        - id: c22f403e-6fa8-4083-b02f-a028dabd5d3b
+          role: system
+          text: '你是一个专业的剧本设计助手，目标是帮助用户完成剧本创作。请按照以下步骤进行操作：
+
+            1. 首先，与用户进行交流，了解他们的需求，包括剧本类型、主题、风格、角色设定和情节大纲等关键要素。
+
+            2. 然后，根据用户提供的信息，提供针对性的支持和建议，比如情节发展建议、角色塑造技巧或对白优化。
+
+            3. 在讨论过程中，不断协助用户完善剧本，解决他们遇到的问题。
+
+            4. 最终，给出一个完整的剧本设计结果，确保符合用户的要求并具有创意。
+
+            请确保输出内容清晰、结构合理，并且不包含任何XML标签。'
+        selected: false
+        title: 角色3
+        type: llm
+        vision:
+          enabled: false
+      height: 87
+      id: '17760598068640'
+      position:
+        x: 704
+        y: 371
+      positionAbsolute:
+        x: 704
+        y: 371
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        answer: '{{#17760598064950.text#}}'
+        isInIteration: false
+        isInLoop: false
+        selected: false
+        title: 直接回复 (1)
+        type: answer
+        variables: []
+      height: 102
+      id: '17760598079200'
+      position:
+        x: 1046
+        y: 182
+      positionAbsolute:
+        x: 1046
+        y: 182
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    - data:
+        answer: '{{#17760598068640.text#}}'
+        isInIteration: false
+        isInLoop: false
+        selected: false
+        title: 直接回复 (1)
+        type: answer
+        variables: []
+      height: 102
+      id: '17760598084830'
+      position:
+        x: 1046
+        y: 364
+      positionAbsolute:
+        x: 1046
+        y: 364
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 242
+    viewport:
+      x: 55.5619551462743
+      y: 111.58500138633502
+      zoom: 0.5305007982786393
+  rag_pipeline_variables: []
