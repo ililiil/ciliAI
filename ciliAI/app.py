@@ -858,6 +858,16 @@ def generate_invite_code(length=8, prefix=''):
 def index():
     return send_from_directory(app.static_folder, 'index.html')
 
+@app.route('/<path:fallback>')
+def serve_frontend_fallback(fallback):
+    """Catch-all route for SPA frontend routes"""
+    if fallback.startswith('api/') or fallback.startswith('uploads/'):
+        return jsonify({'error': 'Not found'}), 404
+    try:
+        return send_from_directory(app.static_folder, 'index.html')
+    except:
+        return send_from_directory(app.static_folder, 'index.html')
+
 @app.route('/uploads/<path:filename>')
 def serve_upload(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
