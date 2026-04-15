@@ -3,7 +3,6 @@ import io
 import time
 import json
 import logging
-import sqlite3
 import hashlib
 import uuid
 import base64
@@ -29,31 +28,19 @@ CORS(app)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-DB_TYPE = os.getenv('DB_TYPE', 'sqlite')
+import pymysql
+pymysql.install_as_MySQLdb()
+DATABASE = {
+    'host': os.getenv('DB_HOST', 'localhost'),
+    'port': int(os.getenv('DB_PORT', 3306)),
+    'user': os.getenv('DB_USER', 'root'),
+    'password': os.getenv('DB_PASSWORD', ''),
+    'database': os.getenv('DB_NAME', 'ciliai'),
+    'charset': 'utf8mb4',
+    'cursorclass': pymysql.cursors.DictCursor
+}
 
-if DB_TYPE == 'mysql':
-    import pymysql
-    pymysql.install_as_MySQLdb()
-    DATABASE = {
-        'host': os.getenv('DB_HOST', 'localhost'),
-        'port': int(os.getenv('DB_PORT', 3306)),
-        'user': os.getenv('DB_USER', 'root'),
-        'password': os.getenv('DB_PASSWORD', ''),
-        'database': os.getenv('DB_NAME', 'ciliai'),
-        'charset': 'utf8mb4',
-        'cursorclass': pymysql.cursors.DictCursor
-    }
-elif DB_TYPE == 'postgres':
-    DATABASE = os.getenv('DB_TYPE') + '://' + os.getenv('DB_USER', 'postgres') + ':' + os.getenv('DB_PASSWORD', '') + '@' + os.getenv('DB_HOST', 'localhost') + ':' + os.getenv('DB_PORT', '5432') + '/' + os.getenv('DB_NAME', 'ciliai')
-else:
-    DB_PATH = os.getenv('DB_PATH', 'fangtang.db')
-    DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), DB_PATH)
-
-logger.info(f"数据库类型: {DB_TYPE}")
-if DB_TYPE == 'mysql':
-    logger.info(f"数据库: {DATABASE['host']}:{DATABASE['port']}/{DATABASE['database']}")
-else:
-    logger.info(f"数据库路径: {DATABASE}")
+logger.info(f"数据库: {DATABASE['host']}:{DATABASE['port']}/{DATABASE['database']}")
 
 ADMIN_BASE_URL = os.getenv('ADMIN_BASE_URL', 'http://localhost:5002')
 
@@ -261,12 +248,8 @@ POWER_COST = {
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
-        if DB_TYPE == 'mysql':
-            import pymysql
-            db = g._database = pymysql.connect(**DATABASE)
-        else:
-            db = g._database = sqlite3.connect(DATABASE, check_same_thread=False)
-            db.row_factory = sqlite3.Row
+        import pymysql
+        db = g._database = pymysql.connect(**DATABASE)
     return db
 
 @app.teardown_appcontext
@@ -276,271 +259,134 @@ def close_connection(exception):
         db.close()
 
 def init_db():
-    if DB_TYPE == 'mysql':
-        import pymysql
-        conn = pymysql.connect(**DATABASE)
-        cursor = conn.cursor()
-    else:
-        conn = sqlite3.connect(DATABASE)
-        cursor = conn.cursor()
-        cursor.execute('PRAGMA foreign_keys = ON')
+    import pymysql
+    conn = pymysql.connect(**DATABASE)
+    cursor = conn.cursor()
     
-    if DB_TYPE == 'mysql':
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                id INT PRIMARY KEY AUTO_INCREMENT,
-                invite_code VARCHAR(255) UNIQUE NOT NULL,
-                compute_power INT DEFAULT 0,
-                total_power_used INT DEFAULT 0,
-                nickname VARCHAR(255),
-                avatar VARCHAR(500),
-                status VARCHAR(50) DEFAULT 'active',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                last_login TIMESTAMP NULL,
-                last_active TIMESTAMP NULL
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-        ''')
-    else:
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                invite_code TEXT UNIQUE NOT NULL,
-                compute_power INTEGER DEFAULT 0,
-                total_power_used INTEGER DEFAULT 0,
-                nickname TEXT,
-                avatar TEXT,
-                status TEXT DEFAULT 'active',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                last_login TIMESTAMP,
-                last_active TIMESTAMP
-            )
-        ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            invite_code VARCHAR(255) UNIQUE NOT NULL,
+            compute_power INT DEFAULT 0,
+            total_power_used INT DEFAULT 0,
+            nickname VARCHAR(255),
+            avatar VARCHAR(500),
+            status VARCHAR(50) DEFAULT 'active',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_login TIMESTAMP NULL,
+            last_active TIMESTAMP NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ''')
     
-    if DB_TYPE == 'mysql':
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS projects (
-                id INT PRIMARY KEY AUTO_INCREMENT,
-                user_id INT NOT NULL,
-                title TEXT NOT NULL,
-                description TEXT,
-                cover_image TEXT,
-                status VARCHAR(50) DEFAULT 'active',
-                image_count INT DEFAULT 0,
-                chat_count INT DEFAULT 0,
-                total_power_used INT DEFAULT 0,
-                create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-        ''')
-    else:
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS projects (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                title TEXT NOT NULL,
-                description TEXT,
-                cover_image TEXT,
-                status TEXT DEFAULT 'active',
-                image_count INTEGER DEFAULT 0,
-                chat_count INTEGER DEFAULT 0,
-                total_power_used INTEGER DEFAULT 0,
-                create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-            )
-        ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS projects (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            user_id INT NOT NULL,
+            title TEXT NOT NULL,
+            description TEXT,
+            cover_image TEXT,
+            status VARCHAR(50) DEFAULT 'active',
+            image_count INT DEFAULT 0,
+            chat_count INT DEFAULT 0,
+            total_power_used INT DEFAULT 0,
+            create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ''')
     
-    if DB_TYPE == 'mysql':
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS generation_records (
-                id INT PRIMARY KEY AUTO_INCREMENT,
-                project_id INT,
-                user_id INT NOT NULL,
-                type VARCHAR(50) NOT NULL,
-                prompt TEXT,
-                negative_prompt TEXT,
-                image_url TEXT,
-                image_width INT,
-                image_height INT,
-                image_size INT,
-                model_version VARCHAR(50),
-                params TEXT,
-                task_id VARCHAR(255),
-                status VARCHAR(50) DEFAULT 'completed',
-                power_cost INT DEFAULT 0,
-                error_msg TEXT,
-                create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE SET NULL,
-                FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-        ''')
-    else:
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS generation_records (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                project_id INTEGER,
-                user_id INTEGER NOT NULL,
-                type TEXT NOT NULL,
-                prompt TEXT,
-                negative_prompt TEXT,
-                image_url TEXT,
-                image_width INTEGER,
-                image_height INTEGER,
-                image_size INTEGER,
-                model_version TEXT,
-                params TEXT,
-                task_id TEXT,
-                status TEXT DEFAULT 'completed',
-                power_cost INTEGER DEFAULT 0,
-                error_msg TEXT,
-                create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE SET NULL,
-                FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-            )
-        ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS generation_records (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            project_id INT,
+            user_id INT NOT NULL,
+            type VARCHAR(50) NOT NULL,
+            prompt TEXT,
+            negative_prompt TEXT,
+            image_url TEXT,
+            image_width INT,
+            image_height INT,
+            image_size INT,
+            model_version VARCHAR(50),
+            params TEXT,
+            task_id VARCHAR(255),
+            status VARCHAR(50) DEFAULT 'completed',
+            power_cost INT DEFAULT 0,
+            error_msg TEXT,
+            create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE SET NULL,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ''')
     
-    if DB_TYPE == 'mysql':
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS chat_messages (
-                id INT PRIMARY KEY AUTO_INCREMENT,
-                project_id INT,
-                user_id INT NOT NULL,
-                chat_id VARCHAR(255) NOT NULL,
-                role VARCHAR(20) NOT NULL,
-                content TEXT NOT NULL,
-                token_count INT DEFAULT 0,
-                power_cost INT DEFAULT 0,
-                metadata TEXT,
-                create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE SET NULL,
-                FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-        ''')
-    else:
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS chat_messages (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                project_id INTEGER,
-                user_id INTEGER NOT NULL,
-                chat_id TEXT NOT NULL,
-                role TEXT NOT NULL,
-                content TEXT NOT NULL,
-                token_count INTEGER DEFAULT 0,
-                power_cost INTEGER DEFAULT 0,
-                metadata TEXT,
-                create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE SET NULL,
-                FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
-            )
-        ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS chat_messages (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            project_id INT,
+            user_id INT NOT NULL,
+            chat_id VARCHAR(255) NOT NULL,
+            role VARCHAR(20) NOT NULL,
+            content TEXT NOT NULL,
+            token_count INT DEFAULT 0,
+            power_cost INT DEFAULT 0,
+            metadata TEXT,
+            create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE SET NULL,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ''')
     
-    if DB_TYPE == 'mysql':
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS compute_power_logs (
-                id INT PRIMARY KEY AUTO_INCREMENT,
-                user_id INT NOT NULL,
-                project_id INT,
-                record_id INT,
-                operation_type VARCHAR(50) NOT NULL,
-                power_change INT NOT NULL,
-                power_before INT NOT NULL,
-                power_after INT NOT NULL,
-                description TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-                FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE SET NULL,
-                FOREIGN KEY (record_id) REFERENCES generation_records (id) ON DELETE SET NULL
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-        ''')
-    else:
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS compute_power_logs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                project_id INTEGER,
-                record_id INTEGER,
-                operation_type TEXT NOT NULL,
-                power_change INTEGER NOT NULL,
-                power_before INTEGER NOT NULL,
-                power_after INTEGER NOT NULL,
-                description TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
-                FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE SET NULL,
-                FOREIGN KEY (record_id) REFERENCES generation_records (id) ON DELETE SET NULL
-            )
-        ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS compute_power_logs (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            user_id INT NOT NULL,
+            project_id INT,
+            record_id INT,
+            operation_type VARCHAR(50) NOT NULL,
+            power_change INT NOT NULL,
+            power_before INT NOT NULL,
+            power_after INT NOT NULL,
+            description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+            FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE SET NULL,
+            FOREIGN KEY (record_id) REFERENCES generation_records (id) ON DELETE SET NULL
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ''')
     
-    if DB_TYPE == 'mysql':
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS invite_codes (
-                id INT PRIMARY KEY AUTO_INCREMENT,
-                code VARCHAR(255) UNIQUE NOT NULL,
-                status VARCHAR(50) DEFAULT 'active',
-                compute_power INT DEFAULT 1000,
-                max_uses INT DEFAULT 1,
-                current_uses INT DEFAULT 0,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                used_at TIMESTAMP NULL,
-                created_by INT,
-                FOREIGN KEY (created_by) REFERENCES users (id)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-        ''')
-    else:
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS invite_codes (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                code TEXT UNIQUE NOT NULL,
-                status TEXT DEFAULT 'active',
-                compute_power INTEGER DEFAULT 1000,
-                max_uses INTEGER DEFAULT 1,
-                current_uses INTEGER DEFAULT 0,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                used_at TIMESTAMP,
-                created_by INTEGER,
-                FOREIGN KEY (created_by) REFERENCES users (id)
-            )
-        ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS invite_codes (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            code VARCHAR(255) UNIQUE NOT NULL,
+            status VARCHAR(50) DEFAULT 'active',
+            compute_power INT DEFAULT 1000,
+            max_uses INT DEFAULT 1,
+            current_uses INT DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            used_at TIMESTAMP NULL,
+            created_by INT,
+            FOREIGN KEY (created_by) REFERENCES users (id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ''')
     
-    if DB_TYPE == 'mysql':
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS ip_works (
-                id INT PRIMARY KEY AUTO_INCREMENT,
-                title TEXT NOT NULL,
-                student_name TEXT,
-                image TEXT,
-                tags TEXT,
-                cost VARCHAR(50),
-                duration VARCHAR(50),
-                price VARCHAR(50),
-                copyright TEXT,
-                introduction TEXT,
-                category VARCHAR(100) DEFAULT 'IP版权库',
-                status VARCHAR(50) DEFAULT 'active',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-        ''')
-    else:
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS ip_works (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT NOT NULL,
-                student_name TEXT,
-                image TEXT,
-                tags TEXT,
-                cost TEXT,
-                duration TEXT,
-                price TEXT,
-                copyright TEXT,
-                introduction TEXT,
-                category TEXT DEFAULT 'IP版权库',
-                status TEXT DEFAULT 'active',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS ip_works (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            title TEXT NOT NULL,
+            student_name TEXT,
+            image TEXT,
+            tags TEXT,
+            cost VARCHAR(50),
+            duration VARCHAR(50),
+            price VARCHAR(50),
+            copyright TEXT,
+            introduction TEXT,
+            category VARCHAR(100) DEFAULT 'IP版权库',
+            status VARCHAR(50) DEFAULT 'active',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ''')
     
     try:
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_projects_user_id ON projects(user_id)')
@@ -649,82 +495,45 @@ def init_db():
     except:
         pass
     
-    if DB_TYPE == 'mysql':
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS orders (
-                id INT PRIMARY KEY AUTO_INCREMENT,
-                title TEXT NOT NULL,
-                image TEXT,
-                qrcode TEXT,
-                price VARCHAR(50),
-                deadline VARCHAR(100),
-                status VARCHAR(50) DEFAULT 'recruiting',
-                tags TEXT,
-                contact_count INT DEFAULT 0,
-                description TEXT,
-                contact_info TEXT,
-                min_profit DECIMAL(10,2) DEFAULT 0,
-                share_ratio DECIMAL(5,2) DEFAULT 0,
-                power_subsidy DECIMAL(10,2) DEFAULT 0,
-                period INT DEFAULT 0,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-        ''')
-    else:
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS orders (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT NOT NULL,
-                image TEXT,
-                qrcode TEXT,
-                price TEXT,
-                deadline TEXT,
-                status TEXT DEFAULT 'recruiting',
-                tags TEXT,
-                contact_count INTEGER DEFAULT 0,
-                description TEXT,
-                contact_info TEXT,
-                min_profit REAL DEFAULT 0,
-                share_ratio REAL DEFAULT 0,
-                power_subsidy REAL DEFAULT 0,
-                period INTEGER DEFAULT 0,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS orders (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            title TEXT NOT NULL,
+            image TEXT,
+            qrcode TEXT,
+            price VARCHAR(50),
+            deadline VARCHAR(100),
+            status VARCHAR(50) DEFAULT 'recruiting',
+            tags TEXT,
+            contact_count INT DEFAULT 0,
+            description TEXT,
+            contact_info TEXT,
+            min_profit DECIMAL(10,2) DEFAULT 0,
+            share_ratio DECIMAL(5,2) DEFAULT 0,
+            power_subsidy DECIMAL(10,2) DEFAULT 0,
+            period INT DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ''')
     
     try:
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status)')
     except:
         pass
     
-    if DB_TYPE == 'mysql':
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS advertisements (
-                id INT PRIMARY KEY AUTO_INCREMENT,
-                title TEXT NOT NULL,
-                image TEXT,
-                link_url TEXT,
-                status VARCHAR(50) DEFAULT 'draft',
-                sort_order INT DEFAULT 0,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-        ''')
-    else:
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS advertisements (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT NOT NULL,
-                image TEXT,
-                link_url TEXT,
-                status TEXT DEFAULT 'draft',
-                sort_order INTEGER DEFAULT 0,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS advertisements (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            title TEXT NOT NULL,
+            image TEXT,
+            link_url TEXT,
+            status VARCHAR(50) DEFAULT 'draft',
+            sort_order INT DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ''')
     
     try:
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_advertisements_status ON advertisements(status)')
@@ -735,38 +544,21 @@ def init_db():
     except:
         pass
     
-    if DB_TYPE == 'mysql':
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS chat_sessions (
-                id INT PRIMARY KEY AUTO_INCREMENT,
-                project_id INT,
-                user_id INT NOT NULL,
-                conversation_id VARCHAR(255),
-                title TEXT NOT NULL DEFAULT '新对话',
-                selected_people VARCHAR(50) DEFAULT 'script',
-                message_count INT DEFAULT 0,
-                create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
-        ''')
-    else:
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS chat_sessions (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                project_id INTEGER,
-                user_id INTEGER NOT NULL,
-                conversation_id TEXT,
-                title TEXT NOT NULL DEFAULT '新对话',
-                selected_people TEXT DEFAULT 'script',
-                message_count INTEGER DEFAULT 0,
-                create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-            )
-        ''')
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS chat_sessions (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            project_id INT,
+            user_id INT NOT NULL,
+            conversation_id VARCHAR(255),
+            title VARCHAR(255) NOT NULL DEFAULT '新对话',
+            selected_people VARCHAR(50) DEFAULT 'script',
+            message_count INT DEFAULT 0,
+            create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            update_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ''')
     
     try:
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_chat_sessions_user_id ON chat_sessions(user_id)')
@@ -809,7 +601,7 @@ def init_db():
             try:
                 cursor.execute('''
                     INSERT INTO advertisements (title, image, link_url, status, sort_order, created_at, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                 ''', (ad['title'], ad['image'], ad['link_url'], ad['status'], ad['sort_order'], datetime.now(), datetime.now()))
             except Exception as e:
                 logger.error(f"Error inserting default ad: {e}")
@@ -818,7 +610,7 @@ def init_db():
                      "66666666", "77777777", "88888888", "99999999", "00000000"]
     for code in default_codes:
         try:
-            cursor.execute('INSERT OR IGNORE INTO invite_codes (code, compute_power) VALUES (?, ?)', 
+            cursor.execute('INSERT OR IGNORE INTO invite_codes (code, compute_power) VALUES (%s, %s, %s)', 
                           (code, 1000))
         except:
             pass
@@ -908,7 +700,7 @@ def init_db():
                 sort_order = idx if idx < 3 else 999
                 cursor.execute('''
                     INSERT INTO ip_works (title, student_name, image, tags, cost, duration, price, copyright, introduction, category, is_featured, sort_order)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                 ''', (work['title'], work['student_name'], work['image'], work['tags'], work['cost'], 
                      work['duration'], work['price'], work['copyright'], work['introduction'], work['category'],
                      is_featured, sort_order))
@@ -931,7 +723,7 @@ def get_user_id_by_invite_code(invite_code):
 
 def create_user(invite_code, compute_power=0):
     db = get_db()
-    cursor = db.execute('INSERT INTO users (invite_code, compute_power) VALUES (?, ?)', 
+    cursor = db.execute('INSERT INTO users (invite_code, compute_power) VALUES (%s, %s, %s)', 
                        (invite_code, compute_power))
     db.commit()
     return cursor.lastrowid
@@ -962,7 +754,7 @@ def deduct_compute_power(user_id, amount, operation_type, project_id=None, recor
     db.execute('''
         INSERT INTO compute_power_logs 
         (user_id, project_id, record_id, operation_type, power_change, power_before, power_after, description)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
     ''', (user_id, project_id, record_id, operation_type, -amount, current_power, new_power, description))
     
     if project_id:
@@ -983,7 +775,7 @@ def add_compute_power(user_id, amount, operation_type, description=None):
     db.execute('''
         INSERT INTO compute_power_logs 
         (user_id, operation_type, power_change, power_before, power_after, description)
-        VALUES (?, ?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
     ''', (user_id, operation_type, amount, current_power, new_power, description))
     
     db.commit()
@@ -1169,7 +961,7 @@ def dify_proxy():
                 user_msg_cursor = db.execute('''
                     INSERT INTO chat_messages 
                     (project_id, user_id, chat_id, role, content, power_cost)
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
                 ''', (project_id, user_id, conversation_id, 'user', query, power_cost))
                 user_message_id = user_msg_cursor.lastrowid
                 
@@ -1215,7 +1007,7 @@ def dify_proxy():
                                                     ai_msg_cursor = db.execute('''
                                                         INSERT INTO chat_messages 
                                                         (project_id, user_id, chat_id, role, content, power_cost)
-                                                        VALUES (?, ?, ?, ?, ?, ?)
+                                                        VALUES (%s, %s, %s, %s, %s, %s, %s)
                                                     ''', (project_id, user_id, conversation_id, 'assistant', ai_response_text, 0))
                                                     ai_message_id = ai_msg_cursor.lastrowid
                                                     db.commit()
@@ -1239,7 +1031,7 @@ def dify_proxy():
                         ai_msg_cursor = db.execute('''
                             INSERT INTO chat_messages 
                             (project_id, user_id, chat_id, role, content, power_cost)
-                            VALUES (?, ?, ?, ?, ?, ?)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s)
                         ''', (project_id, user_id, conversation_id, 'assistant', ai_response_text, 0))
                         ai_message_id = ai_msg_cursor.lastrowid
                         db.commit()
@@ -1476,7 +1268,7 @@ def create_project():
     db = get_db()
     cursor = db.execute('''
         INSERT INTO projects (user_id, title, description, cover_image)
-        VALUES (?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s)
     ''', (user_id, title.strip(), description, cover_image))
     db.commit()
     
@@ -1654,7 +1446,7 @@ def generate_image():
                     cursor = db.execute('''
                         INSERT INTO generation_records 
                         (project_id, user_id, type, prompt, image_url, image_width, image_height, model_version, params, task_id, power_cost)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ''', (project_id, user_id, 'generate', prompt, 
                           image_urls[0] if image_urls else None,
                           data.get('width', 1024), data.get('height', 1024),
@@ -1814,7 +1606,7 @@ def inpaint_image():
                     cursor = db.execute('''
                         INSERT INTO generation_records 
                         (project_id, user_id, type, prompt, image_url, params, task_id, power_cost)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ''', (project_id, user_id, 'inpaint', prompt, 
                           image_urls[0] if image_urls else None,
                           json.dumps(params), task_id, power_cost))
@@ -1938,7 +1730,7 @@ def extend_image():
                     cursor = db.execute('''
                         INSERT INTO generation_records 
                         (project_id, user_id, type, prompt, image_url, image_width, image_height, params, task_id, power_cost)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ''', (project_id, user_id, 'extend', prompt, 
                           image_urls[0] if image_urls else None,
                           data.get('width', 2048), data.get('height', 2048),
@@ -2054,7 +1846,7 @@ def super_resolution():
                     cursor = db.execute('''
                         INSERT INTO generation_records 
                         (project_id, user_id, type, image_url, params, task_id, power_cost)
-                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                     ''', (project_id, user_id, 'super_resolution', 
                           image_urls[0] if image_urls else None,
                           json.dumps(params), task_id, power_cost))
@@ -2233,7 +2025,7 @@ def save_chat_message():
     cursor = db.execute('''
         INSERT INTO chat_messages 
         (project_id, user_id, chat_id, role, content, power_cost)
-        VALUES (?, ?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
     ''', (data.get('project_id'), user_id, data.get('chat_id'),
           data.get('role'), data.get('content'), power_cost))
     
@@ -2632,7 +2424,7 @@ def create_order():
         
         cursor.execute('''
             INSERT INTO orders (user_id, title, image, qrcode, price, deadline, status, tags, description, contact_info, min_profit, share_ratio, power_subsidy, period)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''', (user_id, title, image, qrcode, price, deadline, status, tags, description, contact_info, min_profit, share_ratio, power_subsidy, period))
         
         order_id = cursor.lastrowid
@@ -2791,7 +2583,7 @@ def create_advertisement():
         
         cursor.execute('''
             INSERT INTO advertisements (title, image, link_url, status, sort_order, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         ''', (title, image, link_url, status, sort_order, datetime.now(), datetime.now()))
         
         ad_id = cursor.lastrowid
@@ -3066,7 +2858,7 @@ def create_admin_invite_code():
     
     db = get_db()
     try:
-        db.execute('INSERT INTO invite_codes (code, compute_power) VALUES (?, ?)', 
+        db.execute('INSERT INTO invite_codes (code, compute_power) VALUES (%s, %s, %s)', 
                    (code.upper(), compute_power))
         db.commit()
         return jsonify({'code': 200, 'msg': '创建成功', 'data': {'code': code.upper()}})
@@ -3124,7 +2916,7 @@ def batch_create_admin_invite_codes():
     while len(created_codes) < count and attempts < max_attempts:
         code = generate_invite_code(code_length, prefix)
         try:
-            db.execute('INSERT INTO invite_codes (code, compute_power) VALUES (?, ?)',
+            db.execute('INSERT INTO invite_codes (code, compute_power) VALUES (%s, %s, %s)',
                        (code, compute_power))
             created_codes.append(code)
         except sqlite3.IntegrityError:
@@ -3184,7 +2976,7 @@ def create_admin_work():
     db = get_db()
     cursor = db.execute('''
         INSERT INTO ip_works (user_id, title, student_name, image, tags, cost, duration, price, copyright, introduction, category)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     ''', (user_id, title, student_name, image, json.dumps(tags), cost, duration, price, copyright, introduction, category))
     db.commit()
     
@@ -3283,7 +3075,7 @@ def create_admin_order():
         db = get_db()
         cursor = db.execute('''
             INSERT INTO orders (title, image, qrcode, price, deadline, status, tags, contact_count)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''', (title, image, qrcode, price, deadline, status, tags, contact_count))
         db.commit()
         
@@ -3477,7 +3269,7 @@ def update_admin_user_power(user_id):
         db.execute('''
             INSERT INTO compute_power_logs 
             (user_id, operation_type, power_change, power_before, power_after, description)
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
         ''', (user_id, f'admin_{operation}', power_change, current_power, new_power, description or f'管理员操作: {operation}'))
         
         db.commit()
@@ -3548,7 +3340,7 @@ def create_admin_advertisement():
         db = get_db()
         cursor = db.execute('''
             INSERT INTO advertisements (title, image, link_url, status, sort_order, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         ''', (title, image, link_url, status, sort_order, datetime.now(), datetime.now()))
         
         db.commit()
@@ -3709,7 +3501,7 @@ def create_chat_session():
     db = get_db()
     cursor = db.execute('''
         INSERT INTO chat_sessions (project_id, user_id, title, selected_people)
-        VALUES (?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s)
     ''', (project_id, user_id, title, selected_people))
     db.commit()
     
