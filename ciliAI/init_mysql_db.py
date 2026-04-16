@@ -28,6 +28,7 @@ def wait_for_mysql(max_retries=30, retry_interval=2):
                 port=db_port,
                 user=db_user,
                 password=db_password,
+                db=os.getenv('DB_NAME', 'ciliai'),
                 charset='utf8mb4',
                 cursorclass=DictCursor
             )
@@ -60,6 +61,7 @@ def init_mysql_database():
             port=db_port,
             user=db_user,
             password=db_password,
+            db=db_name,
             charset='utf8mb4',
             cursorclass=DictCursor
         )
