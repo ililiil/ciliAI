@@ -2320,7 +2320,7 @@ def get_orders():
     """获取所有订单"""
     try:
         db = get_db()
-                
+        cursor = db.cursor()
         
         cursor.execute('''
             SELECT * FROM orders 
@@ -2449,7 +2449,7 @@ def create_order():
             tags = json.dumps(tags, ensure_ascii=False)
         
         db = get_db()
-        
+        cursor = db.cursor()
         
         cursor.execute('''
             INSERT INTO orders (user_id, title, image, qrcode, price, deadline, status, tags, description, contact_info, min_profit, share_ratio, power_subsidy, period)
