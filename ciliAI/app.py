@@ -2292,7 +2292,7 @@ def update_work_image(work_id):
             return jsonify({'status': 'error', 'message': '无效的图片URL'}), 400
         
         db = get_db()
-        
+        cursor = db.cursor()
         
         cursor.execute('SELECT * FROM ip_works WHERE id = %s', (work_id,))
         work = cursor.fetchone()
@@ -2607,12 +2607,12 @@ def create_advertisement():
         sort_order = data.get('sort_order', 0)
         
         db = get_db()
-        
+        cursor = db.cursor()
         
         cursor.execute('''
-            INSERT INTO advertisements (title, image, link_url, status, sort_order, created_at, updated_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        ''', (title, image, link_url, status, sort_order, datetime.now(), datetime.now()))
+            INSERT INTO advertisements (title, image, link_url, status, sort_order)
+            VALUES (%s, %s, %s, %s, %s)
+        ''', (title, image, link_url, status, sort_order))
         
         ad_id = cursor.lastrowid
         db.commit()
@@ -2637,7 +2637,7 @@ def update_advertisement(ad_id):
             return jsonify({'status': 'error', 'message': '缺少广告数据'}), 400
         
         db = get_db()
-        
+        cursor = db.cursor()
         
         cursor.execute('SELECT * FROM advertisements WHERE id = %s', (ad_id,))
         ad = cursor.fetchone()
@@ -2654,7 +2654,7 @@ def update_advertisement(ad_id):
         
         cursor.execute('''
             UPDATE advertisements 
-            SET title = ?, image = ?, link_url = ?, status = ?, sort_order = ?, updated_at = ?
+            SET title = %s, image = %s, link_url = %s, status = %s, sort_order = %s, updated_at = %s
             WHERE id = %s
         ''', (title, image, link_url, status, sort_order, datetime.now(), ad_id))
         
