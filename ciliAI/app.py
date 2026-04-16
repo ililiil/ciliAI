@@ -1103,13 +1103,14 @@ def verify_invite_code():
         return jsonify({'status': 'error', 'message': '登录凭据必须为8位字符'}), 400
     
     db = get_db()
+    cursor = db.cursor()
     
     existing_user = get_user_by_invite_code(invite_code)
     if existing_user:
         if existing_user['status'] == 'disabled':
             return jsonify({'status': 'error', 'message': '该账户已被禁用'}), 400
         
-        db.execute('UPDATE users SET last_login = %s WHERE id = %s', (datetime.now(), existing_user['id']))
+        cursor.execute('UPDATE users SET last_login = %s WHERE id = %s', (datetime.now(), existing_user['id']))
         db.commit()
         
         return jsonify({
@@ -1119,7 +1120,8 @@ def verify_invite_code():
             'is_new_user': False
         })
     
-    code_row = db.execute('SELECT * FROM invite_codes WHERE code = %s', (invite_code,)).fetchone()
+    cursor.execute('SELECT * FROM invite_codes WHERE code = %s', (invite_code,))
+    code_row = cursor.fetchone()
     
     if not code_row:
         return jsonify({'status': 'error', 'message': '无效的邀请码，请联系管理员获取'}), 400
@@ -2149,7 +2151,7 @@ DEFAULT_COVER_IMAGES = [
 def get_public_works():
     try:
         db = get_db()
-                
+        cursor = db.cursor()
         
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='ip_works'")
         if not cursor.fetchone():
@@ -2369,7 +2371,7 @@ def get_featured_works():
     """获取推荐作品，用于首页广告位"""
     try:
         db = get_db()
-                
+        cursor = db.cursor()
         
         cursor.execute('''
             SELECT * FROM ip_works
@@ -2554,7 +2556,7 @@ def get_advertisements():
         status = request.args.get('status', 'published')
         
         db = get_db()
-                
+        cursor = db.cursor()
         
         if status == 'all':
             cursor.execute('''
