@@ -2153,7 +2153,7 @@ def get_public_works():
         db = get_db()
         cursor = db.cursor()
         
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='ip_works'")
+        cursor.execute("SHOW TABLES LIKE 'ip_works'")
         if not cursor.fetchone():
             logger.error("Table 'ip_works' does not exist in database")
             db.close()
