@@ -245,11 +245,38 @@ POWER_COST = {
     'chat': 1
 }
 
+class DatabaseWrapper:
+    """包装 PyMySQL 连接对象，使其兼容 MySQLdb API"""
+    
+    def __init__(self, connection):
+        self._conn = connection
+    
+    def cursor(self):
+        return self._conn.cursor()
+    
+    def execute(self, query, args=None):
+        cursor = self._conn.cursor()
+        try:
+            result = cursor.execute(query, args)
+            return cursor
+        except Exception as e:
+            cursor.close()
+            raise
+    
+    def commit(self):
+        self._conn.commit()
+    
+    def close(self):
+        self._conn.close()
+    
+    def ping(self, reconnect=False):
+        self._conn.ping(reconnect=reconnect)
+
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
         import pymysql
-        db = g._database = pymysql.connect(**DATABASE)
+        db = g._database = DatabaseWrapper(pymysql.connect(**DATABASE))
     return db
 
 @app.teardown_appcontext
