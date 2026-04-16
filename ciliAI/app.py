@@ -1242,7 +1242,7 @@ def get_power_logs():
         LEFT JOIN projects p ON cpl.project_id = p.id
         WHERE cpl.user_id = %s
         ORDER BY cpl.created_at DESC
-        LIMIT ? OFFSET ?
+        LIMIT %s OFFSET %s
     ''', (user_id, page_size, offset)).fetchall()
     
     total = db.execute('SELECT COUNT(*) as count FROM compute_power_logs WHERE user_id = %s', (user_id,)).fetchone()['count']
@@ -2386,7 +2386,7 @@ def get_featured_works():
                 SELECT * FROM ip_works
                 WHERE status = 'active'
                 ORDER BY created_at DESC
-                LIMIT ?
+                LIMIT %s
             ''', (3 - len(works),))
             additional_works = cursor.fetchall()
             works = list(works) + list(additional_works)
@@ -3227,7 +3227,7 @@ def get_admin_power_logs():
                 LEFT JOIN projects p ON cpl.project_id = p.id
                 WHERE cpl.user_id = %s
                 ORDER BY cpl.created_at DESC
-                LIMIT ? OFFSET ?
+                LIMIT %s OFFSET %s
             ''', (user_id, page_size, offset)).fetchall()
             
             total = db.execute('SELECT COUNT(*) as count FROM compute_power_logs WHERE user_id = %s', (user_id,)).fetchone()['count']
@@ -3240,7 +3240,7 @@ def get_admin_power_logs():
                 LEFT JOIN users u ON cpl.user_id = u.id
                 LEFT JOIN projects p ON cpl.project_id = p.id
                 ORDER BY cpl.created_at DESC
-                LIMIT ? OFFSET ?
+                LIMIT %s OFFSET %s
             ''', (page_size, offset)).fetchall()
             
             total = db.execute('SELECT COUNT(*) as count FROM compute_power_logs').fetchone()['count']
