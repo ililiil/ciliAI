@@ -257,7 +257,7 @@ class DatabaseWrapper:
     def execute(self, query, args=None):
         cursor = self._conn.cursor()
         try:
-            result = cursor.execute(query, args)
+            cursor.execute(query, args)
             return cursor
         except Exception as e:
             cursor.close()
@@ -283,7 +283,10 @@ def get_db():
 def close_connection(exception):
     db = getattr(g, '_database', None)
     if db is not None:
-        db.close()
+        try:
+            db.close()
+        except Exception:
+            pass
 
 def init_db():
     import pymysql
@@ -744,7 +747,8 @@ init_db()
 
 def get_user_by_invite_code(invite_code):
     db = get_db()
-    cursor = db.execute('SELECT * FROM users WHERE invite_code = %s', (invite_code,))
+    cursor = db.cursor()
+    cursor.execute('SELECT * FROM users WHERE invite_code = %s', (invite_code,))
     return cursor.fetchone()
 
 def get_user_id_by_invite_code(invite_code):
@@ -753,7 +757,8 @@ def get_user_id_by_invite_code(invite_code):
 
 def create_user(invite_code, compute_power=0):
     db = get_db()
-    cursor = db.execute('INSERT INTO users (invite_code, compute_power) VALUES (%s, %s)', 
+    cursor = db.cursor()
+    cursor.execute('INSERT INTO users (invite_code, compute_power) VALUES (%s, %s)', 
                        (invite_code, compute_power))
     db.commit()
     return cursor.lastrowid
@@ -766,11 +771,14 @@ def get_or_create_user(invite_code):
 
 def get_user_compute_power(user_id):
     db = get_db()
-    user = db.execute('SELECT compute_power FROM users WHERE id = %s', (user_id,)).fetchone()
+    cursor = db.cursor()
+    cursor.execute('SELECT compute_power FROM users WHERE id = %s', (user_id,))
+    user = cursor.fetchone()
     return user['compute_power'] if user else 0
 
 def deduct_compute_power(user_id, amount, operation_type, project_id=None, record_id=None, description=None):
     db = get_db()
+    cursor = db.cursor()
     current_power = get_user_compute_power(user_id)
     
     if current_power < amount:
@@ -778,17 +786,17 @@ def deduct_compute_power(user_id, amount, operation_type, project_id=None, recor
     
     new_power = current_power - amount
     
-    db.execute('UPDATE users SET compute_power = %s, total_power_used = total_power_used + %s, last_active = %s WHERE id = %s',
+    cursor.execute('UPDATE users SET compute_power = %s, total_power_used = total_power_used + %s, last_active = %s WHERE id = %s',
                (new_power, amount, datetime.now(), user_id))
     
-    db.execute('''
+    cursor.execute('''
         INSERT INTO compute_power_logs 
         (user_id, project_id, record_id, operation_type, power_change, power_before, power_after, description)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
     ''', (user_id, project_id, record_id, operation_type, -amount, current_power, new_power, description))
     
     if project_id:
-        db.execute('UPDATE projects SET total_power_used = total_power_used + %s, update_time = %s WHERE id = %s',
+        cursor.execute('UPDATE projects SET total_power_used = total_power_used + %s, update_time = %s WHERE id = %s',
                    (amount, datetime.now(), project_id))
     
     db.commit()
@@ -796,16 +804,17 @@ def deduct_compute_power(user_id, amount, operation_type, project_id=None, recor
 
 def add_compute_power(user_id, amount, operation_type, description=None):
     db = get_db()
+    cursor = db.cursor()
     current_power = get_user_compute_power(user_id)
     new_power = current_power + amount
     
-    db.execute('UPDATE users SET compute_power = %s, last_active = %s WHERE id = %s',
+    cursor.execute('UPDATE users SET compute_power = %s, last_active = %s WHERE id = %s',
                (new_power, datetime.now(), user_id))
     
-    db.execute('''
+    cursor.execute('''
         INSERT INTO compute_power_logs 
         (user_id, operation_type, power_change, power_before, power_after, description)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s)
     ''', (user_id, operation_type, amount, current_power, new_power, description))
     
     db.commit()
@@ -991,7 +1000,7 @@ def dify_proxy():
                 user_msg_cursor = db.execute('''
                     INSERT INTO chat_messages 
                     (project_id, user_id, chat_id, role, content, power_cost)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    VALUES (%s, %s, %s, %s, %s, %s)
                 ''', (project_id, user_id, conversation_id, 'user', query, power_cost))
                 user_message_id = user_msg_cursor.lastrowid
                 
@@ -1061,7 +1070,7 @@ def dify_proxy():
                         ai_msg_cursor = db.execute('''
                             INSERT INTO chat_messages 
                             (project_id, user_id, chat_id, role, content, power_cost)
-                            VALUES (%s, %s, %s, %s, %s, %s, %s)
+                            VALUES (%s, %s, %s, %s, %s, %s)
                         ''', (project_id, user_id, conversation_id, 'assistant', ai_response_text, 0))
                         ai_message_id = ai_msg_cursor.lastrowid
                         db.commit()
@@ -1133,7 +1142,7 @@ def verify_invite_code():
     
     user_id = create_user(invite_code, compute_power)
     
-    db.execute('UPDATE invite_codes SET status = %s, used_at = %s, current_uses = current_uses + 1 WHERE code = %s',
+    cursor.execute('UPDATE invite_codes SET status = %s, used_at = %s, current_uses = current_uses + 1 WHERE code = %s',
                ('used', datetime.now(), invite_code))
     db.commit()
     
@@ -1157,8 +1166,11 @@ def get_user_info():
         return jsonify({'status': 'error', 'message': '用户不存在'}), 404
     
     db = get_db()
-    project_count = db.execute('SELECT COUNT(*) as count FROM projects WHERE user_id = %s', (user['id'],)).fetchone()['count']
-    image_count = db.execute('SELECT COUNT(*) as count FROM generation_records WHERE user_id = %s', (user['id'],)).fetchone()['count']
+    cursor = db.cursor()
+    cursor.execute('SELECT COUNT(*) as count FROM projects WHERE user_id = %s', (user['id'],))
+    project_count = cursor.fetchone()['count']
+    cursor.execute('SELECT COUNT(*) as count FROM generation_records WHERE user_id = %s', (user['id'],))
+    image_count = cursor.fetchone()['count']
     
     return jsonify({
         'status': 'success',
@@ -1268,14 +1280,16 @@ def get_projects():
         return jsonify({'status': 'success', 'projects': []})
     
     db = get_db()
-    projects = db.execute('''
+    cursor = db.cursor()
+    cursor.execute('''
         SELECT p.*, 
                (SELECT COUNT(*) FROM generation_records WHERE project_id = p.id) as image_count,
                (SELECT COUNT(*) FROM chat_messages WHERE project_id = p.id) as chat_count
         FROM projects p
         WHERE p.user_id = %s AND p.status != 'deleted'
         ORDER BY p.update_time DESC
-    ''', (user_id,)).fetchall()
+    ''', (user_id,))
+    projects = cursor.fetchall()
     
     return jsonify({
         'status': 'success',
@@ -1298,15 +1312,17 @@ def create_project():
     user_id = get_or_create_user(invite_code)
     
     db = get_db()
-    cursor = db.execute('''
+    cursor = db.cursor()
+    cursor.execute('''
         INSERT INTO projects (user_id, title, description, cover_image)
-        VALUES (%s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s)
     ''', (user_id, title.strip(), description, cover_image))
     db.commit()
+    project_id = cursor.lastrowid
     
     return jsonify({
         'status': 'success',
-        'project_id': cursor.lastrowid,
+        'project_id': project_id,
         'message': '项目创建成功'
     })
 
@@ -1315,7 +1331,9 @@ def get_project(project_id):
     invite_code = request.args.get('invite_code')
     
     db = get_db()
-    project = db.execute('SELECT * FROM projects WHERE id = %s AND status != "deleted"', (project_id,)).fetchone()
+    cursor = db.cursor()
+    cursor.execute('SELECT * FROM projects WHERE id = %s AND status != "deleted"', (project_id,))
+    project = cursor.fetchone()
     
     if not project:
         return jsonify({'status': 'error', 'message': '项目不存在'}), 404
@@ -1325,18 +1343,20 @@ def get_project(project_id):
         if user_id and project['user_id'] != user_id:
             return jsonify({'status': 'error', 'message': '无权访问此项目'}), 403
     
-    generation_records = db.execute('''
+    cursor.execute('''
         SELECT * FROM generation_records 
         WHERE project_id = %s 
         ORDER BY create_time DESC
         LIMIT 50
-    ''', (project_id,)).fetchall()
+    ''', (project_id,))
+    generation_records = cursor.fetchall()
     
-    chat_messages = db.execute('''
+    cursor.execute('''
         SELECT * FROM chat_messages 
         WHERE project_id = %s 
         ORDER BY create_time ASC
-    ''', (project_id,)).fetchall()
+    ''', (project_id,))
+    chat_messages = cursor.fetchall()
     
     return jsonify({
         'status': 'success',
@@ -1349,8 +1369,10 @@ def get_project(project_id):
 def update_project(project_id):
     data = request.json
     db = get_db()
+    cursor = db.cursor()
     
-    project = db.execute('SELECT * FROM projects WHERE id = %s AND status != "deleted"', (project_id,)).fetchone()
+    cursor.execute('SELECT * FROM projects WHERE id = %s AND status != "deleted"', (project_id,))
+    project = cursor.fetchone()
     if not project:
         return jsonify({'status': 'error', 'message': '项目不存在'}), 404
     
@@ -1358,7 +1380,7 @@ def update_project(project_id):
     values = []
     
     if 'title' in data:
-        updates.append('title = ?')
+        updates.append('title = %s')
         values.append(data['title'])
     if 'description' in data:
         updates.append('description = %s')
@@ -1372,7 +1394,7 @@ def update_project(project_id):
         values.append(datetime.now())
         values.append(project_id)
         
-        db.execute(f'UPDATE projects SET {", ".join(updates)} WHERE id = %s', values)
+        cursor.execute(f'UPDATE projects SET {", ".join(updates)} WHERE id = %s', values)
         db.commit()
     
     return jsonify({'status': 'success', 'message': '项目更新成功'})
@@ -1380,12 +1402,14 @@ def update_project(project_id):
 @app.route('/api/projects/<int:project_id>', methods=['DELETE'])
 def delete_project(project_id):
     db = get_db()
+    cursor = db.cursor()
     
-    project = db.execute('SELECT * FROM projects WHERE id = %s', (project_id,)).fetchone()
+    cursor.execute('SELECT * FROM projects WHERE id = %s', (project_id,))
+    project = cursor.fetchone()
     if not project:
         return jsonify({'status': 'error', 'message': '项目不存在'}), 404
     
-    db.execute('UPDATE projects SET status = "deleted" WHERE id = %s', (project_id,))
+    cursor.execute('UPDATE projects SET status = "deleted" WHERE id = %s', (project_id,))
     db.commit()
     
     return jsonify({'status': 'success', 'message': '项目已删除'})
@@ -1431,11 +1455,15 @@ def generate_image():
         "width": data.get('width', 1024),
         "height": data.get('height', 1024)
     }
-
+    
+    logger.info(f"生图参数详情: {json.dumps(params, ensure_ascii=False)}")
+    
     try:
         logger.info(f"Submitting task for prompt: {prompt}")
         visual_service = get_visual_service()
+        logger.info(f"VisualService 实例创建成功，准备调用 API...")
         submit_res = visual_service.common_json_handler("CVSync2AsyncSubmitTask", params)
+        logger.info(f"火山引擎 API 响应: {json.dumps(submit_res, ensure_ascii=False)}")
 
         if submit_res.get('code') != 10000:
             add_compute_power(user_id, power_cost, 'refund', f'生图失败退还: {prompt[:30]}...')
@@ -1478,7 +1506,7 @@ def generate_image():
                     cursor = db.execute('''
                         INSERT INTO generation_records 
                         (project_id, user_id, type, prompt, image_url, image_width, image_height, model_version, params, task_id, power_cost)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ''', (project_id, user_id, 'generate', prompt, 
                           image_urls[0] if image_urls else None,
                           data.get('width', 1024), data.get('height', 1024),
@@ -1489,10 +1517,17 @@ def generate_image():
                         db.execute('UPDATE projects SET image_count = image_count + 1, update_time = %s WHERE id = %s',
                                    (datetime.now(), project_id))
                     
-                    db.execute('''UPDATE compute_power_logs SET record_id = %s WHERE id = (
-                        SELECT id FROM compute_power_logs WHERE user_id = %s AND operation_type = 'generate' 
+                    # 修复MySQL不允许在同一表中使用子查询更新的问题
+                    cursor.execute('''
+                        SELECT id FROM compute_power_logs 
+                        WHERE user_id = %s AND operation_type = 'generate' 
                         ORDER BY created_at DESC LIMIT 1
-                    )''', (record_id, user_id))
+                    ''', (user_id,))
+                    log_row = cursor.fetchone()
+                    if log_row:
+                        cursor.execute('''
+                            UPDATE compute_power_logs SET record_id = %s WHERE id = %s
+                        ''', (record_id, log_row['id']))
                     db.commit()
                     
                     return jsonify({
@@ -1519,9 +1554,12 @@ def generate_image():
         return jsonify({'status': 'error', 'message': "任务超时"}), 504
 
     except Exception as e:
-        logger.error(f"Error: {str(e)}")
+        import traceback
+        logger.error(f"生图API异常: {str(e)}")
+        logger.error(f"异常类型: {type(e).__name__}")
+        logger.error(f"异常堆栈: {traceback.format_exc()}")
         add_compute_power(user_id, power_cost, 'refund', f'生图异常退还: {prompt[:30]}...')
-        return jsonify({'status': 'error', 'message': str(e)}), 500
+        return jsonify({'status': 'error', 'message': f'服务器内部错误: {str(e)}'}), 500
 
 @app.route('/api/inpaint', methods=['POST'])
 def inpaint_image():
@@ -1638,7 +1676,7 @@ def inpaint_image():
                     cursor = db.execute('''
                         INSERT INTO generation_records 
                         (project_id, user_id, type, prompt, image_url, params, task_id, power_cost)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
                     ''', (project_id, user_id, 'inpaint', prompt, 
                           image_urls[0] if image_urls else None,
                           json.dumps(params), task_id, power_cost))
@@ -1762,7 +1800,7 @@ def extend_image():
                     cursor = db.execute('''
                         INSERT INTO generation_records 
                         (project_id, user_id, type, prompt, image_url, image_width, image_height, params, task_id, power_cost)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ''', (project_id, user_id, 'extend', prompt, 
                           image_urls[0] if image_urls else None,
                           data.get('width', 2048), data.get('height', 2048),
@@ -1878,7 +1916,7 @@ def super_resolution():
                     cursor = db.execute('''
                         INSERT INTO generation_records 
                         (project_id, user_id, type, image_url, params, task_id, power_cost)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
                     ''', (project_id, user_id, 'super_resolution', 
                           image_urls[0] if image_urls else None,
                           json.dumps(params), task_id, power_cost))
@@ -1930,6 +1968,7 @@ def get_records():
         return jsonify({'status': 'success', 'records': [], 'total': 0})
     
     db = get_db()
+    cursor = db.cursor()
     query = 'SELECT * FROM generation_records WHERE user_id = %s'
     params = [user_id]
     
@@ -1942,12 +1981,14 @@ def get_records():
         params.append(record_type)
     
     count_query = query.replace('SELECT *', 'SELECT COUNT(*) as count')
-    total = db.execute(count_query, params).fetchone()['count']
+    cursor.execute(count_query, params)
+    total = cursor.fetchone()['count']
     
     query += ' ORDER BY create_time DESC LIMIT %s OFFSET %s'
     params.extend([page_size, (page - 1) * page_size])
     
-    records = db.execute(query, params).fetchall()
+    cursor.execute(query, params)
+    records = cursor.fetchall()
     
     records_list = []
     for r in records:
@@ -2011,6 +2052,7 @@ def get_chat_messages():
         return jsonify({'status': 'success', 'messages': []})
     
     db = get_db()
+    cursor = db.cursor()
     query = 'SELECT * FROM chat_messages WHERE user_id = %s'
     params = [user_id]
     
@@ -2024,7 +2066,8 @@ def get_chat_messages():
     
     query += ' ORDER BY create_time ASC'
     
-    messages = db.execute(query, params).fetchall()
+    cursor.execute(query, params)
+    messages = cursor.fetchall()
     
     return jsonify({
         'status': 'success',
@@ -2055,10 +2098,10 @@ def save_chat_message():
     
     db = get_db()
     cursor = db.execute('''
-        INSERT INTO chat_messages 
-        (project_id, user_id, chat_id, role, content, power_cost)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
-    ''', (data.get('project_id'), user_id, data.get('chat_id'),
+            INSERT INTO chat_messages 
+            (project_id, user_id, chat_id, role, content, power_cost)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        ''', (data.get('project_id'), user_id, data.get('chat_id'),
           data.get('role'), data.get('content'), power_cost))
     
     if data.get('project_id'):
@@ -2156,18 +2199,18 @@ def get_public_works():
         cursor.execute("SHOW TABLES LIKE 'ip_works'")
         if not cursor.fetchone():
             logger.error("Table 'ip_works' does not exist in database")
-            db.close()
             return jsonify({
                 'code': 404,
                 'msg': 'IP works table does not exist. Please restart the application to initialize the database.',
                 'data': {'list': [], 'total': 0}
             }), 404
         
-        works = cursor.execute('''
+        cursor.execute('''
             SELECT * FROM ip_works
             WHERE status = 'active'
             ORDER BY created_at DESC
-        ''').fetchall()
+        ''')
+        works = cursor.fetchall()
         
         works_list = []
         for idx, work in enumerate(works):
@@ -2190,7 +2233,6 @@ def get_public_works():
             }
         }
         
-        db.close()
         return jsonify(result)
     except Exception as e:
         logger.error(f"Error fetching works: {str(e)}")
@@ -2453,7 +2495,7 @@ def create_order():
         
         cursor.execute('''
             INSERT INTO orders (user_id, title, image, qrcode, price, deadline, status, tags, description, contact_info, min_profit, share_ratio, power_subsidy, period)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''', (user_id, title, image, qrcode, price, deadline, status, tags, description, contact_info, min_profit, share_ratio, power_subsidy, period))
         
         order_id = cursor.lastrowid
@@ -2504,10 +2546,10 @@ def update_order(order_id):
         
         cursor.execute('''
             UPDATE orders SET 
-                title = ?, image = ?, qrcode = ?, price = ?, deadline = ?, 
-                status = ?, tags = ?, description = ?, contact_info = ?,
-                min_profit = ?, share_ratio = ?, power_subsidy = ?, period = ?,
-                updated_at = ?
+                title = %s, image = %s, qrcode = %s, price = %s, deadline = %s, 
+                status = %s, tags = %s, description = %s, contact_info = %s,
+                min_profit = %s, share_ratio = %s, power_subsidy = %s, period = %s,
+                updated_at = %s
             WHERE id = %s
         ''', (title, image, qrcode, price, deadline, status, tags, description, contact_info,
               min_profit, share_ratio, power_subsidy, period, datetime.now(), order_id))
@@ -2711,7 +2753,7 @@ def publish_advertisement(ad_id):
         
         cursor.execute('''
             UPDATE advertisements 
-            SET status = 'published', updated_at = ?
+            SET status = 'published', updated_at = %s
             WHERE id = %s
         ''', (datetime.now(), ad_id))
         
@@ -2742,7 +2784,7 @@ def unpublish_advertisement(ad_id):
         
         cursor.execute('''
             UPDATE advertisements 
-            SET status = 'unpublished', updated_at = ?
+            SET status = 'unpublished', updated_at = %s
             WHERE id = %s
         ''', (datetime.now(), ad_id))
         
@@ -2885,8 +2927,9 @@ def create_admin_invite_code():
         return jsonify({'code': 400, 'msg': '邀请码长度必须在4-20位之间'}), 400
     
     db = get_db()
+    cursor = db.cursor()
     try:
-        db.execute('INSERT INTO invite_codes (code, compute_power) VALUES (%s, %s)', 
+        cursor.execute('INSERT INTO invite_codes (code, compute_power) VALUES (%s, %s)', 
                    (code.upper(), compute_power))
         db.commit()
         return jsonify({'code': 200, 'msg': '创建成功', 'data': {'code': code.upper()}})
@@ -2935,16 +2978,15 @@ def batch_create_admin_invite_codes():
         return jsonify({'code': 400, 'msg': '单次最多创建100个邀请码'}), 400
     
     db = get_db()
+    cursor = db.cursor()
     created_codes = []
     attempts = 0
     max_attempts = count * 3
     
-    code_length = 8 + len(prefix)
-    
     while len(created_codes) < count and attempts < max_attempts:
-        code = generate_invite_code(code_length, prefix)
+        code = generate_invite_code(8, prefix)
         try:
-            db.execute('INSERT INTO invite_codes (code, compute_power) VALUES (%s, %s)',
+            cursor.execute('INSERT INTO invite_codes (code, compute_power) VALUES (%s, %s)',
                        (code, compute_power))
             created_codes.append(code)
         except pymysql.IntegrityError:
@@ -2990,11 +3032,6 @@ def create_admin_work():
     introduction = data.get('introduction', '')
     category = data.get('category', 'IP版权库')
     
-    invite_code = data.get('invite_code')
-    user_id = None
-    if invite_code:
-        user_id = get_or_create_user(invite_code)
-    
     if not title or not image:
         return jsonify({'code': 400, 'msg': '标题和图片不能为空'}), 400
     
@@ -3002,16 +3039,18 @@ def create_admin_work():
         category = 'IP版权库'
     
     db = get_db()
-    cursor = db.execute('''
-        INSERT INTO ip_works (user_id, title, student_name, image, tags, cost, duration, price, copyright, introduction, category)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-    ''', (user_id, title, student_name, image, json.dumps(tags), cost, duration, price, copyright, introduction, category))
+    cursor = db.cursor()
+    cursor.execute('''
+        INSERT INTO ip_works (title, student_name, image, tags, cost, duration, price, copyright, introduction, category)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    ''', (title, student_name, image, json.dumps(tags), cost, duration, price, copyright, introduction, category))
     db.commit()
+    work_id = cursor.lastrowid
     
     return jsonify({
         'code': 200,
         'msg': '创建成功',
-        'data': {'id': cursor.lastrowid}
+        'data': {'id': work_id}
     })
 
 @app.route('/api/admin/works/<int:id>', methods=['PUT'])
@@ -3059,7 +3098,9 @@ def delete_admin_work(id):
 @app.route('/api/admin/orders', methods=['GET'])
 def get_admin_orders():
     db = get_db()
-    orders = db.execute('SELECT * FROM orders ORDER BY created_at DESC').fetchall()
+    cursor = db.cursor()
+    cursor.execute('SELECT * FROM orders ORDER BY created_at DESC')
+    orders = cursor.fetchall()
     
     orders_list = []
     for order in orders:
@@ -3101,16 +3142,18 @@ def create_admin_order():
             tags = json.dumps(tags, ensure_ascii=False)
         
         db = get_db()
-        cursor = db.execute('''
+        cursor = db.cursor()
+        cursor.execute('''
             INSERT INTO orders (title, image, qrcode, price, deadline, status, tags, contact_count)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         ''', (title, image, qrcode, price, deadline, status, tags, contact_count))
         db.commit()
+        order_id = cursor.lastrowid
         
         return jsonify({
             'code': 200,
             'msg': '订单创建成功',
-            'data': {'id': cursor.lastrowid}
+            'data': {'id': order_id}
         })
     except Exception as e:
         logger.error(f"创建订单失败: {str(e)}")
@@ -3366,17 +3409,19 @@ def create_admin_advertisement():
         sort_order = data.get('sort_order', 0)
         
         db = get_db()
-        cursor = db.execute('''
-            INSERT INTO advertisements (title, image, link_url, status, sort_order, created_at, updated_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        ''', (title, image, link_url, status, sort_order, datetime.now(), datetime.now()))
+        cursor = db.cursor()
+        cursor.execute('''
+            INSERT INTO advertisements (title, image, link_url, status, sort_order)
+            VALUES (%s, %s, %s, %s, %s)
+        ''', (title, image, link_url, status, sort_order))
         
         db.commit()
+        ad_id = cursor.lastrowid
         
         return jsonify({
             'code': 200,
             'msg': '广告位创建成功',
-            'data': {'id': cursor.lastrowid}
+            'data': {'id': ad_id}
         })
     except Exception as e:
         return jsonify({'code': 500, 'msg': str(e)}), 500
@@ -3401,9 +3446,10 @@ def update_admin_advertisement(ad_id):
         status = data.get('status', ad['status'])
         sort_order = data.get('sort_order', ad['sort_order'])
         
-        db.execute('''
+        cursor = db.cursor()
+        cursor.execute('''
             UPDATE advertisements 
-            SET title = ?, image = ?, link_url = ?, status = ?, sort_order = ?, updated_at = ?
+            SET title = %s, image = %s, link_url = %s, status = %s, sort_order = %s, updated_at = %s
             WHERE id = %s
         ''', (title, image, link_url, status, sort_order, datetime.now(), ad_id))
         
@@ -3444,9 +3490,10 @@ def publish_admin_advertisement(ad_id):
         if not ad:
             return jsonify({'code': 404, 'msg': '广告位不存在'}), 404
         
-        db.execute('''
+        cursor = db.cursor()
+        cursor.execute('''
             UPDATE advertisements 
-            SET status = 'published', updated_at = ?
+            SET status = 'published', updated_at = %s
             WHERE id = %s
         ''', (datetime.now(), ad_id))
         
@@ -3468,9 +3515,10 @@ def unpublish_admin_advertisement(ad_id):
         if not ad:
             return jsonify({'code': 404, 'msg': '广告位不存在'}), 404
         
-        db.execute('''
+        cursor = db.cursor()
+        cursor.execute('''
             UPDATE advertisements 
-            SET status = 'unpublished', updated_at = ?
+            SET status = 'unpublished', updated_at = %s
             WHERE id = %s
         ''', (datetime.now(), ad_id))
         
@@ -3496,6 +3544,7 @@ def get_chat_sessions():
         return jsonify({'status': 'success', 'sessions': [], 'total': 0})
     
     db = get_db()
+    cursor = db.cursor()
     query = 'SELECT * FROM chat_sessions WHERE user_id = %s'
     params = [user_id]
     
@@ -3505,7 +3554,8 @@ def get_chat_sessions():
     
     query += ' ORDER BY update_time DESC'
     
-    sessions = db.execute(query, params).fetchall()
+    cursor.execute(query, params)
+    sessions = cursor.fetchall()
     
     return jsonify({
         'status': 'success',
@@ -3640,6 +3690,6 @@ if __name__ == '__main__':
     if key_manager.get_key_count() == 0:
         print("WARNING: 未找到有效的火山引擎密钥配置！请检查 .env 文件中的 VOLC_AK_1 和 VOLC_SK_1")
     else:
-        print(f"✓ 密钥管理器初始化完成，共 {key_manager.get_key_count()} 组密钥")
+        print(f"[OK] 密钥管理器初始化完成，共 {key_manager.get_key_count()} 组密钥")
 
     app.run(host='0.0.0.0', port=5001, debug=False, use_reloader=False)

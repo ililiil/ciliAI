@@ -83,17 +83,26 @@
   <el-dialog
     v-model="showContactModal"
     title="联系方式"
-    width="400px"
+    width="450px"
     class="contact-dialog"
   >
-    <div class="contact-qrcode" v-if="selectedOrder">
-      <div class="qrcode-container">
-        <img :src="selectedOrder.qrcode" alt="企业微信二维码" class="qrcode-image">
+    <div class="contact-content" v-if="selectedOrder">
+      <div class="qrcode-wrapper">
+        <img 
+          :src="getQrcodeUrl(selectedOrder.qrcode)" 
+          alt="企业微信二维码" 
+          class="qrcode-image"
+          @error="handleQrcodeError($event)"
+        >
       </div>
-      <p class="contact-tip">请扫描上方二维码添加企业微信</p>
+      <div class="contact-info">
+        <h3 class="order-title">{{ selectedOrder.title }}</h3>
+        <p class="contact-tip">请扫描上方二维码添加企业微信</p>
+        <p class="contact-note">添加时请注明"接单"，我们的商务人员会尽快与您联系</p>
+      </div>
     </div>
     <div v-else class="contact-empty">
-      <p>暂无联系方式</p>
+      <el-empty description="暂无联系方式" />
     </div>
     <template #footer>
       <span class="dialog-footer">
@@ -269,6 +278,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, inject } from 'vue'
 import { Upload } from '@element-plus/icons-vue'
+import { ElEmpty } from 'element-plus'
 
 const inviteCode = inject('currentInviteCode')
 
@@ -372,6 +382,44 @@ const getImageUrl = (order) => {
     console.error('图片 URL 无效:', order.image, error)
     return order.image
   }
+}
+
+// 获取二维码图片 URL
+const getQrcodeUrl = (qrcode) => {
+  if (!qrcode) {
+    return ''
+  }
+  
+  try {
+    // 如果已经是完整URL，直接返回
+    if (qrcode.startsWith('http://') || qrcode.startsWith('https://')) {
+      return qrcode
+    }
+    
+    // 如果是相对路径，添加基础URL
+    if (qrcode.startsWith('/uploads/')) {
+      return `http://localhost:5001${qrcode}`
+    }
+    
+    // 如果是base64图片，直接返回
+    if (qrcode.startsWith('data:')) {
+      return qrcode
+    }
+    
+    // 其他情况，尝试添加基础URL
+    return `http://localhost:5001${qrcode.startsWith('/') ? '' : '/'}${qrcode}`
+  } catch (error) {
+    console.error('二维码 URL 处理失败:', error)
+    return qrcode
+  }
+}
+
+// 处理二维码图片加载失败
+const handleQrcodeError = (e) => {
+  console.warn('二维码图片加载失败')
+  // 隐藏图片或显示占位符
+  e.target.style.display = 'none'
+  e.target.parentElement.classList.add('qrcode-error')
 }
 
 // 组件挂载时初始化
@@ -1306,6 +1354,7 @@ const handleContact = (order) => {
 
 .contact-dialog .el-dialog__header {
   border-bottom: 1px solid #BACACB;
+  padding: 16px 20px;
 }
 
 .contact-dialog .el-dialog__title {
@@ -1317,45 +1366,137 @@ const handleContact = (order) => {
 .contact-dialog .el-dialog__body {
   padding: 30px;
   text-align: center;
+  background-color: #F8F7F2;
 }
 
 .contact-dialog .el-dialog__footer {
   border-top: 1px solid #BACACB;
-  padding-top: 20px;
+  padding: 16px 20px;
+  background-color: #F8F7F2;
 }
 
-/* 二维码样式 */
-.contact-qrcode {
+/* 联系内容区域 */
+.contact-content {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 24px;
 }
 
-.qrcode-container {
-  width: 200px;
-  height: 200px;
-  margin-bottom: 20px;
-  background-color: #F8F7F2;
-  padding: 10px;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+.qrcode-wrapper {
+  width: 220px;
+  height: 220px;
+  padding: 12px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f7f2 100%);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(66, 93, 95, 0.15);
+  border: 2px solid #BACACB;
+  transition: all 0.3s ease;
+}
+
+.qrcode-wrapper:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(66, 93, 95, 0.2);
+}
+
+.qrcode-wrapper.qrcode-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #BACACB 0%, #F8F7F2 100%);
 }
 
 .qrcode-image {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  border-radius: 8px;
 }
 
-.contact-tip {
-  color: #e5e5e5;
-  font-size: 14px;
+.contact-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.contact-info .order-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #425D5F;
   margin: 0;
 }
 
+.contact-info .contact-tip {
+  color: #425D5F;
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.contact-info .contact-note {
+  color: #666;
+  font-size: 13px;
+  margin: 0;
+  padding: 8px 16px;
+  background-color: rgba(250, 169, 67, 0.1);
+  border-radius: 8px;
+  border-left: 3px solid #FAA943;
+}
+
 .contact-empty {
-  padding: 40px 0;
-  color: #999;
+  padding: 40px 20px;
+}
+
+.contact-empty .el-empty {
+  padding: 20px;
+}
+
+/* 弹窗底部按钮 */
+.contact-dialog .dialog-footer {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.contact-dialog .dialog-footer .el-button {
+  padding: 10px 30px;
+  border-radius: 8px;
   font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.contact-dialog .dialog-footer .el-button:not(.is-link) {
+  background-color: #425D5F;
+  border-color: #425D5F;
+  color: #F8F7F2;
+}
+
+.contact-dialog .dialog-footer .el-button:not(.is-link):hover {
+  background-color: #FAA943;
+  border-color: #FAA943;
+  box-shadow: 0 2px 8px rgba(250, 169, 67, 0.3);
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .qrcode-wrapper {
+    width: 180px;
+    height: 180px;
+    padding: 10px;
+  }
+  
+  .contact-info .order-title {
+    font-size: 16px;
+  }
+  
+  .contact-info .contact-tip {
+    font-size: 14px;
+  }
+  
+  .contact-info .contact-note {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
 }
 </style>

@@ -172,10 +172,14 @@ export const sendVolcEngineRequest = async (action, payload, accessKeyId, secret
       // 尝试获取错误详情
       let errorDetails = ''
       try {
-        const errorData = await response.json()
+        const errorData = await response.clone().json()
         errorDetails = JSON.stringify(errorData)
       } catch (e) {
-        errorDetails = await response.text()
+        const text = await response.clone().text()
+        // 清理 HTML 标签，只保留错误信息
+        const tempDiv = document.createElement('div')
+        tempDiv.innerHTML = text
+        errorDetails = tempDiv.textContent || tempDiv.innerText || text
       }
       throw new Error(`API请求失败: ${response.status} ${response.statusText}\n错误详情: ${errorDetails}`)
     }
@@ -317,10 +321,10 @@ export const editImage = async (params, accessKeyId, secretAccessKey, inviteCode
     if (!response.ok) {
       let errorDetails = ''
       try {
-        const errorData = await response.json()
+        const errorData = await response.clone().json()
         errorDetails = JSON.stringify(errorData)
       } catch (e) {
-        errorDetails = await response.text()
+        errorDetails = await response.clone().text()
       }
       throw new Error(`改图API请求失败: ${response.status} ${response.statusText}\n错误详情: ${errorDetails}`)
     }
@@ -394,10 +398,10 @@ export const extendImage = async (params, accessKeyId, secretAccessKey, inviteCo
     if (!response.ok) {
       let errorDetails = ''
       try {
-        const errorData = await response.json()
+        const errorData = await response.clone().json()
         errorDetails = JSON.stringify(errorData)
       } catch (e) {
-        errorDetails = await response.text()
+        errorDetails = await response.clone().text()
       }
       throw new Error(`扩图API请求失败: ${response.status} ${response.statusText}\n错误详情: ${errorDetails}`)
     }
@@ -469,10 +473,10 @@ export const superResolution = async (params, accessKeyId, secretAccessKey, invi
     if (!response.ok) {
       let errorDetails = ''
       try {
-        const errorData = await response.json()
+        const errorData = await response.clone().json()
         errorDetails = JSON.stringify(errorData)
       } catch (e) {
-        errorDetails = await response.text()
+        errorDetails = await response.clone().text()
       }
       throw new Error(`智能超清API请求失败: ${response.status} ${response.statusText}\n错误详情: ${errorDetails}`)
     }

@@ -1155,10 +1155,37 @@ const goBack = () => {
 const saveProject = async () => {
   isSaving.value = true
   try {
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    ElMessage.success('项目保存成功')
+    const inviteCode = localStorage.getItem('inviteCode') || ''
+    
+    if (!inviteCode) {
+      ElMessage.warning('请先登录')
+      isSaving.value = false
+      return
+    }
+    
+    const response = await fetch(`/api/projects/${project.value.id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        invite_code: inviteCode,
+        title: project.value.title,
+        description: project.value.description,
+        cover_image: project.value.coverImage
+      })
+    })
+    
+    const result = await response.json()
+    
+    if (result.status === 'success') {
+      ElMessage.success('项目保存成功')
+    } else {
+      ElMessage.error(result.message || '保存失败，请重试')
+    }
   } catch (error) {
-    ElMessage.error('保存失败，请重试')
+    console.error('保存项目失败:', error)
+    ElMessage.error('保存失败，请检查网络连接')
   } finally {
     isSaving.value = false
   }
@@ -1509,11 +1536,6 @@ const callDifyAPI = async (query, conversationId, people, onChunk) => {
       }
     }
     
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('Dify API 错误响应:', errorText)
-      console.log('===================================')
-    }
   } catch (error) {
     clearTimeout(timeout)
     
