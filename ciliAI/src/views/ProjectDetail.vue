@@ -1016,6 +1016,27 @@ const maskFileList = ref([])
 const isExtending = ref(false)
 const isEditing = ref(false)
 
+const getImageUrl = (imageUrl) => {
+  if (!imageUrl) {
+    return ''
+  }
+  
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    return imageUrl
+  }
+  
+  if (imageUrl.startsWith('data:image')) {
+    return imageUrl
+  }
+  
+  if (imageUrl.startsWith('/')) {
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001'
+    return `${apiBaseUrl}${imageUrl}`
+  }
+  
+  return imageUrl
+}
+
 const loadProjectData = async () => {
   const projectId = route.params.id
   
@@ -1111,7 +1132,7 @@ const loadImageHistory = async () => {
       imageHistory.value = result.records.map(record => ({
         id: record.id.toString(),
         prompt: record.prompt || '',
-        imageUrl: record.image_url || '',
+        imageUrl: getImageUrl(record.image_url) || '',
         createTime: new Date(record.create_time).toLocaleString('zh-CN'),
         params: JSON.parse(record.params || '{}')
       }))
@@ -1137,7 +1158,7 @@ const loadEditHistory = async () => {
       editHistory.value = result.records.map(record => ({
         id: record.id.toString(),
         prompt: record.prompt || '无提示词',
-        imageUrl: record.image_url || '',
+        imageUrl: getImageUrl(record.image_url) || '',
         createTime: new Date(record.create_time).toLocaleString('zh-CN'),
         params: JSON.parse(record.params || '{}')
       }))

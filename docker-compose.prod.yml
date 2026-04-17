@@ -5,12 +5,12 @@ services:
     image: mysql:8.0
     container_name: ciliai-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-ciliai}
-      MYSQL_USER: ${MYSQL_USER:-ciliai}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-ciliai_password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
-      - "${MYSQL_PORT:-3306}:3306"
+      - "${MYSQL_PORT}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./sql:/docker-entrypoint-initdb.d
@@ -18,7 +18,7 @@ services:
     networks:
       - ciliai-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root_password}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,16 +30,16 @@ services:
       dockerfile: Dockerfile
     container_name: ciliai-backend
     ports:
-      - "${BACKEND_PORT:-5001}:5001"
+      - "${BACKEND_PORT}:5001"
     env_file:
       - .env
     environment:
       DB_TYPE: mysql
       DB_HOST: mysql
       DB_PORT: 3306
-      DB_NAME: ${MYSQL_DATABASE:-ciliai}
-      DB_USER: ${MYSQL_USER:-ciliai}
-      DB_PASSWORD: ${MYSQL_PASSWORD:-ciliai_password}
+      DB_NAME: ${MYSQL_DATABASE}
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
       FLASK_DEBUG: "False"
       FLASK_PORT: 5001
       VOLC_AK: ${VOLC_AK}
@@ -66,10 +66,10 @@ services:
       dockerfile: Dockerfile.frontend
     container_name: ciliai-frontend
     ports:
-      - "${FRONTEND_PORT:-3003}:3003"
+      - "${FRONTEND_PORT}:3003"
     environment:
-      VITE_API_BASE_URL: http://backend:${BACKEND_PORT:-5001}
-      VITE_ADMIN_BASE_URL: http://admin:${ADMIN_PORT:-3002}
+      VITE_API_BASE_URL: http://backend:${BACKEND_PORT}
+      VITE_ADMIN_BASE_URL: http://admin:${ADMIN_PORT}
     depends_on:
       - backend
     restart: always
@@ -82,9 +82,9 @@ services:
       dockerfile: Dockerfile
     container_name: ciliai-admin
     ports:
-      - "${ADMIN_PORT:-3002}:80"
+      - "${ADMIN_PORT}:80"
     environment:
-      VITE_API_BASE_URL: http://backend:${BACKEND_PORT:-5001}
+      VITE_API_BASE_URL: http://backend:${BACKEND_PORT}
     depends_on:
       - backend
     restart: always

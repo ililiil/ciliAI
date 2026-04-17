@@ -166,11 +166,30 @@
     <div class="qr-code-content">
       <h3>请联系导师获取创作权限</h3>
       <div class="qr-code-container">
-        <img src="https://picsum.photos/300/300" alt="Teacher QR Code" class="qr-code-image">
+        <img 
+          v-if="novelWithIntro.qr_code" 
+          :src="getFullImageUrl(novelWithIntro.qr_code)" 
+          alt="Teacher QR Code" 
+          class="qr-code-image"
+          @click="previewQRCode"
+        >
+        <img 
+          v-else 
+          src="https://picsum.photos/300/300" 
+          alt="Teacher QR Code" 
+          class="qr-code-image"
+        >
       </div>
       <p class="qr-code-note">扫描上方二维码联系导师</p>
     </div>
   </el-dialog>
+
+  <el-image-viewer
+    v-if="showImageViewer"
+    :url-list="imageViewerList"
+    :initial-index="imageViewerIndex"
+    @close="showImageViewer = false"
+  />
 </template>
 
 <script setup>
@@ -193,6 +212,9 @@ const emit = defineEmits(['update:modelValue'])
 const visible = ref(props.modelValue)
 const showQRModal = ref(false)
 const currentImageIndex = ref(0)
+const showImageViewer = ref(false)
+const imageViewerList = ref([])
+const imageViewerIndex = ref(0)
 
 const novelWithIntro = computed(() => ({
   ...props.novel,
@@ -215,7 +237,7 @@ const currentImage = computed(() => {
       console.log('NovelDetailModal - Using array image, index:', imageIndex, 'url:', imgUrl)
       
       if (isValidImageUrl(imgUrl)) {
-        return imgUrl
+        return getImageUrl(imgUrl)
       }
       return generatePlaceholder()
     }
@@ -223,7 +245,7 @@ const currentImage = computed(() => {
     console.log('NovelDetailModal - Using single image:', props.novel.image)
     
     if (isValidImageUrl(props.novel.image)) {
-      return props.novel.image
+      return getImageUrl(props.novel.image)
     }
     
     console.warn('NovelDetailModal - Invalid single image URL:', props.novel.image)
@@ -236,7 +258,7 @@ const currentImage = computed(() => {
     console.log('NovelDetailModal - Using images array, index:', imageIndex, 'url:', imgUrl)
     
     if (isValidImageUrl(imgUrl)) {
-      return imgUrl
+      return getImageUrl(imgUrl)
     }
     return generatePlaceholder()
   }
@@ -259,8 +281,30 @@ const isValidImageUrl = (url) => {
   
   if (trimmedUrl.startsWith('data:image')) return true
   if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')) return true
+  if (trimmedUrl.startsWith('/')) return true
   
   return false
+}
+
+const getImageUrl = (url) => {
+  if (!url || typeof url !== 'string') return ''
+  
+  const trimmedUrl = url.trim()
+  
+  if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')) {
+    return trimmedUrl
+  }
+  
+  if (trimmedUrl.startsWith('data:image')) {
+    return trimmedUrl
+  }
+  
+  if (trimmedUrl.startsWith('/')) {
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001'
+    return `${apiBaseUrl}${trimmedUrl}`
+  }
+  
+  return trimmedUrl
 }
 
 const maxImageIndex = computed(() => {
@@ -301,6 +345,23 @@ watch(visible, (val) => {
 
 const showTeacherQR = () => {
   showQRModal.value = true
+}
+
+const getFullImageUrl = (url) => {
+  if (!url) return ''
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url
+  }
+  const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001'
+  return `${apiBaseUrl}${url}`
+}
+
+const previewQRCode = () => {
+  if (novelWithIntro.value.qr_code) {
+    imageViewerList.value = [getFullImageUrl(novelWithIntro.value.qr_code)]
+    imageViewerIndex.value = 0
+    showImageViewer.value = true
+  }
 }
 
 const adding = ref(false)
@@ -632,6 +693,13 @@ const addToProject = async () => {
   height: 200px;
   object-fit: contain;
   border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.qr-code-image:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
 .qr-code-note {
@@ -872,6 +940,26 @@ const addToProject = async () => {
   
   .novel-info-section {
     width: 100%;
+  }
+  
+  .qr-code-image {
+    width: 150px;
+    height: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .qr-code-image {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .qr-code-content h3 {
+    font-size: 16px;
+  }
+  
+  .qr-code-note {
+    font-size: 12px;
   }
 }
 </style>

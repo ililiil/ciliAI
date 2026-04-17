@@ -2,7 +2,10 @@ import axios from 'axios'
 
 const request = axios.create({
   baseURL: '/api/admin',
-  timeout: 30000
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
 })
 
 request.interceptors.request.use(
@@ -23,6 +26,11 @@ request.interceptors.response.use(
     return response.data
   },
   error => {
+    console.error('API Error:', error)
+    if (error.response) {
+      console.error('Response data:', error.response.data)
+      console.error('Response status:', error.response.status)
+    }
     return Promise.reject(error)
   }
 )

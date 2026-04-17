@@ -1,0 +1,11 @@
+.git
+.gitignore
+*.md
+node_modules
+npm-debug.log
+dist
+build
+.idea
+.vscode
+.DS_Store
+Thumbs.db

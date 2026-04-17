@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ciliai-mysql-dev
+    environment:
+      MYSQL_ROOT_PASSWORD: root_dev_password
+      MYSQL_DATABASE: ciliai_dev
+      MYSQL_USER: ciliai_dev
+      MYSQL_PASSWORD: ciliai_dev_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_dev_data:/var/lib/mysql
+      - ./sql:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+    networks:
+      - ciliai-dev-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_dev_password"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  backend:
+    build:
+      context: ./ciliAI
+      dockerfile: Dockerfile.dev
+    container_name: ciliai-backend-dev
+    ports:
+      - "5001:5001"
+    env_file:
+      - .env.dev
+    environment:
+      DB_TYPE: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ciliai_dev
+      DB_USER: ciliai_dev
+      DB_PASSWORD: ciliai_dev_password
+      FLASK_DEBUG: "True"
+      FLASK_PORT: 5001
+    volumes:
+      - ./ciliAI:/app
+      - backend_dev_logs:/app/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - ciliai-dev-network
+    command: flask run --host=0.0.0.0 --port=5001 --reload
+
+  frontend:
+    build:
+      context: ./ciliAI/ciliAI
+      dockerfile: Dockerfile.dev
+    container_name: ciliai-frontend-dev
+    ports:
+      - "3003:3003"
+    environment:
+      VITE_API_BASE_URL: http://localhost:5001
+      VITE_ADMIN_BASE_URL: http://localhost:3002
+    volumes:
+      - ./ciliAI/ciliAI:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - ciliai-dev-network
+    command: npm run dev -- --host 0.0.0.0
+
+  admin:
+    build:
+      context: ./ruoyi
+      dockerfile: Dockerfile.dev
+    container_name: ciliai-admin-dev
+    ports:
+      - "3002:80"
+    environment:
+      VITE_API_BASE_URL: http://localhost:5001
+    volumes:
+      - ./ruoyi:/usr/share/nginx/html
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - ciliai-dev-network
+
+networks:
+  ciliai-dev-network:
+    driver: bridge
+
+volumes:
+  mysql_dev_data:
+  backend_dev_logs:

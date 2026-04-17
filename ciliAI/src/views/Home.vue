@@ -201,6 +201,20 @@ const getImageUrl = (work) => {
       return trimmedUrl
     }
     
+    if (trimmedUrl.startsWith('/uploads/')) {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001'
+      const fullUrl = `${apiBaseUrl}${trimmedUrl}`
+      console.log('getImageUrl - Relative upload URL converted:', fullUrl)
+      return fullUrl
+    }
+    
+    if (trimmedUrl.startsWith('/')) {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001'
+      const fullUrl = `${apiBaseUrl}${trimmedUrl}`
+      console.log('getImageUrl - Relative URL converted:', fullUrl)
+      return fullUrl
+    }
+    
     console.warn('作品图片URL格式无效:', trimmedUrl)
     return `https://picsum.photos/400/600?random=${work.id || Date.now()}`
   }

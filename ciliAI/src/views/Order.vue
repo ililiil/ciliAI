@@ -374,13 +374,20 @@ const getImageUrl = (order) => {
     return ''
   }
   
+  let imageUrl = order.image
+  
+  if (imageUrl.startsWith('/uploads/') || imageUrl.startsWith('/')) {
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001'
+    imageUrl = `${apiBaseUrl}${imageUrl}`
+  }
+  
   try {
-    const url = new URL(order.image)
+    const url = new URL(imageUrl)
     url.searchParams.set('_cb', imageCacheBuster.value)
     return url.toString()
   } catch (error) {
-    console.error('图片 URL 无效:', order.image, error)
-    return order.image
+    console.error('图片 URL 无效:', imageUrl, error)
+    return imageUrl
   }
 }
 
