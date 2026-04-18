@@ -855,6 +855,7 @@ const difyApiUrl = '/dify-api/chat-messages'
 const activeModule = ref('chat')
 const isSaving = ref(false)
 const isSending = ref(false)
+const currentRequestController = ref(null)
 
 // 算力相关
 const userComputePower = ref(0)
@@ -1334,6 +1335,12 @@ const deleteChat = async (chatId) => {
 const sendMessage = async () => {
   if (!inputMessage.value.trim() || isSending.value) return
   
+  if (currentRequestController.value) {
+    console.log('🛑 取消之前的请求')
+    currentRequestController.value.abort()
+    currentRequestController.value = null
+  }
+  
   const inviteCode = localStorage.getItem('inviteCode') || ''
   if (!inviteCode) {
     ElMessage.warning('请先登录后再发送消息')
@@ -1517,6 +1524,8 @@ const sendMessage = async () => {
 
 const callDifyAPI = async (query, conversationId, people, onChunk) => {
   const controller = new AbortController()
+  currentRequestController.value = controller
+  
   const timeout = setTimeout(() => {
     console.warn('⏰ 请求超时触发（180秒），中止请求')
     controller.abort()
@@ -1636,6 +1645,10 @@ const callDifyAPI = async (query, conversationId, people, onChunk) => {
   const cleanup = () => {
     if (reader) {
       reader.cancel().catch(() => {})
+    }
+    clearTimeout(timeout)
+    if (currentRequestController.value === controller) {
+      currentRequestController.value = null
     }
   }
 
@@ -1770,12 +1783,13 @@ const callDifyAPI = async (query, conversationId, people, onChunk) => {
     cleanup()
     console.error('❌ 流式处理出错:', error)
     
-    if (error.name === 'AbortError' || error.message.includes('abort')) {
+    if (error.name === 'AbortError' || error.message?.includes('abort')) {
+      console.log('⚠️ 请求被中止（可能是用户发送了新消息）')
       if (result.length > 0) {
-        console.log('⚠️ 请求被中止但已有部分响应，返回已获取的内容')
+        console.log('✅ 已有部分响应，返回已获取的内容')
         return { answer: result, conversationId: newConversationId }
       }
-      throw new Error('请求被中止，请检查网络连接后重试。')
+      return { answer: '', conversationId: newConversationId }
     }
     throw error
   }
