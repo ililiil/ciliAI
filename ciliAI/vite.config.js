@@ -7,29 +7,29 @@ export default defineConfig({
     port: 3003,
     open: false,
     proxy: {
+      // RuoYi 后端 API
       '/api': {
-        target: 'http://localhost:5001',
+        target: 'http://localhost:8080',
         changeOrigin: true
       },
+      // 火山引擎 AI API
       '/dify-api': {
-        target: 'https://whhongyi.com.cn',
+        target: 'https://ark.cn-beijing.volces.com',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/dify-api/, '/v1'),
+        rewrite: (path) => path.replace(/^\/dify-api/, '/api/v3'),
         secure: false,
         timeout: 180000
       },
+      // 火山引擎服务
       '/whhongyi-api': {
-        target: 'https://whhongyi.com.cn',
+        target: 'https://ark.cn-beijing.volces.com',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/whhongyi-api/, ''),
         secure: false,
-        timeout: 120000,
+        timeout: 180000,
         headers: {
-          'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
-          'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36',
-          'Referer': 'https://whhongyi.com.cn/',
-          'Origin': 'https://whhongyi.com.cn'
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
         }
       }
     }

@@ -198,6 +198,11 @@ export const sendVolcEngineRequest = async (action, payload, accessKeyId, secret
     console.log('后端返回的images:', data.images)
     
     // 确保返回的是正确的图片URL格式
+    if (!data.images || !Array.isArray(data.images)) {
+      console.warn('API返回的images字段无效:', data.images)
+      data.images = []
+    }
+    
     const formattedImages = data.images.map(item => {
       // 如果item是字符串
       if (typeof item === 'string') {
@@ -214,7 +219,7 @@ export const sendVolcEngineRequest = async (action, payload, accessKeyId, secret
         }
       }
       // 如果item是对象，使用其url属性
-      else if (typeof item === 'object' && item.url) {
+      else if (typeof item === 'object' && item !== null && item.url) {
         return { url: item.url }
       }
       // 否则返回一个默认值
@@ -336,6 +341,11 @@ export const editImage = async (params, accessKeyId, secretAccessKey, inviteCode
       throw new Error(`改图API返回错误: ${data.error}`)
     }
     
+    if (!data.images || !Array.isArray(data.images)) {
+      console.warn('改图API返回的images字段无效:', data.images)
+      data.images = []
+    }
+    
     const formattedImages = data.images.map(item => {
       if (typeof item === 'string') {
         if (item.startsWith('data:image/')) {
@@ -345,7 +355,7 @@ export const editImage = async (params, accessKeyId, secretAccessKey, inviteCode
         } else {
           return { url: item }
         }
-      } else if (typeof item === 'object' && item.url) {
+      } else if (typeof item === 'object' && item !== null && item.url) {
         return { url: item.url }
       } else {
         return { url: '' }
@@ -413,6 +423,11 @@ export const extendImage = async (params, accessKeyId, secretAccessKey, inviteCo
       throw new Error(`扩图API返回错误: ${data.error}`)
     }
     
+    if (!data.images || !Array.isArray(data.images)) {
+      console.warn('扩图API返回的images字段无效:', data.images)
+      data.images = []
+    }
+    
     const formattedImages = data.images.map(item => {
       if (typeof item === 'string') {
         if (item.startsWith('data:image/')) {
@@ -422,7 +437,7 @@ export const extendImage = async (params, accessKeyId, secretAccessKey, inviteCo
         } else {
           return { url: item }
         }
-      } else if (typeof item === 'object' && item.url) {
+      } else if (typeof item === 'object' && item !== null && item.url) {
         return { url: item.url }
       } else {
         return { url: '' }
@@ -488,6 +503,11 @@ export const superResolution = async (params, accessKeyId, secretAccessKey, invi
       throw new Error(`智能超清API返回错误: ${data.error}`)
     }
     
+    if (!data.images || !Array.isArray(data.images)) {
+      console.warn('智能超清API返回的images字段无效:', data.images)
+      data.images = []
+    }
+    
     const formattedImages = data.images.map(item => {
       if (typeof item === 'string') {
         if (item.startsWith('data:image/')) {
@@ -497,7 +517,7 @@ export const superResolution = async (params, accessKeyId, secretAccessKey, invi
         } else {
           return { url: item }
         }
-      } else if (typeof item === 'object' && item.url) {
+      } else if (typeof item === 'object' && item !== null && item.url) {
         return { url: item.url }
       } else {
         return { url: '' }

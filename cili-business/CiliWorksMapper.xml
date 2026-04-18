@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.CiliWorksMapper">
+
+    <resultMap type="com.ruoyi.system.domain.CiliWorks" id="CiliWorksResult">
+        <id property="id" column="id" />
+        <result property="title" column="title" />
+        <result property="author" column="author" />
+        <result property="userId" column="user_id" />
+        <result property="category" column="category" />
+        <result property="description" column="description" />
+        <result property="coverImage" column="cover_image" />
+        <result property="images" column="images" />
+        <result property="videoUrl" column="video_url" />
+        <result property="status" column="status" />
+        <result property="isTop" column="is_top" />
+        <result property="likeCount" column="like_count" />
+        <result property="viewCount" column="view_count" />
+        <result property="auditTime" column="audit_time" />
+        <result property="auditReason" column="audit_reason" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="selectCiliWorksVo">
+        select id, title, author, user_id, category, description, cover_image, images, video_url, status, is_top, like_count, view_count, audit_time, audit_reason, create_time, update_time from cili_works
+    </sql>
+
+    <select id="selectCiliWorksList" parameterType="com.ruoyi.system.domain.CiliWorks" resultMap="CiliWorksResult">
+        <include refid="selectCiliWorksVo"/>
+        <where>
+            <if test="title != null and title != ''">
+                AND title like concat('%', #{title}, '%')
+            </if>
+            <if test="author != null and author != ''">
+                AND author like concat('%', #{author}, '%')
+            </if>
+            <if test="category != null and category != ''">
+                AND category = #{category}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        order by create_time desc
+    </select>
+
+    <select id="selectCiliWorksById" parameterType="Long" resultMap="CiliWorksResult">
+        <include refid="selectCiliWorksVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertCiliWorks" parameterType="com.ruoyi.system.domain.CiliWorks">
+        insert into cili_works
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="title != null and title != ''">title,</if>
+            <if test="author != null and author != ''">author,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="category != null and category != ''">category,</if>
+            <if test="description != null">description,</if>
+            <if test="coverImage != null">cover_image,</if>
+            <if test="images != null">images,</if>
+            <if test="videoUrl != null">video_url,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="isTop != null">is_top,</if>
+            create_time,
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="title != null and title != ''">#{title},</if>
+            <if test="author != null and author != ''">#{author},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="category != null and category != ''">#{category},</if>
+            <if test="description != null">#{description},</if>
+            <if test="coverImage != null">#{coverImage},</if>
+            <if test="images != null">#{images},</if>
+            <if test="videoUrl != null">#{videoUrl},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="isTop != null">#{isTop},</if>
+            now(),
+        </trim>
+    </insert>
+
+    <update id="updateCiliWorks" parameterType="com.ruoyi.system.domain.CiliWorks">
+        update cili_works
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="title != null and title != ''">title = #{title},</if>
+            <if test="author != null and author != ''">author = #{author},</if>
+            <if test="category != null and category != ''">category = #{category},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="coverImage != null">cover_image = #{coverImage},</if>
+            <if test="images != null">images = #{images},</if>
+            <if test="videoUrl != null">video_url = #{videoUrl},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="isTop != null">is_top = #{isTop},</if>
+            <if test="auditTime != null">audit_time = #{auditTime},</if>
+            <if test="auditReason != null">audit_reason = #{auditReason},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCiliWorksByIds" parameterType="Long">
+        delete from cili_works where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteCiliWorksById" parameterType="Long">
+        delete from cili_works where id = #{id}
+    </delete>
+
+</mapper>

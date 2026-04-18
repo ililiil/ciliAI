@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.CiliChatMessageMapper">
+
+    <resultMap type="com.ruoyi.system.domain.CiliChatMessage" id="CiliChatMessageResult">
+        <id property="id" column="id" />
+        <result property="sessionId" column="session_id" />
+        <result property="role" column="role" />
+        <result property="content" column="content" />
+        <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <sql id="selectCiliChatMessageVo">
+        select id, session_id, role, content, create_time from cili_chat_message
+    </sql>
+
+    <select id="selectCiliChatMessageList" parameterType="com.ruoyi.system.domain.CiliChatMessage" resultMap="CiliChatMessageResult">
+        <include refid="selectCiliChatMessageVo"/>
+        <where>
+            <if test="sessionId != null">
+                AND session_id = #{sessionId}
+            </if>
+        </where>
+        order by create_time asc
+    </select>
+
+    <select id="selectCiliChatMessageById" parameterType="Long" resultMap="CiliChatMessageResult">
+        <include refid="selectCiliChatMessageVo"/>
+        where id = #{id}
+    </select>
+
+    <select id="selectMessagesBySessionId" resultType="map">
+        <include refid="selectCiliChatMessageVo"/>
+        where session_id = #{sessionId}
+        order by create_time asc
+    </select>
+
+    <insert id="insertCiliChatMessage" parameterType="com.ruoyi.system.domain.CiliChatMessage">
+        insert into cili_chat_message (session_id, role, content, create_time)
+        values (#{sessionId}, #{role}, #{content}, now())
+    </insert>
+
+    <update id="updateCiliChatMessage" parameterType="com.ruoyi.system.domain.CiliChatMessage">
+        update cili_chat_message
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="content != null">content = #{content},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCiliChatMessageByIds" parameterType="Long">
+        delete from cili_chat_message where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteCiliChatMessageById" parameterType="Long">
+        delete from cili_chat_message where id = #{id}
+    </delete>
+
+</mapper>

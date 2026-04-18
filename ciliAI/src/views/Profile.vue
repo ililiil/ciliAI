@@ -9,7 +9,7 @@
       </template>
       <div class="profile-info">
         <div class="avatar-section">
-          <el-avatar :size="120" :src="userInfo.avatar">
+          <el-avatar :size="120">
             {{ userInfo.username.charAt(0).toUpperCase() }}
           </el-avatar>
           <h2>{{ userInfo.username }}</h2>

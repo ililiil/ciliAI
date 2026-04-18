@@ -43,6 +43,7 @@ DATABASE = {
 logger.info(f"数据库: {DATABASE['host']}:{DATABASE['port']}/{DATABASE['database']}")
 
 ADMIN_BASE_URL = os.getenv('ADMIN_BASE_URL', 'http://localhost:5002')
+DIFY_API_URL = os.getenv('DIFY_API_URL', 'https://whhongyi.com.cn/v1/chat-messages')
 
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -54,7 +55,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def convert_image_url(image_url):
-    """转换图片URL，将管理后台上传的图片路径转换为完整URL"""
+    """转换图片URL，保持相对路径，由前端处理"""
     if not image_url or not isinstance(image_url, str):
         return image_url
 
@@ -62,9 +63,6 @@ def convert_image_url(image_url):
 
     if not image_url:
         return image_url
-
-    if image_url.startswith('/uploads/'):
-        return f"http://localhost:5001{image_url}"
 
     return image_url
 
@@ -745,6 +743,42 @@ def init_db():
 
 init_db()
 
+def run_db_migrations():
+    """运行数据库迁移，自动修复表结构"""
+    try:
+        import pymysql
+        conn = pymysql.connect(**DATABASE)
+        cursor = conn.cursor()
+        
+        cursor.execute("SHOW COLUMNS FROM advertisements LIKE 'image'")
+        result = cursor.fetchone()
+        
+        logger.info(f"数据库迁移检查 - image字段信息: {result}")
+        
+        if result:
+            if isinstance(result, dict):
+                current_type = result.get('Type', '').lower()
+            else:
+                current_type = str(result[1]).lower() if len(result) > 1 else ""
+            
+            logger.info(f"当前字段类型: {current_type}")
+            
+            if 'longtext' in current_type or 'mediumtext' in current_type:
+                logger.info("advertisements.image 字段类型正确，无需迁移")
+            else:
+                logger.info("正在迁移 advertisements.image 字段类型 -> LONGTEXT")
+                cursor.execute("ALTER TABLE advertisements MODIFY COLUMN image LONGTEXT")
+                conn.commit()
+                logger.info("advertisements.image 字段迁移完成")
+        else:
+            logger.info("advertisements.image 字段不存在，跳过迁移")
+        
+        conn.close()
+    except Exception as e:
+        logger.error(f"数据库迁移失败: {e}")
+
+run_db_migrations()
+
 def get_user_by_invite_code(invite_code):
     db = get_db()
     cursor = db.cursor()
@@ -939,7 +973,7 @@ def dify_proxy():
             remaining = get_user_compute_power(user_id)
             logger.info(f"算力已预扣减，跳过扣减步骤，当前剩余: {remaining}")
         
-        dify_url = 'https://whhongyi.com.cn/v1/chat-messages'
+        dify_url = DIFY_API_URL
         headers = {
             'Authorization': request.headers.get('Authorization', ''),
             'Content-Type': 'application/json'
@@ -3069,7 +3103,7 @@ def update_admin_work(id):
         if field in data:
             if field == 'category' and data[field] not in ['IP版权库', '社区分享']:
                 continue
-            update_fields.append(f'{field} = ?')
+            update_fields.append(f'{field} = %s')
             if field == 'tags':
                 update_values.append(json.dumps(data[field]))
             else:

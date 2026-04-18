@@ -48,7 +48,7 @@
       <div v-else class="projects-grid">
         <div v-for="project in projects" :key="project.id" class="project-card" @click="openProject(project)">
           <div class="project-cover">
-            <img v-if="project.cover_image" :src="project.cover_image" alt="cover">
+            <img v-if="project.cover_image" :src="getImageUrl(project.cover_image)" alt="cover">
             <div v-else class="project-cover-placeholder">
               <span>📁</span>
             </div>
@@ -105,7 +105,7 @@
                   <div class="cover-upload-hint">支持 JPG、PNG 格式，建议尺寸 500x892</div>
                 </div>
                 <div class="cover-preview" v-else>
-                  <img :src="projectForm.cover_image" alt="封面预览" class="cover-preview-image">
+                  <img :src="getImageUrl(projectForm.cover_image)" alt="封面预览" class="cover-preview-image">
                   <div class="cover-preview-overlay">
                     <el-button type="danger" size="small" @click.stop="removeCover">移除</el-button>
                   </div>
@@ -138,7 +138,7 @@
               <div v-else class="records-grid">
                 <div v-for="record in generationRecords" :key="record.id" class="record-card">
                   <div class="record-image" v-if="record.image_url">
-                    <img :src="record.image_url.startsWith('data:') ? record.image_url : `data:image/png;base64,${record.image_url}`" alt="generated">
+                    <img :src="getImageUrl(record.image_url)" alt="generated">
                   </div>
                   <div class="record-info">
                     <div class="record-type">
@@ -248,6 +248,27 @@ const projectForm = ref({
 
 const coverFileList = ref([])
 
+const getImageUrl = (imageUrl) => {
+  if (!imageUrl) {
+    return ''
+  }
+  
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    return imageUrl
+  }
+  
+  if (imageUrl.startsWith('data:image')) {
+    return imageUrl
+  }
+  
+  if (imageUrl.startsWith('/')) {
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001'
+    return `${apiBaseUrl}${imageUrl}`
+  }
+  
+  return imageUrl
+}
+
 const formatDate = (dateStr) => {
   if (!dateStr) return ''
   const date = new Date(dateStr)
@@ -292,6 +313,15 @@ const getOperationLabel = (type) => {
     recharge: '充值'
   }
   return labels[type] || type
+}
+
+const getImageUrl = (imageUrl) => {
+  if (!imageUrl) return ''
+  if (typeof imageUrl !== 'string') return ''
+  if (imageUrl.startsWith('data:')) {
+    return imageUrl
+  }
+  return `data:image/png;base64,${imageUrl}`
 }
 
 const fetchUserInfo = async () => {

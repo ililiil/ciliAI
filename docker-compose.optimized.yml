@@ -1,0 +1,123 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ciliai-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+      MYSQL_DATABASE: ${DB_NAME:-ciliai}
+      MYSQL_USER: ${DB_USER:-ciliai}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-ciliai_password}
+    ports:
+      - "3306:3306"
+      - "33060:33060"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - ciliai-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root_password}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ciliai-backend
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-ciliai}
+      DB_USER: ${DB_USER:-ciliai}
+      DB_PASSWORD: ${DB_PASSWORD:-ciliai_password}
+      ADMIN_BASE_URL: http://admin:5002
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./uploads:/app/uploads
+    networks:
+      - ciliai-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  frontend:
+    build:
+      context: ./ciliAI
+      dockerfile: Dockerfile.frontend
+    container_name: ciliai-frontend
+    environment:
+      VITE_API_BASE_URL: http://backend:5001
+    ports:
+      - "3003:3003"
+    networks:
+      - ciliai-network
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3003/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  admin:
+    build:
+      context: ./backup/flask-frontend-admin-original/ruoyi
+      dockerfile: Dockerfile
+    container_name: ciliai-admin
+    ports:
+      - "3002:3002"
+    networks:
+      - ciliai-network
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  ciliai-network:
+    driver: bridge
+    name: ciliai-unified-network
+
+volumes:
+  mysql_data:
+    name: ciliai-mysql-data

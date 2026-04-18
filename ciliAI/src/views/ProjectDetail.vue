@@ -196,11 +196,11 @@
                 @click="viewHistoryItem(item)"
               >
                 <div class="history-thumbnail">
-                  <img :src="item.imageUrl" :alt="item.prompt" />
+                  <img :src="getImageUrl(item.imageUrl)" :alt="item.prompt || '生成图片'" />
                 </div>
                 <div class="history-info">
-                  <div class="history-prompt">{{ item.prompt }}</div>
-                  <div class="history-time">{{ item.createTime }}</div>
+                  <div class="history-prompt">{{ item.prompt || '无提示词' }}</div>
+                  <div class="history-time">{{ item.createTime || '未知时间' }}</div>
                 </div>
               </div>
             </div>
@@ -291,7 +291,7 @@
                         @touchmove.prevent="editDrawingTouch"
                         @touchend="stopEditDrawing"
                       ></canvas>
-                      <img :src="image.url" class="edit-base-image-fullscreen" />
+                      <img v-if="image && image.url" :src="getImageUrl(image.url)" class="edit-base-image-fullscreen" />
                     </div>
                     
                     <!-- 浮动工具栏 -->
@@ -346,7 +346,7 @@
                   </div>
 
                   <div v-else class="result-content">
-                    <img :src="image.url" :alt="image.prompt" @click="previewImage(image.url)" style="cursor: pointer;" />
+                    <img v-if="image && image.url" :src="getImageUrl(image.url)" :alt="image.prompt || '生成图片'" @click="previewImage(image.url)" style="cursor: pointer;" />
                     <div class="result-actions">
                       <button class="action-btn" @click="startEdit(image, index)" title="局部重绘">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -405,11 +405,11 @@
                 @click="viewEditHistoryItem(item)"
               >
                 <div class="history-thumbnail">
-                  <img :src="item.imageUrl" :alt="item.prompt" />
+                  <img :src="getImageUrl(item.imageUrl)" :alt="item.prompt || '重绘图片'" />
                 </div>
                 <div class="history-info">
-                  <div class="history-prompt">{{ item.prompt }}</div>
-                  <div class="history-time">{{ item.createTime }}</div>
+                  <div class="history-prompt">{{ item.prompt || '无提示词' }}</div>
+                  <div class="history-time">{{ item.createTime || '未知时间' }}</div>
                 </div>
               </div>
             </div>
@@ -443,11 +443,11 @@
                 @click="viewExtendHistoryItem(item)"
               >
                 <div class="history-thumbnail">
-                  <img :src="item.imageUrl" :alt="item.prompt" />
+                  <img :src="getImageUrl(item.imageUrl)" :alt="item.prompt || '扩图图片'" />
                 </div>
                 <div class="history-info">
-                  <div class="history-prompt">{{ item.prompt }}</div>
-                  <div class="history-time">{{ item.createTime }}</div>
+                  <div class="history-prompt">{{ item.prompt || '无提示词' }}</div>
+                  <div class="history-time">{{ item.createTime || '未知时间' }}</div>
                 </div>
               </div>
             </div>
@@ -525,7 +525,7 @@
                   :key="index"
                   class="result-item"
                 >
-                  <img :src="image.url" :alt="image.prompt" @click="previewImage(image.url)" style="cursor: pointer;" />
+                  <img v-if="image && image.url" :src="getImageUrl(image.url)" :alt="image.prompt || '扩展图片'" @click="previewImage(image.url)" style="cursor: pointer;" />
                   <div class="result-actions">
                     <button class="action-btn" @click="downloadImage(image.url)">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -560,11 +560,11 @@
                 @click="viewEditHistoryItem(item)"
               >
                 <div class="history-thumbnail">
-                  <img :src="item.imageUrl" :alt="item.prompt" />
+                  <img :src="getImageUrl(item.imageUrl)" :alt="item.prompt || '编辑图片'" />
                 </div>
                 <div class="history-info">
-                  <div class="history-prompt">{{ item.prompt }}</div>
-                  <div class="history-time">{{ item.createTime }}</div>
+                  <div class="history-prompt">{{ item.prompt || '无提示词' }}</div>
+                  <div class="history-time">{{ item.createTime || '未知时间' }}</div>
                 </div>
               </div>
             </div>
@@ -727,7 +727,7 @@
                             @touchend="stopDrawing"
                             :style="{ cursor: getCanvasCursor() }"
                           ></canvas>
-                          <img ref="editImageRef" :src="editParams.image" class="editor-image" />
+                          <img v-if="editParams.image" ref="editImageRef" :src="getImageUrl(editParams.image)" class="editor-image" />
                         </div>
                       </div>
                       <div class="canvas-zoom-controls">
@@ -799,7 +799,7 @@
                   :key="index"
                   class="result-item"
                 >
-                  <img :src="image.url" :alt="image.prompt" @click="previewImage(image.url)" style="cursor: pointer;" />
+                  <img v-if="image && image.url" :src="getImageUrl(image.url)" :alt="image.prompt || '编辑图片'" @click="previewImage(image.url)" style="cursor: pointer;" />
                   <div class="result-actions">
                     <button class="action-btn" @click="downloadImage(image.url)">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -828,7 +828,7 @@
       width="80%"
       class="image-preview-dialog"
     >
-      <img :src="previewImageUrl" class="preview-image" />
+      <img v-if="previewImageUrl" :src="getImageUrl(previewImageUrl)" class="preview-image" />
     </el-dialog>
 
   </div>
@@ -849,7 +849,7 @@ const currentInviteCode = ref(localStorage.getItem('inviteCode') || '')
 const accessKeyId = import.meta.env.VITE_VOLC_AK_1 || import.meta.env.VITE_VOLC_AK || ''
 const secretAccessKey = import.meta.env.VITE_VOLC_SK_1 || import.meta.env.VITE_VOLC_SK || ''
 
-const difyApiKey = 'app-jd05GWziMofrIu8sX7FFfLd2'
+const difyApiKey = import.meta.env.VITE_DIFY_API_KEY || 'app-jd05GWziMofrIu8sX7FFfLd2'
 const difyApiUrl = '/dify-api/chat-messages'
 
 const activeModule = ref('chat')
@@ -1016,6 +1016,27 @@ const maskFileList = ref([])
 const isExtending = ref(false)
 const isEditing = ref(false)
 
+const getImageUrl = (imageUrl) => {
+  if (!imageUrl) {
+    return ''
+  }
+  
+  if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+    return imageUrl
+  }
+  
+  if (imageUrl.startsWith('data:image')) {
+    return imageUrl
+  }
+  
+  if (imageUrl.startsWith('/')) {
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001'
+    return `${apiBaseUrl}${imageUrl}`
+  }
+  
+  return imageUrl
+}
+
 const loadProjectData = async () => {
   const projectId = route.params.id
   
@@ -1111,7 +1132,7 @@ const loadImageHistory = async () => {
       imageHistory.value = result.records.map(record => ({
         id: record.id.toString(),
         prompt: record.prompt || '',
-        imageUrl: record.image_url || '',
+        imageUrl: getImageUrl(record.image_url) || '',
         createTime: new Date(record.create_time).toLocaleString('zh-CN'),
         params: JSON.parse(record.params || '{}')
       }))
@@ -1137,7 +1158,7 @@ const loadEditHistory = async () => {
       editHistory.value = result.records.map(record => ({
         id: record.id.toString(),
         prompt: record.prompt || '无提示词',
-        imageUrl: record.image_url || '',
+        imageUrl: getImageUrl(record.image_url) || '',
         createTime: new Date(record.create_time).toLocaleString('zh-CN'),
         params: JSON.parse(record.params || '{}')
       }))
@@ -2064,7 +2085,12 @@ const clearEditMask = () => {
 const updateEditMask = () => {
   if (!editCanvasInstance.value) return
 
-  editMaskData.value = editCanvasInstance.value.toDataURL('image/png')
+  try {
+    editMaskData.value = editCanvasInstance.value.toDataURL('image/png')
+  } catch (error) {
+    console.error('生成蒙版失败:', error)
+    editMaskData.value = ''
+  }
 }
 
 const applyEdit = async (image, index) => {

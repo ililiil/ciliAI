@@ -215,7 +215,7 @@ const currentImage = computed(() => {
       console.log('NovelDetailModal - Using array image, index:', imageIndex, 'url:', imgUrl)
       
       if (isValidImageUrl(imgUrl)) {
-        return imgUrl
+        return getImageUrl(imgUrl)
       }
       return generatePlaceholder()
     }
@@ -223,7 +223,7 @@ const currentImage = computed(() => {
     console.log('NovelDetailModal - Using single image:', props.novel.image)
     
     if (isValidImageUrl(props.novel.image)) {
-      return props.novel.image
+      return getImageUrl(props.novel.image)
     }
     
     console.warn('NovelDetailModal - Invalid single image URL:', props.novel.image)
@@ -236,7 +236,7 @@ const currentImage = computed(() => {
     console.log('NovelDetailModal - Using images array, index:', imageIndex, 'url:', imgUrl)
     
     if (isValidImageUrl(imgUrl)) {
-      return imgUrl
+      return getImageUrl(imgUrl)
     }
     return generatePlaceholder()
   }
@@ -259,8 +259,30 @@ const isValidImageUrl = (url) => {
   
   if (trimmedUrl.startsWith('data:image')) return true
   if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')) return true
+  if (trimmedUrl.startsWith('/')) return true
   
   return false
+}
+
+const getImageUrl = (url) => {
+  if (!url || typeof url !== 'string') return ''
+  
+  const trimmedUrl = url.trim()
+  
+  if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')) {
+    return trimmedUrl
+  }
+  
+  if (trimmedUrl.startsWith('data:image')) {
+    return trimmedUrl
+  }
+  
+  if (trimmedUrl.startsWith('/')) {
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001'
+    return `${apiBaseUrl}${trimmedUrl}`
+  }
+  
+  return trimmedUrl
 }
 
 const maxImageIndex = computed(() => {

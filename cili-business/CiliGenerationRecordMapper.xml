@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.CiliGenerationRecordMapper">
+
+    <resultMap type="com.ruoyi.system.domain.CiliGenerationRecord" id="CiliGenerationRecordResult">
+        <id property="id" column="id" />
+        <result property="taskId" column="task_id" />
+        <result property="userId" column="user_id" />
+        <result property="type" column="type" />
+        <result property="status" column="status" />
+        <result property="prompt" column="prompt" />
+        <result property="resultUrl" column="result_url" />
+        <result property="errorMessage" column="error_message" />
+        <result property="computePower" column="compute_power" />
+        <result property="createTime" column="create_time" />
+        <result property="completeTime" column="complete_time" />
+    </resultMap>
+
+    <sql id="selectCiliGenerationRecordVo">
+        select id, task_id, user_id, type, status, prompt, result_url, error_message, compute_power, create_time, complete_time from cili_generation_record
+    </sql>
+
+    <select id="selectCiliGenerationRecordList" parameterType="com.ruoyi.system.domain.CiliGenerationRecord" resultMap="CiliGenerationRecordResult">
+        <include refid="selectCiliGenerationRecordVo"/>
+        <where>
+            <if test="taskId != null and taskId != ''">
+                AND task_id = #{taskId}
+            </if>
+            <if test="type != null and type != ''">
+                AND type = #{type}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        order by create_time desc
+    </select>
+
+    <select id="selectCiliGenerationRecordById" parameterType="Long" resultMap="CiliGenerationRecordResult">
+        <include refid="selectCiliGenerationRecordVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertCiliGenerationRecord" parameterType="com.ruoyi.system.domain.CiliGenerationRecord">
+        insert into cili_generation_record (id, task_id, user_id, type, status, prompt, compute_power, create_time)
+        values (#{id}, #{taskId}, #{userId}, #{type}, #{status}, #{prompt}, #{computePower}, now())
+    </insert>
+
+    <update id="updateCiliGenerationRecord" parameterType="com.ruoyi.system.domain.CiliGenerationRecord">
+        update cili_generation_record
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="status != null">status = #{status},</if>
+            <if test="resultUrl != null">result_url = #{resultUrl},</if>
+            <if test="errorMessage != null">error_message = #{errorMessage},</if>
+            <if test="completeTime != null">complete_time = #{completeTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCiliGenerationRecordByIds" parameterType="Long">
+        delete from cili_generation_record where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteCiliGenerationRecordById" parameterType="Long">
+        delete from cili_generation_record where id = #{id}
+    </delete>
+
+</mapper>

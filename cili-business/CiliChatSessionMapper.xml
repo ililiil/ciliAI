@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.CiliChatSessionMapper">
+
+    <resultMap type="com.ruoyi.system.domain.CiliChatSession" id="CiliChatSessionResult">
+        <id property="id" column="id" />
+        <result property="sessionId" column="session_id" />
+        <result property="userId" column="user_id" />
+        <result property="status" column="status" />
+        <result property="messageCount" column="message_count" />
+        <result property="lastMessage" column="last_message" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="selectCiliChatSessionVo">
+        select id, session_id, user_id, status, message_count, last_message, create_time, update_time from cili_chat_session
+    </sql>
+
+    <select id="selectCiliChatSessionList" parameterType="com.ruoyi.system.domain.CiliChatSession" resultMap="CiliChatSessionResult">
+        <include refid="selectCiliChatSessionVo"/>
+        <where>
+            <if test="sessionId != null and sessionId != ''">
+                AND session_id = #{sessionId}
+            </if>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        order by create_time desc
+    </select>
+
+    <select id="selectCiliChatSessionById" parameterType="Long" resultMap="CiliChatSessionResult">
+        <include refid="selectCiliChatSessionVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertCiliChatSession" parameterType="com.ruoyi.system.domain.CiliChatSession">
+        insert into cili_chat_session
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="sessionId != null">session_id,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="status != null">status,</if>
+            <if test="messageCount != null">message_count,</if>
+            create_time,
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="sessionId != null">#{sessionId},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="status != null">#{status},</if>
+            <if test="messageCount != null">#{messageCount},</if>
+            now(),
+        </trim>
+    </insert>
+
+    <update id="updateCiliChatSession" parameterType="com.ruoyi.system.domain.CiliChatSession">
+        update cili_chat_session
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="status != null">status = #{status},</if>
+            <if test="messageCount != null">message_count = #{messageCount},</if>
+            <if test="lastMessage != null">last_message = #{lastMessage},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCiliChatSessionByIds" parameterType="Long">
+        delete from cili_chat_session where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteCiliChatSessionById" parameterType="Long">
+        delete from cili_chat_session where id = #{id}
+    </delete>
+
+</mapper>

@@ -1,0 +1,28 @@
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+# 复制package.json和package-lock.json
+COPY package*.json ./
+
+# 强制重新安装依赖（不使用缓存）
+RUN npm cache clean --force && npm install --force
+
+# 复制源代码
+COPY . .
+
+# 构建
+RUN npm run build
+
+# 运行阶段
+FROM nginx:alpine
+
+# 复制构建产物
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx-user.conf /etc/nginx/conf.d/default.conf
+
+# 创建上传目录
+RUN mkdir -p /usr/share/nginx/html/uploads
+
+EXPOSE 3003
+
+CMD ["nginx", "-g", "daemon off;"]

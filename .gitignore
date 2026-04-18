@@ -1,11 +1,108 @@
-venv/
-node_modules/
-dist/
-.env
-*.db
-*.zip
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+*.egg-info/
+.eggs/
+*.egg
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Build
+dist/
+build/
+*.local
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# OS
 .DS_Store
 Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
 *.log
+logs/
+
+# Uploads
+uploads/
+
+# Backup
+backup/
+*.backup
+*.bak
+*.old
+
+# Debug and test files
+debug_*.py
+test_*.py
+check_*.py
+fix_*.py
+verify_*.py
+*_test.py
+*_check.py
+*_debug.py
+diagnose_*.py
+capture_*.py
+get_*.py
+list_*.py
+make_*.py
+show_*.py
+add_*.py
+complete_*.py
+comprehensive_*.py
+accurate_*.py
+final_*.py
+
+# Temporary files
+*.tmp
+*.temp
+*.pyc
+
+# Docker
+.docker/
+
+# Trae documents (keep structure but ignore content)
+.trae/documents/*.md
+
+# Package files
+*.7z
+*.zip
+*.tar.gz
+*.rar
+
+# Generated reports (keep main README)
+*_REPORT.md
+*_GUIDE.md
+*_ANALYSIS.md
+*_PLAN.md
+*_SUMMARY.md
+*_FIX_*.md
+docker-status.md
