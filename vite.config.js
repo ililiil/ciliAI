@@ -25,9 +25,8 @@ export default defineConfig({
         }
       },
       '/dify-api': {
-        target: 'https://whhongyi.com.cn',
+        target: 'http://localhost:5001',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/dify-api/, '/v1'),
         secure: false,
         timeout: 180000
       },

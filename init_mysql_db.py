@@ -105,7 +105,7 @@ def init_mysql_database():
                 type VARCHAR(50) NOT NULL,
                 prompt TEXT,
                 negative_prompt TEXT,
-                image_url VARCHAR(500),
+                image_url LONGTEXT,
                 image_width INT,
                 image_height INT,
                 image_size INT,
