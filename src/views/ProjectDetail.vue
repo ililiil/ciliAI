@@ -1396,15 +1396,20 @@ const sendMessage = async () => {
       message,
       chat.conversationId,
       selectedPeople.value,
-      (chunk, receivedConversationId) => {
-        console.log('🔄 onChunk 回调被调用，chunk 长度:', chunk?.length || 0)
+      (chunk, receivedConversationId, isFullAnswer) => {
+        console.log('🔄 onChunk 回调被调用，chunk 长度:', chunk?.length || 0, '是否完整答案:', isFullAnswer)
         console.log('🔍 查找消息，aiMessageId:', aiMessageId)
         console.log('📋 当前 chat.messages 数量:', chat.messages.length)
         const msg = chat.messages.find(m => m.id === aiMessageId)
         console.log('🎯 找到的消息:', msg ? `id=${msg.id}, content长度=${msg.content.length}` : '未找到')
         if (msg && chunk) {
-          msg.content += chunk
-          console.log('📝 消息内容已更新:', msg.content.length, '字符')
+          if (isFullAnswer) {
+            msg.content = chunk
+            console.log('📝 消息内容已设置（完整答案）:', msg.content.length, '字符')
+          } else {
+            msg.content += chunk
+            console.log('📝 消息内容已更新（累加）:', msg.content.length, '字符')
+          }
         }
         
         if (receivedConversationId && chat) {
@@ -1706,8 +1711,8 @@ const callDifyAPI = async (query, conversationId, people, onChunk) => {
                   result = answerText
                   console.log('📤 从answer节点获取答案，长度:', answerText.length)
                   if (onChunk) {
-                    onChunk(answerText, data.conversation_id || newConversationId)
-                    console.log('✅ onChunk 已调用')
+                    onChunk(answerText, data.conversation_id || newConversationId, true)
+                    console.log('✅ onChunk 已调用（完整答案）')
                   }
                 }
               }
@@ -1720,7 +1725,7 @@ const callDifyAPI = async (query, conversationId, people, onChunk) => {
                     result = answerText
                     console.log('📤 从workflow获取答案，长度:', answerText.length)
                     if (onChunk) {
-                      onChunk(answerText, data.conversation_id || newConversationId)
+                      onChunk(answerText, data.conversation_id || newConversationId, true)
                     }
                   }
                 }
