@@ -1699,6 +1699,33 @@ const callDifyAPI = async (query, conversationId, people, onChunk) => {
                 }
               }
               
+              if (data.event === 'node_finished') {
+                console.log('节点完成:', data.data?.node_type, data.data?.title)
+                if (data.data?.node_type === 'answer' && data.data?.outputs?.answer) {
+                  const answerText = data.data.outputs.answer
+                  result = answerText
+                  console.log('📤 从answer节点获取答案，长度:', answerText.length)
+                  if (onChunk) {
+                    onChunk(answerText, data.conversation_id || newConversationId)
+                    console.log('✅ onChunk 已调用')
+                  }
+                }
+              }
+              
+              if (data.event === 'workflow_finished') {
+                console.log('工作流完成:', data.data?.status)
+                if (data.data?.outputs?.answer) {
+                  const answerText = data.data.outputs.answer
+                  if (!result) {
+                    result = answerText
+                    console.log('📤 从workflow获取答案，长度:', answerText.length)
+                    if (onChunk) {
+                      onChunk(answerText, data.conversation_id || newConversationId)
+                    }
+                  }
+                }
+              }
+              
               if (data.conversation_id) {
                 newConversationId = data.conversation_id
                 console.log('✅ 收到新会话ID:', newConversationId)
