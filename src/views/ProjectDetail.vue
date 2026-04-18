@@ -1276,7 +1276,7 @@ const loadChatMessages = async (chatId) => {
     if (result.status === 'success' && result.messages) {
       const chat = chatList.value.find(c => c.id === chatId)
       if (chat) {
-        chat.messages = result.messages.map(msg => ({
+        chat.messages = result.messages.map(msg => reactive({
           id: msg.id.toString(),
           role: msg.role,
           content: msg.content,
@@ -1363,13 +1363,13 @@ const sendMessage = async () => {
     return
   }
   
-  chat.messages.push({
+  chat.messages.push(reactive({
     id: Date.now().toString(),
     role: 'user',
     content: message,
     time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
     status: 'success'
-  })
+  }))
   chat.title = message.slice(0, 20) + (message.length > 20 ? '...' : '')
   chat.updateTime = new Date().toLocaleString('zh-CN')
   
@@ -1378,13 +1378,13 @@ const sendMessage = async () => {
   isSending.value = true
   
   const aiMessageId = (Date.now() + 1).toString()
-  chat.messages.push({
+  chat.messages.push(reactive({
     id: aiMessageId,
     role: 'assistant',
     content: '',
     time: new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
     status: 'sending'
-  })
+  }))
   
   scrollToBottom()
   
