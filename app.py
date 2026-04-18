@@ -958,10 +958,8 @@ def dify_proxy():
         def generate():
             nonlocal user_message_id, conversation_id
             
-            db = get_db()
-            db_created = True
-            
             try:
+                db = get_db()
                 cursor = db.cursor()
 
                 cursor.execute('''
@@ -972,14 +970,17 @@ def dify_proxy():
                 user_message_id = cursor.lastrowid
                 
                 if project_id:
-                    cursor = db.cursor()
                     cursor.execute('UPDATE projects SET chat_count = chat_count + 1, update_time = %s WHERE id = %s', (datetime.now(), project_id))
                 
                 db.commit()
                 logger.info(f"✅ 已保存用户消息: {user_message_id}")
             except Exception as e:
                 logger.error(f"❌ 保存用户消息失败: {str(e)}")
-                db.rollback()
+                try:
+                    if 'db' in locals():
+                        db.rollback()
+                except:
+                    pass
             
             ai_response_text = ''
             ai_message_id = None
@@ -1010,7 +1011,8 @@ def dify_proxy():
                                             logger.info(f"✅ 收到消息结束事件")
                                             if not ai_message_id:
                                                 try:
-                                                    cursor = db.cursor()
+                                                    db_save = get_db()
+                                                    cursor = db_save.cursor()
 
                                                     cursor.execute('''
                                                         INSERT INTO chat_messages 
@@ -1018,11 +1020,20 @@ def dify_proxy():
                                                         VALUES (%s, %s, %s, %s, %s, %s)
                                                     ''', (project_id, user_id, conversation_id, 'assistant', ai_response_text, 0))
                                                     ai_message_id = cursor.lastrowid
-                                                    db.commit()
+                                                    db_save.commit()
                                                     logger.info(f"✅ 已保存AI消息: {ai_message_id}, 长度: {len(ai_response_text)}")
+                                                    try:
+                                                        db_save.close()
+                                                    except:
+                                                        pass
                                                 except Exception as e:
                                                     logger.error(f"❌ 保存AI消息失败: {str(e)}")
-                                                    db.rollback()
+                                                    try:
+                                                        if 'db_save' in locals():
+                                                            db_save.rollback()
+                                                            db_save.close()
+                                                    except:
+                                                        pass
                                     except json.JSONDecodeError:
                                         continue
                         except UnicodeDecodeError:
@@ -1036,7 +1047,8 @@ def dify_proxy():
             finally:
                 if not ai_message_id and ai_response_text:
                     try:
-                        cursor = db.cursor()
+                        db_final = get_db()
+                        cursor = db_final.cursor()
 
                         cursor.execute('''
                             INSERT INTO chat_messages 
@@ -1044,15 +1056,20 @@ def dify_proxy():
                             VALUES (%s, %s, %s, %s, %s, %s)
                         ''', (project_id, user_id, conversation_id, 'assistant', ai_response_text, 0))
                         ai_message_id = cursor.lastrowid
-                        db.commit()
+                        db_final.commit()
                         logger.info(f"✅ 流结束时保存AI消息: {ai_message_id}")
+                        try:
+                            db_final.close()
+                        except:
+                            pass
                     except Exception as e:
                         logger.error(f"❌ 保存AI消息失败: {str(e)}")
-                        db.rollback()
-                try:
-                    db.close()
-                except:
-                    pass
+                        try:
+                            if 'db_final' in locals():
+                                db_final.rollback()
+                                db_final.close()
+                        except:
+                            pass
         
         logger.info(f"========== Dify Proxy 响应开始 ==========")
         
